@@ -1,0 +1,47 @@
+[33mcommit dfb69afc48854d533bdcc01330bfbd342cf625e1[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: georgeksaji <georgeksaji14@gmail.com>
+Date:   Thu Jul 13 22:51:18 2023 +0530
+
+    Connection.php created , Register_Staff.php connected
+
+[33mcommit 864b5c835ec278cdfe8e090fe2c3ec228ef990a0[m
+Author: georgeksaji <georgeksaji14@gmail.com>
+Date:   Wed Jul 12 21:28:59 2023 +0530
+
+    Home page -upto picture slider completed
+
+[33mcommit f1c666384c13d714a5fd6dc3571b3c748790577c[m
+Author: georgeksaji <georgeksaji14@gmail.com>
+Date:   Mon Jul 10 00:43:51 2023 +0530
+
+    Completed Customer Login
+
+[33mcommit 919e187e97f0342c4546977cd8082063ad4224e0[m
+Author: georgeksaji <georgeksaji14@gmail.com>
+Date:   Sun Jul 9 23:18:18 2023 +0530
+
+    Completed Staff Registration
+
+[33mcommit 995bcde2228ae9ef5e16d0a4aff57ce3924626a4[m
+Author: georgeksaji <georgeksaji14@gmail.com>
+Date:   Sun Jul 9 12:08:13 2023 +0530
+
+    Customer Registration completed(Not verified)
+
+[33mcommit b6d9f3bd0c6173707faa2f09a4a2211ad82b5d85[m
+Author: georgeksaji <georgeksaji14@gmail.com>
+Date:   Sat Jul 8 23:43:24 2023 +0530
+
+    working on form border
+
+[33mcommit ed35c77e286efaab59dd17005287f1b6a98b7b39[m
+Author: georgeksaji <georgeksaji14@gmail.com>
+Date:   Tue Jul 4 11:31:05 2023 +0530
+
+    Added bootstrap Starter template
+
+[33mcommit 5c5d56beffd2d69c5da07a22fac79395ff42db48[m
+Author: georgeksaji <georgeksaji14@gmail.com>
+Date:   Tue Jul 4 10:49:43 2023 +0530
+
+    First commmit . No changes

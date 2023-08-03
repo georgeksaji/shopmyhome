@@ -1,3 +1,35 @@
+<?php
+include ("connection.php");
+
+if(isset($_POST['loginbutton']))
+{
+  $email = $_POST['email'];
+  $password = $_POST['password'];
+
+  $sql = "SELECT * FROM tbl_login WHERE Username = '$email' AND User_Type = 'CU'";
+  $result1 = mysqli_query($conn, $sql);
+  $num1 = mysqli_num_rows($result1);
+  if($num1 == 1) 
+  {
+    $sql = "SELECT * FROM tbl_login WHERE Username = '$email' AND Password = '$password' AND User_Type = 'CU'";
+    $result = mysqli_query($conn, $sql);
+    $num2 = mysqli_num_rows($result);
+    if($num2 == 1) 
+    {
+      echo "<script>alert('Login successful!');</script>";
+      header("Location: Home_page.php");
+    }
+    else if($num2 == 0)
+    {
+      echo "<script>alert('Incorrect password!');</script>";
+    } 
+  }
+  else
+  {
+    echo "<script>alert('Username doesn\'t exist!');</script>";
+  } 
+}
+?>
 <html>
 <head>
   <title>Customer Login</title>
@@ -153,7 +185,7 @@
     <div class="registration-box">
       <div class="registration-box-logo"></div>
       <div class="registration-box-heading">Login</div>
-      <form>
+      <form action="" method="POST">
         <div class="registration-form">
           <div class="registration-form-left">
             
@@ -161,14 +193,15 @@
             <input type="email" id="email" name="email" placeholder="Email" required>
               
             <label for="passwordright">Password</label>
-            <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="6" required title="Minimum 6 characters required.">
+            <input type="password" id="password" name="password" placeholder="Enter password" minlength="6" required title="Minimum 6 characters required.">
         </div>
-        <button class="login-button">Login</button>
-      </form>
+        <button class="login-button" type="submit" name="loginbutton">Login</button>
+        </form>
        </div>
     <div class="signup-redirect">
       <p>Dont have an account? Register here.</p>
-      <a href="Customer_Sign_Up.html"><button class="signup-button" type="submit">Create your Account</button></a>
+      <a href="Customer_Sign_Up.php"><button class="signup-button" type="submit">Create your Account</button></a>
     </div>
   </div>
 </body>
+</html>

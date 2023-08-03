@@ -190,8 +190,8 @@ a {
           </div>
         </nav>
             <div class="navigation-item">
-                <a href="Customer_Login.html" class="href"><div class="login-box">Login</div></a>
-                <a href="Customer_Sign_Up.html" class="href"><div class="signup-box">Sign Up</div></a> 
+                <a href="Customer_Login.php" class="href"><div class="login-box">Login</div></a>
+                <a href="Customer_Sign_Up.php" class="href"><div class="signup-box">Sign Up</div></a> 
             </div> 
   </div> 
   <div class="category-navigation">

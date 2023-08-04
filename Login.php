@@ -1,43 +1,71 @@
 <?php
 include ("connection.php");
 
-if(isset($_POST['loginbutton']))
-{
+if (isset($_POST['loginbutton'])) {
   $email = $_POST['email'];
   $password = $_POST['password'];
 
-  $sql = "SELECT * FROM tbl_login WHERE Username = '$email' AND User_Type = 'CU'";
-  $result1 = mysqli_query($conn, $sql);
-  $num1 = mysqli_num_rows($result1);
-  if($num1 == 1) 
-  {
-    $sql = "SELECT * FROM tbl_login WHERE Username = '$email' AND Password = '$password' AND User_Type = 'CU'";
-    $result = mysqli_query($conn, $sql);
-    $num2 = mysqli_num_rows($result);
-    if($num2 == 1) 
-    {
-      echo "<script>alert('Login successful!');</script>";
-      header("Location: Home_page.php");
+  $sql = "SELECT * FROM tbl_login WHERE Username = '$email' AND Password = '$password'";
+  $result = mysqli_query($conn, $sql);
+  $num = mysqli_num_rows($result);
+
+  if ($num == 1) {
+    $row = mysqli_fetch_assoc($result);
+    $user_type = $row['User_Type'];
+
+    if ($user_type == 'CU') {
+      echo ('Customer');
+      $sql1 = "SELECT Cust_ID FROM tbl_customer WHERE C_Username = '$email'";
+      $result1 = mysqli_query($conn, $sql1);
+
+      if ($result1) {
+        $user_id = mysqli_fetch_assoc($result1)['Cust_ID'];
+        $_SESSION['User_ID'] = $user_id;
+        echo "<script>alert('Login successful!');</script>";
+        header("Location: session.php");
+        exit(); // It's a good practice to add an exit after redirection.
+      }
+    } else if ($user_type == 'ST') {
+      echo ('Staff');
+      $sql1 = "SELECT Staff_ID FROM tbl_staff WHERE Staff_Username = '$email'";
+      $result1 = mysqli_query($conn, $sql1);
+
+      if ($result1) {
+        $user_id = mysqli_fetch_assoc($result1)['Staff_ID'];
+        $_SESSION['User_ID'] = $user_id;
+        echo "<script>alert('Login successful!');</script>";
+        header("Location: session.php");
+        exit(); // It's a good practice to add an exit after redirection.
+      }
+    } else if ($user_type == 'AD') {
+      echo ('Admin');
+      $sql1 = "SELECT Admin_ID FROM tbl_Admin WHERE Username = '$email'";
+      $result1 = mysqli_query($conn, $sql1);
+
+      if ($result1) {
+        $user_id = mysqli_fetch_assoc($result1)['Admin_ID'];
+        $_SESSION['User_ID'] = $user_id;
+        echo "<script>alert('Admin Login successful!');</script>";
+        header("Location: session.php");
+        exit(); // It's a good practice to add an exit after redirection.
+      }
     }
-    else if($num2 == 0)
-    {
-      echo "<script>alert('Incorrect password!');</script>";
-    } 
+  } else {
+    echo "<script>alert('Invalid Credentials!');</script>";
   }
-  else
-  {
-    echo "<script>alert('Username doesn\'t exist!');</script>";
-  } 
 }
+
 ?>
+
 <html>
 <head>
   <title>Customer Login</title>
   <style>
     body {
-      background-image: url("background1.jpg");
+      background-image: url("background.png");
       background-size: cover;
       background-repeat: no-repeat;
+      background-position: center;
     }
 
     .outercontainer {
@@ -48,13 +76,13 @@ if(isset($_POST['loginbutton']))
     }
 
     .registration-box {
-    background-color: rgb(0,0,0,0.5);
-    padding: 18px;
-    border-radius: 10px;
-    width: fit-content;
-    text-align: center;
-    transition: 0.5s;
-    }
+	background-color: rgba(256,256,256,0.9);
+	padding: 55px;
+	border-radius: 10px;
+	width: fit-content;
+	text-align: center;
+	transition: 0.5s;
+}
 
     .registration-box:hover {
       transform: scale(1.01);
@@ -72,11 +100,11 @@ if(isset($_POST['loginbutton']))
     }
 
     .registration-box-heading {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family:Times New Roman, Times, serif;
       margin: auto;
-      color: white;
+      color: rgb(50, 131, 212);
       margin-bottom: 20px;
-      font-weight: 500;
+      font-weight: 800;
       font-size: 180%;
     }
 
@@ -93,7 +121,8 @@ if(isset($_POST['loginbutton']))
     border-width: 1px;
     border-style: double;
     border-radius: 5px;
-    color: white;
+    color:rgb(50, 131, 212);
+  
     text-align: initial;
     }
 
@@ -102,19 +131,20 @@ if(isset($_POST['loginbutton']))
     .registration-box input[type="email"]:focus,
     .registration-box input[type="password"]:focus
     {
-      background-color: rgb(0,0,0,0.5);
+      background-color: rgb(120, 181, 225,0.5);
       outline: none;
       border-color:rgba(145, 204, 234, 0.992);
+      color:rgb(0,0,0);
       box-shadow: 0 0 10px #9ecaed;
     }
 
     ::placeholder{
-      color: white;
+      color: rgb(0,0,0,0.8);
     }
 
    label
    {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(0,0,0);
     text-align: left;
     font-size: medium;
     display: block;
@@ -135,7 +165,7 @@ if(isset($_POST['loginbutton']))
 
 
    .login-button {
-    background-color: rgb(255,216,21,0.6);
+    background-color: rgb(255,216,21,0.7);
     border-radius: 5px;
     color: white;
     width: 180px;
@@ -145,17 +175,17 @@ if(isset($_POST['loginbutton']))
     border: none;
     font-size: 19px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 500;
+    font-weight: 600;
     width: 241px;
     }
 
     .login-button:hover {
-      background-color: rgb(255,216,21,0.9);
+      background-color: rgb(255,216,21);
       transition: 0.2s;
     }
 
     .signup-button {
-    background-color: rgb(83,178,212,0.6);
+    background-color: rgb(83,178,212,0.7);
     border-radius: 5px;
     color: white;
     width: 180px;
@@ -164,18 +194,18 @@ if(isset($_POST['loginbutton']))
     border: none;
     font-size: 19px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 500;
+    font-weight: 600;
     width: 241px;
     }
 
     .signup-button:hover {
-      background-color: rgb(83,178,212,0.9);
+      background-color: rgb(83,178,212);
       transition: 0.2s;
     }
 
 
     p{
-      color: whitesmoke;
+      color:rgb(50, 131, 212);
     }
 
   </style>

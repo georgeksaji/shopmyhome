@@ -1,20 +1,22 @@
 <?php
 include ("connection.php");
+session_start();
+$userId = $_SESSION['User_ID'];
+$usertype = $_SESSION['User_Type'];
 
 if(isset($_POST['submit']))
 {
-  $firstName = $_POST['firstName'];
-  $lastName = $_POST['lastName'];
-  $email = $_POST['email'];
-  $gender = $_POST['gender'];
+  $name = $_POST['name'];
   $phoneNumber = $_POST['phoneNumber'];
-  $houseName = $_POST['houseName'];
+  $buildingName = $_POST['buildingName'];
+  $pincode = $_POST['pincode'];
+  $state = $_POST['state'];
+  $email = $_POST['email'];
   $street = $_POST['street'];
   $district = $_POST['district'];
-  $state = $_POST['state'];
-  $pincode = $_POST['pincode'];
   $passwordright = $_POST['passwordright'];
   $passwordleft = $_POST['passwordleft'];
+
 
   if($passwordleft == $passwordright)
   {
@@ -27,12 +29,11 @@ if(isset($_POST['submit']))
     } 
     else
     {
-      $insert1= "INSERT INTO tbl_login(Username,Password,User_Type)VALUES('$email','$passwordleft','CU')";
+      $insert1= "INSERT INTO tbl_login(Username,Password,User_Type)VALUES('$email','$passwordleft','CR')";
       mysqli_query($conn,$insert1);
-      $insert1= "INSERT INTO tbl_customer(Cust_ID,C_Username,Cust_Fname,Cust_Lname,Cust_Phone,Cust_Gender,Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin)VALUES(generate_cust_id(),'$email','$firstName','$lastName','$phoneNumber','$gender','$houseName','$street','$district','$state','$pincode')";
+      $insert1= "INSERT INTO tbl_courier(Cour_ID,Cour_Username,Registrant_ID,Cour_Name,Cour_Phone,Cour_Building_name,Cour_Street,Cour_Dist,Cour_Pin,Cour_State_ut)VALUES(generate_courier_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$pincode','$state')";
       mysqli_query($conn,$insert1);
-      echo "<script>alert('Customer registered successfully!');</script>";
-      //header("Location: Customer_Login.php");
+      echo "<script>alert('Courier registered successfully!');</script>";
     }
   }
   else
@@ -41,15 +42,15 @@ if(isset($_POST['submit']))
   }
 }
 ?>
-
 <html>
 <head>
-  <title>Sign Up</title>
+  <title>Register Courier</title>
   <style>
     body {
       background-image: url("background.png");
       background-size: cover;
       background-repeat: no-repeat;
+      background-position: fixed;
     }
 
     .outercontainer {
@@ -60,16 +61,16 @@ if(isset($_POST['submit']))
     }
 
     .registration-box {
-	background-color: rgba(256,256,256,0.9);
-	padding: 25px;
-	border-radius: 10px;
-	width: fit-content;
-	text-align: center;
-	transition: 0.5s;
+    background-color: rgba(256,256,256,0.9);
+    padding: 18px;
+    border-radius: 10px;
+    width: min-content;
+    text-align: center;
+    transition: 0.5s;
     }
 
     .registration-box:hover {
-      transform: scale(1.01);
+    transform: scale(1.01);
     
     }
 
@@ -102,18 +103,18 @@ if(isset($_POST['submit']))
     .registration-box input[type="tel"],
     .registration-box input[type="number"],
     .registration-box input[type="password"],
-    .registration-box select {
+     .registration-box select{
     width: 344px;
     padding: 7px;
     margin-left: 15px;
     margin-right: 15px;
     margin-bottom: 15px;
-    border-color: rgb(82,176,210);
+   border-color: rgb(82,176,210);
     background-color: rgb(82,176,210,0.1);
     border-width: 1px;
     border-style: double;
     border-radius: 5px;
-    color:rgb(50, 131, 212);
+    color: rgb(0,0,0);
     text-align: initial;
     }
 
@@ -135,6 +136,17 @@ if(isset($_POST['submit']))
       color: rgb(0,0,0,0.8);
     }
 
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+    }
+
+    input[type=number]
+     {
+    -moz-appearance: textfield;
+    }
+
    label
    {
     color: rgba(0,0,0);
@@ -144,6 +156,12 @@ if(isset($_POST['submit']))
     margin-left: 20px;
    }
 
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    }
 
     .registration-form-left,
     .registration-form-right
@@ -158,85 +176,88 @@ if(isset($_POST['submit']))
 
 
     .registration-box button {
-    background-color: rgb(83,178,212,0.8);
+  background-color: rgb(255,216,21,0.9);
     border-radius: 5px;
     color: white;
     width: 180px;
     cursor: pointer;
+    margin-top: 15px;
     padding: 8px 5px;
     border: none;
     font-size: 19px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 600;
-    width: 241px;
+    font-weight: 500;
     }
 
 
     .registration-box button:hover {
-      background-color: rgb(83,178,212);
+      background-color: rgb(83,178,212)
       transition: 0.2s;
-      
     }
+
+
 
   </style>
   </head>
 <body>
+<script>
+var jsMessage1 = <?php echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
+var jsMessage2 = <?php echo json_encode($usertype); ?>;
+
+// Display the PHP variable value as an alert in JavaScript
+alert(jsMessage1);
+alert(jsMessage2);
+</script>
   <div class="outercontainer">
     <div class="registration-box">
       <div class="registration-box-logo"></div>
-      <div class="registration-box-heading">Create Account</div>
+      <div class="registration-box-heading">Register Courier Partner</div>
       <form action="" method="POST">
         <div class="registration-form">
           <div class="registration-form-left">
-              <label for="firstName">Your name</label>
-              <input type="text" id="firstName" name="firstName" placeholder="First name" required>
+              <label for="Name">Courier Partner name</label>
+              <input type="text" id="firstName" name="name" placeholder="Name" required>
 
-              <label for="email">Email/Username</label>
-              <input type="email" id="email" name="email" placeholder="Email" required>
-
-              <label for="gender">Gender</label>
-              <select id="gender" name="gender" required>
-                <option value="" disabled selected hidden>Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Others">Other</option>
-              </select>
-            
-              <label for="address">Street</label>
-              <input type="text" id="address" name="street" placeholder="Street" required>
-
+              <label for="phoneNumber">Phone number</label>
+            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
+ 
               <label for="pincode">Pincode</label>
               <input type="text" id="pincode" name="pincode" placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
-              
-              <label for="passwordright">Create password</label>
-              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="7" required title="Minimum 4 maximum 7 characters required.">
 
+              
+            <label for="district">District</label>
+            <input type="text" id="district" name="district" placeholder="District" required>
+
+            <label for="passwordright">Create password</label>
+              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="7" required title="Minimum 4 and Maximum 7 characters .">
+
+
+          
           </div>
 
           <div class="registration-form-right">
 
-            <label for="lastName"><!--Enter your name:--><br></label>
-            <input type="text" id="lastName" name="lastName" placeholder="Last name">
-  
-            <label for="phoneNumber">Phone number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
+            <label for="email">Email / Username</label>
+            <input type="email" id="email" name="email" placeholder="Email" required>
 
-            <label for="houseName">House name</label>
-            <input type="text" id="houseName" name="houseName" placeholder="House, apartment, suit, etc." required>
-          
-            <label for="district">District</label>
-            <input type="text" id="district" name="district" placeholder="District" required>
+            <label for="houseName">Building name</label>
+            <input type="text" id="buildingName" name="buildingName" placeholder="Building, apartment, suit, etc." required>
+             
+            <label for="address">Street</label>
+             <input type="text" id="address" name="street" placeholder="Street" required>
 
             <label for="state">State</label>
             <input type="text" id="state" name="state" placeholder="State" required>
-            
-            <label for="passwordleft"><br></label>
-            <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="4" maxlength="7" required title="Minimum 4 and maximum 7 characters required.">
+
+            <label for="passwordleft">Confirm password</label>
+              <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="4" maxlength="7" required title="Minimum 4 and Maximum 7 characters required.">
+
+
+
             </div>
         </div>
-        <button type="submit" name="submit">Sign Up</button>
+        <button type="submit" name="submit">Submit</button>
       </form>
     </div>
   </div>
 </body>
-  </html>

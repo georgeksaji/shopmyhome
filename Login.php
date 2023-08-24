@@ -1,5 +1,8 @@
 <?php
 include ("connection.php");
+    
+
+session_start();
 
 if (isset($_POST['loginbutton'])) {
   $email = $_POST['email'];
@@ -13,43 +16,61 @@ if (isset($_POST['loginbutton'])) {
     $row = mysqli_fetch_assoc($result);
     $user_type = $row['User_Type'];
 
-    if ($user_type == 'CU') {
-      echo ('Customer');
-      $sql1 = "SELECT Cust_ID FROM tbl_customer WHERE C_Username = '$email'";
-      $result1 = mysqli_query($conn, $sql1);
+   if ($user_type == 'CU') {
+  $sql1 = "SELECT Cust_ID FROM tbl_customer WHERE C_Username = '$email'";
+  $result1 = mysqli_query($conn, $sql1);
 
-      if ($result1) {
-        $user_id = mysqli_fetch_assoc($result1)['Cust_ID'];
-        $_SESSION['User_ID'] = $user_id;
-        echo "<script>alert('Login successful!');</script>";
-        header("Location: session.php");
-        exit(); // It's a good practice to add an exit after redirection.
-      }
-    } else if ($user_type == 'ST') {
-      echo ('Staff');
-      $sql1 = "SELECT Staff_ID FROM tbl_staff WHERE Staff_Username = '$email'";
-      $result1 = mysqli_query($conn, $sql1);
+  if ($result1) {
+    $row1 = mysqli_fetch_assoc($result1);
+    $user_id = $row1['Cust_ID'];
+    $_SESSION['User_ID'] = $user_id;
+    $_SESSION['User_Type'] = 'CU';
+    header('location:index.php');
+    echo "<script>alert('Login successful!');</script>";
+  }
+} 
 
-      if ($result1) {
-        $user_id = mysqli_fetch_assoc($result1)['Staff_ID'];
-        $_SESSION['User_ID'] = $user_id;
-        echo "<script>alert('Login successful!');</script>";
-        header("Location: session.php");
-        exit(); // It's a good practice to add an exit after redirection.
-      }
-    } else if ($user_type == 'AD') {
-      echo ('Admin');
-      $sql1 = "SELECT Admin_ID FROM tbl_Admin WHERE Username = '$email'";
-      $result1 = mysqli_query($conn, $sql1);
+else if ($user_type == 'ST') {
+  $sql1 = "SELECT Staff_ID FROM tbl_staff WHERE Staff_Username = '$email'";
+  $result1 = mysqli_query($conn, $sql1);
 
-      if ($result1) {
-        $user_id = mysqli_fetch_assoc($result1)['Admin_ID'];
-        $_SESSION['User_ID'] = $user_id;
-        echo "<script>alert('Admin Login successful!');</script>";
-        header("Location: session.php");
-        exit(); // It's a good practice to add an exit after redirection.
-      }
+  if ($result1) {
+    $row1 = mysqli_fetch_assoc($result1);
+    $user_id = $row1['Staff_ID'];
+    $_SESSION['User_ID'] = $user_id;
+    $_SESSION['User_Type'] = 'ST';
+    header('location:index.php');
+    echo "<script>alert('Login successful!');</script>";
+  }
+} 
+else if ($user_type == 'CR') {
+  $sql1 = "SELECT Cour_Username FROM tbl_courier WHERE Cour_Username = '$email'";
+  $result1 = mysqli_query($conn, $sql1);
+  
+  if ($result1) {
+    $row1 = mysqli_fetch_assoc($result1);
+    $user_id = $row1['Cour_Username']; 
+    $_SESSION['User_ID'] = $user_id;
+    $_SESSION['User_Type'] = 'CR';
+    header('location: index.php');
+    echo "<script>alert('Login successful!');</script>";
+  }
+}
+
+else if ($user_type == 'AD') {
+  $sql1 = "SELECT Admin_ID FROM tbl_admin WHERE Admin_Username = '$email'";
+  $result1 = mysqli_query($conn, $sql1);
+  if($result1){
+    $row1 = mysqli_fetch_assoc($result1);
+      $user_id = $row1["Admin_ID"];
+      $_SESSION['User_ID'] = $user_id;
+      $_SESSION['User_Type'] ='AD';
+      header('location: admin.php');
+      echo "<script>alert('Admin Login successful!');</script>";
+    } else {
+      echo "No matching record found.";
     }
+  }
   } else {
     echo "<script>alert('Invalid Credentials!');</script>";
   }
@@ -66,6 +87,7 @@ if (isset($_POST['loginbutton'])) {
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center;
+      overflow: hidden;
     }
 
     .outercontainer {
@@ -122,7 +144,6 @@ if (isset($_POST['loginbutton'])) {
     border-style: double;
     border-radius: 5px;
     color:rgb(50, 131, 212);
-  
     text-align: initial;
     }
 
@@ -211,6 +232,13 @@ if (isset($_POST['loginbutton'])) {
   </style>
   </head>
 <body>
+<script>
+var jsMessage = <?php echo json_encode($value); ?>; // Embedding PHP variable in JavaScript
+
+// Display the PHP variable value as an alert in JavaScript
+alert(jsMessage);
+</script>
+
   <div class="outercontainer">
     <div class="registration-box">
       <div class="registration-box-logo"></div>
@@ -223,7 +251,7 @@ if (isset($_POST['loginbutton'])) {
             <input type="email" id="email" name="email" placeholder="Email" required>
               
             <label for="passwordright">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter password" minlength="6" required title="Minimum 6 characters required.">
+            <input type="password" id="password" name="password" placeholder="Enter password" minlength="4" maxlength="7" required title="Minimum 4 and Maximum 7 characters.">
         </div>
         <button class="login-button" type="submit" name="loginbutton">Login</button>
         </form>

@@ -58,16 +58,17 @@ else if ($user_type == 'CR') {
 }
 
 else if ($user_type == 'AD') {
-  $sql1 = "SELECT Admin_ID FROM tbl_admin WHERE Admin_Username = '$email'";
+  $sql1 = "SELECT Staff_ID FROM tbl_staff WHERE Staff_Username = '$email'";
   $result1 = mysqli_query($conn, $sql1);
   if($result1){
     $row1 = mysqli_fetch_assoc($result1);
-      $user_id = $row1["Admin_ID"];
+    $user_id = $row1["Staff_ID"];
+    if($user_id == 'ST00001'){
       $_SESSION['User_ID'] = $user_id;
       $_SESSION['User_Type'] ='AD';
-      header('location: admin.php');
+      header('location: index.php');
       echo "<script>alert('Admin Login successful!');</script>";
-    } else {
+    }} else {
       echo "No matching record found.";
     }
   }
@@ -251,7 +252,7 @@ alert(jsMessage);
             <input type="email" id="email" name="email" placeholder="Email" required>
               
             <label for="passwordright">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter password" minlength="4" maxlength="7" required title="Minimum 4 and Maximum 7 characters.">
+            <input type="password" id="password" name="password" placeholder="Enter password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters.">
         </div>
         <button class="login-button" type="submit" name="loginbutton">Login</button>
         </form>

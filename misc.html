@@ -90,3 +90,42 @@
 
 </body>
 </html>
+
+
+
+///////////////////////
+list products .php  
+
+
+
+//if $search is not null
+
+  //$sql1 = "SELECT * FROM tbl_appliance WHERE Appliance_Name LIKE '%$search%'";
+/*$sql1="SELECT Brand_ID FROM tbl_brand WHERE Brand_Name LIKE '%$search%'";
+$result1 = mysqli_query($conn,$sql1);
+while($row1 = mysqli_fetch_assoc($result1))
+  {
+    $search_brand_table_result_id = $row1['Brand_ID'];
+//echo $search_brand_table_result_id;
+}
+/*$sql2="SELECT Cat_ID FROM tbl_category WHERE Cat_Name LIKE '%$search%'";
+  $result2 = mysqli_query($conn,$sql2);
+  while($row2 = mysqli_fetch_assoc($result2))
+  {
+    $search_category_table_result_id = $row2['Cat_ID'];
+    echo $search_category_table_result_id;
+  }*/
+/*$sql3 = "SELECT DISTINCT Type_ID FROM tbl_type WHERE Type_Name LIKE '%$search%' UNION SELECT DISTINCT Type_ID FROM tbl_type WHERE Cat_ID IN (SELECT Cat_ID FROM tbl_category WHERE Cat_Name LIKE '%$search%')";
+$result3 = mysqli_query($conn,$sql3);
+while($row3 = mysqli_fetch_assoc($result3))
+  {
+    $search_type_table_result_id = $row3['Type_ID'];
+//echo $search_type_table_result_id;
+}
+$sql4 = "SELECT Appliance_ID FROM tbl_appliance WHERE Appliance_Name LIKE '%$search%' UNION SELECT Appliance_ID FROM tbl_appliance WHERE Brand_ID IN (SELECT Brand_ID FROM tbl_brand WHERE Brand_Name LIKE '%$search%') UNION SELECT Appliance_ID FROM tbl_appliance WHERE Type_ID IN (SELECT Type_ID FROM tbl_type WHERE Type_Name LIKE '%$search%' UNION SELECT Type_ID FROM tbl_type WHERE Cat_ID IN (SELECT Cat_ID FROM tbl_category WHERE Cat_Name LIKE '%$search%'))";
+$result4 = mysqli_query($conn,$sql4);
+while($row4 = mysqli_fetch_assoc($result4))
+  {
+    $search_appliance_table_result_id = $row4['Appliance_ID'];
+echo $search_appliance_table_result_id;
+  }*/

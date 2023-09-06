@@ -241,7 +241,7 @@ alert(jsMessage2);
               <input type="text" id="designation" name="designation" placeholder="Staff designation" required>
 
               <label for="passwordright">Create password</label>
-              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="7" required title="Minimum 4 characters required.">
+              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="9" required title="Minimum 4 characters required.">
 
 
           </div>

@@ -31,8 +31,8 @@ if(isset($_POST['submit']))
       mysqli_query($conn,$insert1);
       $insert1= "INSERT INTO tbl_customer(Cust_ID,C_Username,Cust_Fname,Cust_Lname,Cust_Phone,Cust_Gender,Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin)VALUES(generate_cust_id(),'$email','$firstName','$lastName','$phoneNumber','$gender','$houseName','$street','$district','$state','$pincode')";
       mysqli_query($conn,$insert1);
-      echo "<script>alert('Customer registered successfully!');</script>";
-      //header("Location: Customer_Login.php");
+      echo "<script>alert('Your account registered successfully!');</script>";
+      header("Location: Login.php");
     }
   }
   else

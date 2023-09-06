@@ -3,48 +3,50 @@ include ("connection.php");
 session_start();
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
+$updateid = $_SESSION['Update_ID'];
+echo $updateid;
 
 if(isset($_POST['submit']))
 {
   $name = $_POST['name'];
-  $phoneNumber = $_POST['phoneNumber'];
-  $buildingName = $_POST['buildingName'];
-  $pincode = $_POST['pincode'];
-  $state = $_POST['state'];
-  $email = $_POST['email'];
-  $street = $_POST['street'];
-  $district = $_POST['district'];
-  $passwordright = $_POST['passwordright'];
-  $passwordleft = $_POST['passwordleft'];
-
-
-  if($passwordleft == $passwordright)
+  if(!empty($_FILES['image1']['name']))
   {
-    $sql = "SELECT * FROM tbl_login WHERE Username = '$email'";
-    $result = mysqli_query($conn, $sql);
-    $num = mysqli_num_rows($result);
-    if($num > 0) 
-    {
-      echo "<script>alert('Username already exists!');</script>";
-    } 
-    else
-    {
-      $insert1= "INSERT INTO tbl_login(Username,Password,User_Type)VALUES('$email','$passwordleft','CR')";
-      mysqli_query($conn,$insert1);
-      $insert1= "INSERT INTO tbl_courier(Cour_ID,Cour_Username,Staff_ID,Cour_Name,Cour_Phone,Cour_Building_name,Cour_Street,Cour_Dist,Cour_Pin,Cour_State_ut)VALUES(generate_cour_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$pincode','$state')";
-      mysqli_query($conn,$insert1);
-      echo "<script>alert('Courier registered successfully!');</script>";
-    }
+    $image1 = "brand_images/" . $_FILES['image1']['name'];
   }
   else
   {
-  echo "<script>alert('Passwords do not match!');</script>";
+    $image1 = "";
   }
+  // Define the destination directory
+  $upload_directory = "C:/xampp/htdocs/ohas_codes/brand_images/";
+
+  // Move uploaded images to desired location
+  if(!empty($_FILES['image1']['name']))
+  {
+    move_uploaded_file($_FILES['image1']['tmp_name'], $upload_directory . $_FILES['image1']['name']);
+  }
+
+  $sql = "UPDATE tbl_brand SET Brand_Name='$name' WHERE Brand_ID='$updateid'";
+  $result = mysqli_query($conn, $sql);
+  if(!empty($_FILES['image1']['name']))
+  {
+    $sql = "UPDATE tbl_brand SET Brand_Logo='$image1' WHERE Brand_ID='$updateid'";
+    $result = mysqli_query($conn, $sql);
+  }
+
+  if($result)
+  {
+    unset($_SESSION['Update_ID']);
+    echo "<script>alert('Brand updated successfully!');</script>";
+    header("location: admin.php");
+  }
+
 }
+
 ?>
 <html>
 <head>
-  <title>Register Courier</title>
+  <title>Update Category Name</title>
   <style>
     body {
       background-image: url("background.png");
@@ -95,12 +97,14 @@ if(isset($_POST['submit']))
 
     .registration-form
     {
-      display: flex;
+      display: column;
     }
 
+    
     .registration-box input[type="text"],
     .registration-box input[type="email"],
     .registration-box input[type="tel"],
+    .registration-box input[type="file"],
     .registration-box input[type="number"],
     .registration-box input[type="password"],
      .registration-box select{
@@ -122,6 +126,7 @@ if(isset($_POST['submit']))
     .registration-box input[type="text"]:focus,
     .registration-box input[type="email"]:focus,
     .registration-box input[type="tel"]:focus,
+    .registration-box input[type="file"]:focus,
     .registration-box input[type="password"]:focus,
     .registration-box input[type="number"]:focus
     {
@@ -131,7 +136,6 @@ if(isset($_POST['submit']))
       color:rgb(0,0,0);
       box-shadow: 0 0 10px #9ecaed;
     }
-
     ::placeholder{
       color: rgb(0,0,0,0.8);
     }
@@ -199,62 +203,37 @@ if(isset($_POST['submit']))
 
   </style>
   </head>
-<body>
+<body><!--
 <script>
-var jsMessage1 = <?php echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
-var jsMessage2 = <?php echo json_encode($usertype); ?>;
+var jsMessage1 = <?php //echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
+var jsMessage2 = <?php //echo json_encode($usertype); ?>;
 
 // Display the PHP variable value as an alert in JavaScript
 alert(jsMessage1);
 alert(jsMessage2);
-</script>
+</script>-->
   <div class="outercontainer">
     <div class="registration-box">
       <div class="registration-box-logo"></div>
-      <div class="registration-box-heading">Register Courier Partner</div>
-      <form action="" method="POST">
+      <div class="registration-box-heading">Update Category Name</div>
+      <form action="" method="POST" enctype="multipart/form-data">
         <div class="registration-form">
-          <div class="registration-form-left">
-              <label for="Name">Courier Partner name</label>
-              <input type="text" id="firstName" name="name" placeholder="Name" required>
+        <?php // update category name
+        $sql = "SELECT * FROM tbl_brand WHERE Brand_ID = '$updateid'";
+        $result = mysqli_query($conn, $sql);
+        $row = mysqli_fetch_assoc($result);
+        $name = $row['Brand_Name'];
+        $image = $row['Brand_Logo'];
 
-              <label for="phoneNumber">Phone number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
- 
-              <label for="pincode">Pincode</label>
-              <input type="text" id="pincode" name="pincode" placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
+        // label for name
+        echo "<label for='name'>Brand Name</label>";
+        echo "<input type='text' name='name' value='$name' placeholder='Update Brand Name' required>";
+        echo "<label for='name'>Brand Logo</label>";
+        echo "<img src='$image' alt='Image 1' height='60px' width='60px' style='margin-right:5%'>";
+        echo '<label for="Image">Update Logo</label>';
+        echo  '<input type="file" name="image1" accept=".jpg, .jpeg, .png, .webp">';
+          ?>
 
-              
-            <label for="district">District</label>
-            <input type="text" id="district" name="district" placeholder="District" required>
-
-            <label for="passwordright">Create password</label>
-              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters .">
-
-
-          
-          </div>
-
-          <div class="registration-form-right">
-
-            <label for="email">Email / Username</label>
-            <input type="email" id="email" name="email" placeholder="Email" required>
-
-            <label for="houseName">Building name</label>
-            <input type="text" id="buildingName" name="buildingName" placeholder="Building, apartment, suit, etc." required>
-             
-            <label for="address">Street</label>
-             <input type="text" id="address" name="street" placeholder="Street" required>
-
-            <label for="state">State</label>
-            <input type="text" id="state" name="state" placeholder="State" required>
-
-            <label for="passwordleft">Confirm password</label>
-              <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters required.">
-
-
-
-            </div>
         </div>
         <button type="submit" name="submit">Submit</button>
       </form>

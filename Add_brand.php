@@ -7,50 +7,27 @@ $usertype = $_SESSION['User_Type'];
 if(isset($_POST['submit']))
 {
   $name = $_POST['name'];
-  $phoneNumber = $_POST['phoneNumber'];
-  $buildingName = $_POST['buildingName'];
-  $pincode = $_POST['pincode'];
-  $state = $_POST['state'];
-  $email = $_POST['email'];
-  $street = $_POST['street'];
-  $district = $_POST['district'];
-  $passwordright = $_POST['passwordright'];
-  $passwordleft = $_POST['passwordleft'];
-
-
-  if($passwordleft == $passwordright)
-  {
-    $sql = "SELECT * FROM tbl_login WHERE Username = '$email'";
-    $result = mysqli_query($conn, $sql);
-    $num = mysqli_num_rows($result);
-    if($num > 0) 
-    {
-      echo "<script>alert('Username already exists!');</script>";
-    } 
-    else
-    {
-      $insert1= "INSERT INTO tbl_login(Username,Password,User_Type)VALUES('$email','$passwordleft','CR')";
+  $image1 = "brand_images/" . $_FILES['image1']['name'];
+  
+  $upload_directory = "C:/xampp/htdocs/ohas_codes/brand_images/";
+  move_uploaded_file($_FILES['image1']['tmp_name'], $upload_directory . $_FILES['image1']['name']);
+ 
+      $insert1= "INSERT INTO tbl_brand(Brand_ID,Brand_Name,Brand_Logo)VALUES(generate_brand_id(),'$name','$image1')";
       mysqli_query($conn,$insert1);
-      $insert1= "INSERT INTO tbl_courier(Cour_ID,Cour_Username,Staff_ID,Cour_Name,Cour_Phone,Cour_Building_name,Cour_Street,Cour_Dist,Cour_Pin,Cour_State_ut)VALUES(generate_cour_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$pincode','$state')";
-      mysqli_query($conn,$insert1);
-      echo "<script>alert('Courier registered successfully!');</script>";
-    }
-  }
-  else
-  {
-  echo "<script>alert('Passwords do not match!');</script>";
-  }
+      echo "<script>alert('Brand added successfully!');</script>";
+      header("location: admin.php");
 }
 ?>
 <html>
 <head>
-  <title>Register Courier</title>
+  <title>Add Brand</title>
   <style>
     body {
       background-image: url("background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
+      overflow: hidden;
     }
 
     .outercontainer {
@@ -95,12 +72,13 @@ if(isset($_POST['submit']))
 
     .registration-form
     {
-      display: flex;
+      display:column;
     }
 
     .registration-box input[type="text"],
     .registration-box input[type="email"],
     .registration-box input[type="tel"],
+    .registration-box input[type="file"],
     .registration-box input[type="number"],
     .registration-box input[type="password"],
      .registration-box select{
@@ -122,6 +100,7 @@ if(isset($_POST['submit']))
     .registration-box input[type="text"]:focus,
     .registration-box input[type="email"]:focus,
     .registration-box input[type="tel"]:focus,
+    .registration-box input[type="file"]:focus,
     .registration-box input[type="password"]:focus,
     .registration-box input[type="number"]:focus
     {
@@ -169,10 +148,6 @@ if(isset($_POST['submit']))
       flex-basis: 45%; 
     }
 
-    option
-    {
-      background-color:rgb(0,0,0,0.7);
-    }
 
 
     .registration-box button {
@@ -199,64 +174,29 @@ if(isset($_POST['submit']))
 
   </style>
   </head>
-<body>
+<body><!--
 <script>
-var jsMessage1 = <?php echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
-var jsMessage2 = <?php echo json_encode($usertype); ?>;
+var jsMessage1 = <?php //echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
+var jsMessage2 = <?php //echo json_encode($usertype); ?>;
 
 // Display the PHP variable value as an alert in JavaScript
 alert(jsMessage1);
 alert(jsMessage2);
-</script>
+</script>-->
   <div class="outercontainer">
     <div class="registration-box">
       <div class="registration-box-logo"></div>
-      <div class="registration-box-heading">Register Courier Partner</div>
-      <form action="" method="POST">
+      <div class="registration-box-heading">Add Brand</div>
+      <form action="" method="POST" enctype="multipart/form-data">
         <div class="registration-form">
-          <div class="registration-form-left">
-              <label for="Name">Courier Partner name</label>
-              <input type="text" id="firstName" name="name" placeholder="Name" required>
+            <label for="Brand">Brand Name</label>
+            <input type="text" id="name" name="name" placeholder="Brand Name" required> 
+            <label for="Image">Brand Logo</label>
+            <input type="file" name="image1" accept=".jpg, .jpeg, .png, .webp" required>
 
-              <label for="phoneNumber">Phone number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
- 
-              <label for="pincode">Pincode</label>
-              <input type="text" id="pincode" name="pincode" placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
-
-              
-            <label for="district">District</label>
-            <input type="text" id="district" name="district" placeholder="District" required>
-
-            <label for="passwordright">Create password</label>
-              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters .">
-
-
-          
-          </div>
-
-          <div class="registration-form-right">
-
-            <label for="email">Email / Username</label>
-            <input type="email" id="email" name="email" placeholder="Email" required>
-
-            <label for="houseName">Building name</label>
-            <input type="text" id="buildingName" name="buildingName" placeholder="Building, apartment, suit, etc." required>
-             
-            <label for="address">Street</label>
-             <input type="text" id="address" name="street" placeholder="Street" required>
-
-            <label for="state">State</label>
-            <input type="text" id="state" name="state" placeholder="State" required>
-
-            <label for="passwordleft">Confirm password</label>
-              <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters required.">
-
-
-
-            </div>
         </div>
         <button type="submit" name="submit">Submit</button>
+        
       </form>
     </div>
   </div>

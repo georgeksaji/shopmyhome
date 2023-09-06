@@ -7,50 +7,30 @@ $usertype = $_SESSION['User_Type'];
 if(isset($_POST['submit']))
 {
   $name = $_POST['name'];
-  $phoneNumber = $_POST['phoneNumber'];
-  $buildingName = $_POST['buildingName'];
-  $pincode = $_POST['pincode'];
-  $state = $_POST['state'];
-  $email = $_POST['email'];
-  $street = $_POST['street'];
-  $district = $_POST['district'];
-  $passwordright = $_POST['passwordright'];
-  $passwordleft = $_POST['passwordleft'];
-
-
-  if($passwordleft == $passwordright)
+  $cat_id = $_POST['category'];
+  if($cat_id != "")
   {
-    $sql = "SELECT * FROM tbl_login WHERE Username = '$email'";
-    $result = mysqli_query($conn, $sql);
-    $num = mysqli_num_rows($result);
-    if($num > 0) 
-    {
-      echo "<script>alert('Username already exists!');</script>";
-    } 
-    else
-    {
-      $insert1= "INSERT INTO tbl_login(Username,Password,User_Type)VALUES('$email','$passwordleft','CR')";
+      $insert1= "INSERT INTO tbl_type(Type_ID,Cat_ID,Type_Name)VALUES(generate_type_id(),'$cat_id','$name')";
       mysqli_query($conn,$insert1);
-      $insert1= "INSERT INTO tbl_courier(Cour_ID,Cour_Username,Staff_ID,Cour_Name,Cour_Phone,Cour_Building_name,Cour_Street,Cour_Dist,Cour_Pin,Cour_State_ut)VALUES(generate_cour_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$pincode','$state')";
-      mysqli_query($conn,$insert1);
-      echo "<script>alert('Courier registered successfully!');</script>";
-    }
+      echo "<script>alert('Product Type added successfully!');</script>";
+      header("location: admin.php");
   }
   else
   {
-  echo "<script>alert('Passwords do not match!');</script>";
+    echo "<script>alert('Please select a category!');</script>";
   }
 }
 ?>
 <html>
 <head>
-  <title>Register Courier</title>
+  <title>Add Type</title>
   <style>
     body {
       background-image: url("background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
+      overflow: hidden;
     }
 
     .outercontainer {
@@ -194,6 +174,11 @@ if(isset($_POST['submit']))
       background-color: rgb(83,178,212)
       transition: 0.2s;
     }
+    
+    option
+    {
+      background-color:rgb(256,256,256,0.7);
+    }
 
 
 
@@ -211,52 +196,28 @@ alert(jsMessage2);
   <div class="outercontainer">
     <div class="registration-box">
       <div class="registration-box-logo"></div>
-      <div class="registration-box-heading">Register Courier Partner</div>
+      <div class="registration-box-heading">Add Product Type</div>
       <form action="" method="POST">
         <div class="registration-form">
-          <div class="registration-form-left">
-              <label for="Name">Courier Partner name</label>
-              <input type="text" id="firstName" name="name" placeholder="Name" required>
-
-              <label for="phoneNumber">Phone number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
- 
-              <label for="pincode">Pincode</label>
-              <input type="text" id="pincode" name="pincode" placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
-
-              
-            <label for="district">District</label>
-            <input type="text" id="district" name="district" placeholder="District" required>
-
-            <label for="passwordright">Create password</label>
-              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters .">
+        <?php
+        $query = "SELECT * FROM tbl_category";
+        $category_list = $conn->query($query);
+        echo '<select name="category">';
+        echo '<option value="" disabled selected hidden>Select Category</option>';
+         if ($category_list->num_rows > 0) {
+             while ($row_cat = $category_list->fetch_assoc()) {
+        
+            echo '<option value="'.$row_cat['Cat_ID'].'">'.$row_cat['Cat_Name'].'</option>';     }}
 
 
+            echo '</select>';
+        ?>
           
-          </div>
-
-          <div class="registration-form-right">
-
-            <label for="email">Email / Username</label>
-            <input type="email" id="email" name="email" placeholder="Email" required>
-
-            <label for="houseName">Building name</label>
-            <input type="text" id="buildingName" name="buildingName" placeholder="Building, apartment, suit, etc." required>
-             
-            <label for="address">Street</label>
-             <input type="text" id="address" name="street" placeholder="Street" required>
-
-            <label for="state">State</label>
-            <input type="text" id="state" name="state" placeholder="State" required>
-
-            <label for="passwordleft">Confirm password</label>
-              <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters required.">
-
-
-
-            </div>
+        <input type="text" id="name" name="name" placeholder="Type Name" required>
+            
         </div>
         <button type="submit" name="submit">Submit</button>
+        
       </form>
     </div>
   </div>

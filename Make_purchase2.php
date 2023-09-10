@@ -216,7 +216,7 @@ color:rgb(256,256,256);
 }
 
 .view_table_wrapper {
-  max-height: 60vh; /* Set the desired maximum height */
+  max-height: 48vh; /* Set the desired maximum height */
   overflow-y: scroll;
 }
 

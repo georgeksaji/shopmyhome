@@ -15,7 +15,14 @@ if(isset($_POST['submit']))
       $insert1= "INSERT INTO tbl_brand(Brand_ID,Brand_Name,Brand_Logo)VALUES(generate_brand_id(),'$name','$image1')";
       mysqli_query($conn,$insert1);
       echo "<script>alert('Brand added successfully!');</script>";
-      header("location: admin.php");
+      if($usertype == "AD" && $userId == "ST00001")
+      {
+        header("location: admin.php");
+      }
+      else if($usertype == "ST")
+      {
+        header("location: staff.php");
+      }
 }
 ?>
 <html>

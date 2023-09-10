@@ -1,10 +1,12 @@
 <?php
 include ("connection.php");
-$search = null;
-$brand_id = null;
-$type_id=null;
-$category_id = null;
 session_start();
+$_SESSION['search'] = null;
+$_SESSION['brand_id'] = null;
+$_SESSION['category_id'] = null;
+$_SESSION['type_id'] = null;
+$product_detail_id = $_SESSION['product_detail_id'];
+
 if(isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
   $userId = $_SESSION['User_ID'];
   $usertype = $_SESSION['User_Type'];
@@ -14,31 +16,12 @@ else {
   $usertype = null;
 }
 
-  if($_SESSION['search'] != null)
-  {
-    $search = $_SESSION['search'];
-  }
-  if($_SESSION['brand_id'] != null)
-  {
-    $brand_id = $_SESSION['brand_id'];
-  }
-  if($_SESSION['category_id'] != null)
-  {
-    $category_id = $_SESSION['category_id'];
-  }
-  if($_SESSION['type_id'] != null)
-  {
-    $type_id = $_SESSION['type_id'];
-  }
-
+//search appliance
 //search appliance
 if(isset($_POST['submit']))
 {
   $search = $_POST['search'];
-  $_SESSION['search'] = null;
   $_SESSION['search'] = $search;
-  $_SESSION['brand_id'] = null;
-  $_SESSION['category_id'] = null;
   header("Location: list_products.php"); 
 }
 //login button
@@ -62,32 +45,33 @@ if(isset($_POST['logout']))
   session_destroy();
   header("Location: index.php");
 }
-//search appliance
-/*if(isset($_POST['submit']))
-{
-  $search = $_POST['search'];
-  $_SESSION['search'] = $search;
-  unset($_SESSION['brand_id']);
-  unset($_SESSION['category_id']);
-  header("Location: list_products.php"); 
-}*/
 //category button
 if(isset($_POST['category']))
 {
   $category_id = $_POST['category'];
   $_SESSION['category_id'] = $category_id;
-  $_SESSION['brand_id']=null;
-  $_SESSION['search']=null;
-  $_SESSION['type_id']=null;
   header("Location: list_types.php");
 }
-//select product button
-if(isset($_POST['select_product']))
+//cart button
+if(isset($_POST['cart']))
 {
-  $product_detail_id = $_POST['select_product'];
-  $_SESSION['product_detail_id'] = $product_detail_id;
-  header("Location: product_details.php");
+  $quantity = $_POST['quantity'];
+  /*cart_master Table Columns:
+
+id
+customer_id
+cart_status
+total_amount
+cart_child Table Columns:
+
+id
+cart_master_id
+quantity
+price
+item_id*/
 }
+
+
 ?>
 
 <!doctype html>
@@ -101,7 +85,7 @@ if(isset($_POST['select_product']))
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-   
+    
   <script>
 var jsMessage1 = <?php echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
 var jsMessage2 = <?php echo json_encode($usertype); ?>;
@@ -120,6 +104,7 @@ alert(jsMessage2);
   margin: 0%;
   background-color: rgba(255, 255, 255, 0.9);
   overflow-x: hidden;
+  overflow-y: hidden;
 
 }
 .home-outer {
@@ -301,89 +286,87 @@ a {
   transition: 0.5s;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 100%;
+}
 
-}
-.products_list
-{
-    width: 100%;
-    /* height: initial; */
-    display: table-caption;
-    /* justify-content: center; */
-    padding-bottom: 1.3%;
-    display: flex;
-justify-content: flex-start;
-        flex-wrap: wrap;
-    /* padding: 20px; */
-    height: auto;
-}
-.product_card_button
-{
-  
-  border-style: none;
-  background-color:transparent;
-    width: 17.35%;
-    height: 42vh;
-    display: flex;
-    margin-top: 1.3%;
-    margin-inline: 1.3%;
-    padding: 0%;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    
-}
-.product_card_outer
+.product_outer
 {
   width: 100%;
+  height: 85%;
+  padding:3%;
+  display: flex;
+  align-items: center;
+}
+.image_outer
+{
+  width: 30%;
+  height: 100%;
+  float:left;
+  border-style: solid 1px rgb(0, 0, 0);
+  background-color: rgb(256,256,256);
+  background-size:contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+.product_details
+{
+  width: 70%;
+  height: 100%;
+  padding-left: 5%;
+  padding-right: 5%;
+  padding-top: 2%;
+  /*--background-color: rgb(2,256,256);*/
+  border-style: solid 1px rgb(0, 0, 0);
+}
+.product_details h3,h5,h6
+{
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 550;
+  color: rgb(0,0,0);
+  margin: 0%;
+  padding: 0%;
+}
+.brand_image
+{
+  width: 100%;
+  height: 20%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  float: left;
+  margin-right: 2%;
+}
+.cart_form
+{
+  width: 30%;
+    height: 6vh;
+    margin-top: 6%;
+    margin-bottom: 2%;
+    display: inline-flex;
+    justify-content: space-between;
+}
+.add_to_cart_button
+{
+  width: 68%;
     height: 100%;
+    background-color: gold;
+    border-style: none;
     display: flex;
-    margin:0%;
-    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    background-color: white;
+    transition: 0.5s;
+    font-size: 95%;
 }
-.product_card_outer:hover
+.add_to_cart_button:hover
 {
-  transition: 0.2s;
   transform: scale(1.01);
-  box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.35);
+  background-color: #ffc64de9;
 }
-.product_image
+.details_bottom
 {
   width: 100%;
-    height: 70%;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center center;
-}
-.product_name
-{
-  width: 100%;
-    height: 18%;
-    padding-top: 6%;
-    font-size: 96%;
-    overflow: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 550;
-    color: rgb(57 162 211);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-.product_price
-{
-  width: 100%;
-    height: 7%;
-    font-size: 97%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 550;
-    color: #109b5a;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+  height: 70%;
+  margin-top:6%;
+  padding-bottom: 2%;
+  align-items: flex-start;
 }
 </style>
     
@@ -461,41 +444,83 @@ justify-content: flex-start;
     }
     ?>
     </form>
-    <form action="" method='POST'>
   </div>
-  <div class="products_list">
-  <!--<div class="product_card_outer"><div class="product_image" style="background-image: url('./product_images/41Qhm1NWI2L.jpg');"></div>
-<div class="product_name">text</div>
-<div class="product_price">price</div>-->
 <?php
-if($search != null)
-{
-    //$search = $_SESSION['search'];
-    //search from appliance name,appliance description
-    //$sql2="SELECT * FROM tbl_appliance WHERE Appliance_Name LIKE '%$search%' UNION SELECT * FROM tbl_appliance WHERE Appliance_Description LIKE '%$search%'";
+    //echo $_SESSION['product_detail_id'];?>
 
-    
-    $sql2="SELECT * FROM tbl_appliance WHERE Appliance_ID IN (SELECT Appliance_ID FROM tbl_appliance WHERE Appliance_Name LIKE '%$search%' UNION SELECT Appliance_ID FROM tbl_appliance WHERE Brand_ID IN (SELECT Brand_ID FROM tbl_brand WHERE Brand_Name LIKE '%$search%') UNION SELECT Appliance_ID FROM tbl_appliance WHERE Type_ID IN (SELECT Type_ID FROM tbl_type WHERE Type_Name LIKE '%$search%' UNION SELECT Type_ID FROM tbl_type WHERE Cat_ID IN (SELECT Cat_ID FROM tbl_category WHERE Cat_Name LIKE '%$search%')))";
-    $result2 = mysqli_query($conn,$sql2);
-    while($row2 = mysqli_fetch_assoc($result2))
-    {
-      //fetching brand name
-      $brand_id = $row2['Brand_ID'];
-      $sql_brandname = "SELECT Brand_Name FROM tbl_brand WHERE Brand_ID = '$brand_id'";
-      $result_brandname = mysqli_query($conn,$sql_brandname);
-      $row_brandname = mysqli_fetch_assoc($result_brandname);
-      $brandname = $row_brandname['Brand_Name'];
-      $productid = $row2['Appliance_ID'];
-      $productname = $row2['Appliance_Name'];
-      $productprice = $row2['Appliance_Profit_Percentage'];
-      $productimage = $row2['Appliance_Image1'];
-      echo "<button class='product_card_button' name='select_product' value='" . $productid . "'><div class='product_card_outer'><div class='product_image' style='background-image: url($productimage);'></div>";
-      echo "<div class='product_name'>$brandname $productname</div>";
-      $sql_profit_percent="SELECT * FROM tbl_appliance WHERE Appliance_ID = '$productid'";
-      $result_profit_percent = mysqli_query($conn,$sql_profit_percent);
-      $row_profit_percent = mysqli_fetch_assoc($result_profit_percent);
-      $profit_percent = $row_profit_percent['Appliance_Profit_Percentage'];
-      $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid'";
+<div class="product_outer">
+
+<?php
+$sql = "SELECT * FROM tbl_appliance WHERE Appliance_ID = '$product_detail_id'";
+$result = mysqli_query($conn,$sql);
+//Appliance_ID 	Appliance_Name 	Stock 	Type_ID 	Brand_ID 	Appliance_Description 	Appliance_Image1 	Appliance_Profit_Percentage
+while($row = mysqli_fetch_assoc($result))
+{
+  $appliance_name = $row['Appliance_Name'];
+  //$appliance_stock = $row['Stock'];
+  $appliance_type_id = $row['Type_ID'];
+  $appliance_brand_id = $row['Brand_ID'];
+  $appliance_description = $row['Appliance_Description'];
+  $appliance_image1 = $row['Appliance_Image1'];
+  $appliance_profit_percentage = $row['Appliance_Profit_Percentage'];
+}
+echo "<div class='image_outer' style='background-image: url($appliance_image1);'>";
+echo '</div>';
+?>
+<div class="product_details">
+<?php
+//select stock from tbl_purchase master where appliance_id = $product_detail_id
+$sql = "SELECT Quantity FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id'";
+$result = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($result))
+{
+  $appliance_stock = $row['Quantity'];
+}
+
+
+
+
+//select Brand_Name from tbl_brand where Brand_ID = $appliance_brand_id
+$sql = "SELECT Brand_Name FROM tbl_brand WHERE Brand_ID = '$appliance_brand_id'";
+$result = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($result))
+{
+  $appliance_brand_name = $row['Brand_Name'];
+}
+//select Type_Name from tbl_type where Type_ID = $appliance_type_id
+$sql = "SELECT Type_Name FROM tbl_type WHERE Type_ID = '$appliance_type_id'";
+$result = mysqli_query($conn, $sql);
+
+while ($row = mysqli_fetch_assoc($result)) {
+    $appliance_type_name = $row['Type_Name'];
+
+    // Check if the string is not empty and has at least one character
+    if (!empty($appliance_type_name)) {
+        // Remove the last character
+        $appliance_type_name = substr($appliance_type_name, 0, -1);
+    }
+
+    // Now $appliance_type_name contains the modified string without the last character
+}
+
+
+
+
+
+
+
+echo "<h3>$appliance_brand_name $appliance_name $appliance_type_name</h1>";
+//select Brand_Logo from tbl_brand where Brand_ID = $appliance_brand_id
+$sql = "SELECT Brand_Logo FROM tbl_brand WHERE Brand_ID = '$appliance_brand_id'";
+$result = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($result))
+{
+  $appliance_brand_logo = $row['Brand_Logo'];
+}
+echo "<div class='brand_image' style='background-image: url($appliance_brand_logo);'></div>";
+//calculate price
+//echo "<h5>Profit Percentage: $appliance_profit_percentage</h5>";
+$sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id'";
       $result_cost_price = mysqli_query($conn,$sql_cost_price);
       $row_cost_price = mysqli_fetch_assoc($result_cost_price);
       if($row_cost_price == null)
@@ -507,91 +532,41 @@ if($search != null)
       {
         $cost_price = $row_cost_price['Cost_Per_Piece'];
         $cost_price = $row_cost_price['Cost_Per_Piece'];
-      $price = $cost_price + ($cost_price * $profit_percent)/100;
+      $price = $cost_price + ($cost_price * $appliance_profit_percentage)/100;
+      
       }
       
       if($price==null)
       {
-        echo "<div class='product_price'>OUT OF STOCK</div>";
+        echo "<div class='product_price' style='color:red;'>OUT OF STOCK</div>";
+        echo "<div class='details_bottom'><h6>Description: $appliance_description</h6></div>";
       }
       else if($price!==null)
       {
-        echo "<div class='product_price'>₹$price</div>";
+        
+        echo "<div class='product_price'><h5 style='color:#109b5a;'>₹$price/-</h5></div>";
+        echo "<form action='' method='POST' class='cart_form'>";
+        echo "<input type='number' name='quantity' value='1' min='1' max='$appliance_stock' width: 50%; height: 100%;'>";
+        echo "<button type='submit' name='cart' class='add_to_cart_button'>ADD TO CART</button>";
+        echo "</form>";
+        echo "<h6>IN STOCK: $appliance_stock</h6>";
+        echo "<div class='details_bottom'><h6>Description: $appliance_description</h6></div>";
       }
-      echo "</div></button>";
-      $brand_id=null;
-      $type_id=null;
-    }
-    if(mysqli_num_rows($result2) == 0)
-    {
-      echo "<div style='width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 2em; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 550; color: rgb(57 162 211);'>No results found</div>";
-    }
-  }
-  if($brand_id != null)
-  {
-    $sql3="SELECT * FROM tbl_appliance WHERE Brand_ID = '$brand_id'";
-    $result3 = mysqli_query($conn,$sql3);
-    while($row3 = mysqli_fetch_assoc($result3))
-    {
-      //fetching brand name
-      $brand_id = $row3['Brand_ID'];
-      $sql_brandname = "SELECT Brand_Name FROM tbl_brand WHERE Brand_ID = '$brand_id'";
-      $result_brandname = mysqli_query($conn,$sql_brandname);
-      $row_brandname = mysqli_fetch_assoc($result_brandname);
-      $brandname = $row_brandname['Brand_Name'];
 
-      $productid = $row3['Appliance_ID'];
-      $productname = $row3['Appliance_Name'];
-      $productprice = $row3['Appliance_Profit_Percentage'];
-      $productimage = $row3['Appliance_Image1'];
-      echo "<button class='product_card_button' name='select_product' value='" . $productid . "'><div class='product_card_outer'><div class='product_image' style='background-image: url($productimage);'></div>";
-      echo "<div class='product_name'>$brandname $productname</div>";
-      echo "<div class='product_price'>₹br</div>";
-      echo "</div></button>";
-    }
-    if(mysqli_num_rows($result3) == 0)
-    {
-      echo "<div style='width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 2em; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 550; color: rgb(57 162 211);'>No results found</div>";
-    }
-  }
-  //type id list all products of type id
-  if($type_id != null)
-  {
-    $sql4="SELECT * FROM tbl_appliance WHERE Type_ID = '$type_id'";
-    $result4 = mysqli_query($conn,$sql4);
-    while($row4 = mysqli_fetch_assoc($result4))
-    {
-      //fetching brand name
-      $brand_id = $row4['Brand_ID'];
-      $sql_brandname = "SELECT Brand_Name FROM tbl_brand WHERE Brand_ID = '$brand_id'";
-      $result_brandname = mysqli_query($conn,$sql_brandname);
-      $row_brandname = mysqli_fetch_assoc($result_brandname);
-      $brandname = $row_brandname['Brand_Name'];
-
-      $productid = $row4['Appliance_ID'];
-      $productname = $row4['Appliance_Name'];
-      $productprice = $row4['Appliance_Profit_Percentage'];
-      $productimage = $row4['Appliance_Image1'];
-      echo "<button class='product_card_button' name='select_product' value='" . $productid . "'><div class='product_card_outer'><div class='product_image' style='background-image: url($productimage);'></div>";
-      echo "<div class='product_name'>$brandname $productname</div>";
-      echo "<div class='product_price'>₹typ</div>";
-      echo "</div></button>";
-    }
-    if(mysqli_num_rows($result4) == 0)
-    {
-      echo "<div style='width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 2em; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 550; color: rgb(57 162 211);'>No results found</div>";
-    }
-  }
 ?>
-</form>
-</div>
-</div>
 </div>
 
 
+
+
+
+
+</div>
 
 
 
  </div>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
   </body>
 </html>

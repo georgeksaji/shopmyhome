@@ -10,7 +10,14 @@ if(isset($_POST['submit']))
       $insert1= "INSERT INTO tbl_category(Cat_ID,Cat_Name)VALUES(generate_cat_id(),'$name')";
       mysqli_query($conn,$insert1);
       echo "<script>alert('Category added successfully!');</script>";
-      header("location: admin.php");
+      if($usertype == "AD" && $userId == "ST00001")
+      {
+        header("location: admin.php");
+      }
+      else if($usertype == "ST")
+      {
+        header("location: staff.php");
+      }
 }
 ?>
 <html>

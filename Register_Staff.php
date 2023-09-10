@@ -39,7 +39,10 @@ if(isset($_POST['submit']))
       $insert1= "INSERT INTO tbl_staff(Staff_ID,Staff_Username,Staff_Fname, Staff_Lname, Staff_Phone, Staff_Gender, Staff_Hname, Staff_Street, Staff_Dist, State_Ut, Staff_Pin, Staff_Designation, Staff_Salary)VAlUES(generate_staff_id(),'$email','$firstName','$lastName','$phoneNumber','$gender','$houseName','$street','$district','$state','$pincode','$designation','$salary')";
       mysqli_query($conn,$insert1);
       echo "<script>alert('Staff registered successfully!');</script>";
-      //header("Location: Login.php");
+      if($usertype == "AD" && $userId == "ST00001")
+      {
+        header("location: admin.php");
+      }
     }
   }
   else

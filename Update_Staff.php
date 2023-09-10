@@ -39,10 +39,7 @@ if (isset($_POST['submit']))
       mysqli_query($conn, $update1);
 
       echo "<script>alert('Staff details updated successfully!');</script>";
-      if($usertype =='AD')
-      {header('Location: admin.php');}
-      if($usertype =='ST')
-      {header('Location: staff.php');}
+      header('Location: admin.php');
       }
       else 
       {

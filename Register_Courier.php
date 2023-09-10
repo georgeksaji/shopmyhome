@@ -34,6 +34,14 @@ if(isset($_POST['submit']))
       $insert1= "INSERT INTO tbl_courier(Cour_ID,Cour_Username,Staff_ID,Cour_Name,Cour_Phone,Cour_Building_name,Cour_Street,Cour_Dist,Cour_Pin,Cour_State_ut)VALUES(generate_cour_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$pincode','$state')";
       mysqli_query($conn,$insert1);
       echo "<script>alert('Courier registered successfully!');</script>";
+      if($usertype == "AD" && $userId == "ST00001")
+      {
+        header("location: admin.php");
+      }
+      else if($usertype == "ST")
+      {
+        header("location: staff.php");
+      }
     }
   }
   else

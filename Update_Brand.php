@@ -38,7 +38,14 @@ if(isset($_POST['submit']))
   {
     unset($_SESSION['Update_ID']);
     echo "<script>alert('Brand updated successfully!');</script>";
-    header("location: admin.php");
+    if($usertype == "AD" && $userId == "ST00001")
+    {
+      header("location: admin.php");
+    }
+    else if($usertype == "ST")
+    {
+      header("location: staff.php");
+    }
   }
 
 }

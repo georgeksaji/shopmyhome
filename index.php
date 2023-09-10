@@ -4,6 +4,7 @@ session_start();
 $_SESSION['search'] = null;
 $_SESSION['brand_id'] = null;
 $_SESSION['category_id'] = null;
+$_SESSION['type_id'] = null;
 if(isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
   $userId = $_SESSION['User_ID'];
   $usertype = $_SESSION['User_Type'];
@@ -27,6 +28,11 @@ if(isset($_POST['admin']))
 {
   header("Location: admin.php");
 }
+//staff button
+if(isset($_POST['staff']))
+{
+  header("Location: staff.php");
+}
 //logout button
 if(isset($_POST['logout']))
 {
@@ -38,19 +44,26 @@ if(isset($_POST['brand']))
 {
   $brand_id = $_POST['brand'];
   $_SESSION['brand_id'] = $brand_id;
+  $_SESSION['search'] = null;
+  $_SESSION['category_id'] = null;
+  $_SESSION['type_id'] = null;
   header("Location: list_products.php");
 }
 //all brands
-/*if(isset($_POST['all_brands']))
+if(isset($_POST['all_brands']))
 {
-  header("Location: list_products.php");
-}*/
+  echo 'all brands';
+  header("Location: list_brands.php");
+}
 //search appliance
 if(isset($_POST['submit']))
 {
   $search = $_POST['search'];
-  echo $search;
   $_SESSION['search'] = $search;
+  echo $search;
+  $_SESSION['brand_id'] = null;
+  $_SESSION['category_id'] = null;
+  $_SESSION['type_id'] = null;
   header("Location: list_products.php"); 
 }
 //category button
@@ -58,19 +71,11 @@ if(isset($_POST['category']))
 {
   $category_id = $_POST['category'];
   $_SESSION['category_id'] = $category_id;
-  header("Location: list_products.php");
+  $_SESSION['search'] = null;
+  $_SESSION['brand_id'] = null;
+  $_SESSION['type_id'] = null;
+  header("Location: list_types.php");
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 ?>
@@ -479,7 +484,7 @@ a {
                   echo '<form action="" method="POST">';
                   //profile page
                   echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
-                  echo '<td><button class="admin-box" name="admin">Staff Dashboard</button></td>';
+                  echo '<td><button class="admin-box" name="staff">Staff Dashboard</button></td>';
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
                   echo '</form>';//    
@@ -587,13 +592,13 @@ a {
             <table class="social-media">
               <tr><td colspan="5"><h5>Follow us on</h5></td></tr>
               <tr>
-            <th><img src="instagram.png" height="40px" width="40px"></th>
-            <th><img src="twitter-x.png" height="40px" width="40px"></th>
-            <th><img src="facebook.png" height="40px" width="40px"></th>
-            <th><img src="threads.png" height="40px" width="40px"></th>
-            <th><img src="gmail.png" height="40px" width="40px"></th>
+            <th><a href="https://www.instagram.com/georgeksaji/"><img src="instagram.png" height="40px" width="40px"></a></th>
+            <th><a href="https://twitter.com/georgeksaji"><img src="twitter-x.png" height="40px" width="40px"></a></th>
+            <th><a href="https://www.facebook.com/george.ksaji.39"><img src="facebook.png" height="40px" width="40px"></a></th>
+            <th><a href="https://www.threads.net/@georgeksaji"><img src="threads.png" height="40px" width="40px"></a></th>
+            <th><a href="mailto:georgeksaji14@gmail.com"><img src="gmail.png" height="40px" width="40px"></a></th>
           </tr>
-          <tr style="border-width: 24px;border-color:transparent;"><td colspan="5" style="text-align: center;font-family: fangsong;font-size: 106%;">Phone: 9495224376</td></tr>
+          <tr style="border-width: 24px;border-color:transparent;"><td colspan="5" style="text-align: center;font-family: fangsong;font-size: 106%;"><a href="tel:9495224376"><img src="phone.png" alt="Phone" height="40px" width="40px"></a></td></tr>
           <tr rowspan="3"><td colspan="5"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3929.2677553294766!2d76.35532087459478!3d9.994727373126292!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b080d5991771765%3A0x3ae2017fa74af5d7!2sRajagiri%20College%20of%20Management%20and%20Applied%20Sciences!5e0!3m2!1sen!2sin!4v1693877364945!5m2!1sen!2sin" width="100%" height="25%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
           </td></tr>  
         

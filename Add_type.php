@@ -13,7 +13,14 @@ if(isset($_POST['submit']))
       $insert1= "INSERT INTO tbl_type(Type_ID,Cat_ID,Type_Name)VALUES(generate_type_id(),'$cat_id','$name')";
       mysqli_query($conn,$insert1);
       echo "<script>alert('Product Type added successfully!');</script>";
-      header("location: admin.php");
+      if($usertype == "AD" && $userId == "ST00001")
+      {
+        header("location: admin.php");
+      }
+      else if($usertype == "ST")
+      {
+        header("location: staff.php");
+      }
   }
   else
   {

@@ -55,7 +55,98 @@ if(isset($_POST['category']))
 //cart button
 if(isset($_POST['cart']))
 {
-  $quantity = $_POST['quantity'];
+  header("Location: cart.php");
+}
+//find profit percentage
+$sql = "SELECT * FROM tbl_appliance WHERE Appliance_ID = '$product_detail_id'";
+$result = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($result))
+{
+  $appliance_profit_percentage = $row['Appliance_Profit_Percentage'];
+}
+//cart button
+if(isset($_POST['add_to_cart']))
+{
+  if($userId == null && $usertype == null) 
+  {
+    // Use JavaScript to show a confirmation dialog
+    echo '<script>';
+    echo 'if(confirm("You are not logged in. Do you want to login?"))';
+    echo '{';
+    echo '  window.location.href = "Login.php";'; // Redirect if confirmed
+    echo '}';
+    echo 'else';
+    echo '{';
+    echo '  alert("You chose not to login.");'; // Provide an alert if canceled
+    echo '}';
+    echo '</script>';
+  }
+  else if($userId != null && $usertype == 'CU') 
+  {
+    $quantity = $_POST['quantity'];
+    //calculate price
+    $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id'";
+    $result_cost_price = mysqli_query($conn,$sql_cost_price);
+    $row_cost_price = mysqli_fetch_assoc($result_cost_price);
+    if($row_cost_price == null)
+    {
+      $cost_price = null;
+      $price = null;
+    }
+    else
+    {
+      $cost_price = $row_cost_price['Cost_Per_Piece'];
+      $cost_price = $row_cost_price['Cost_Per_Piece'];
+    $price = $cost_price + ($cost_price * $appliance_profit_percentage)/100;
+    $total_price = $price * $quantity;
+      }
+    //check if cart_master exists for the customer
+// 	CM_ID 	Customer_ID 	Total_Amount 	Cart_Status
+    $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+    $result = mysqli_query($conn,$sql);
+    if(mysqli_num_rows($result) == 0)
+    {
+      //insert into cart_master
+      $sql = "INSERT INTO tbl_cart_master(CM_ID,Customer_ID,Cart_Status) VALUES (generate_cart_master_id(),'$userId','AS')";
+      $result = mysqli_query($conn,$sql);
+      //select cart_master_id from tbl_cart_master where customer_id = $userId
+      $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+      $result = mysqli_query($conn,$sql);
+      while($row = mysqli_fetch_assoc($result))
+      {
+        $cart_master_id = $row['CM_ID'];
+      }
+      //insert into cart_child
+      $sql = "INSERT INTO tbl_cart_child (CC_ID,CM_ID,Appliance_ID,Quantity,Price) VALUES (generate_cart_child_id(),'$cart_master_id','$product_detail_id','$quantity','$total_price')";
+      $result = mysqli_query($conn,$sql);
+      //update total amount in tbl_cart_master
+      //Total_Amount=Total_Amount+total_price
+      $sql = "UPDATE tbl_cart_master SET Total_Amount = Total_Amount + '$total_price' WHERE CM_ID = '$cart_master_id'";
+      $result = mysqli_query($conn,$sql);
+    }
+    else if(mysqli_num_rows($result) == 1)
+    {
+      //select cart_master_id from tbl_cart_master where customer_id = $userId
+      
+      $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+      $result = mysqli_query($conn,$sql);
+      while($row = mysqli_fetch_assoc($result))
+      {
+        $cart_master_id = $row['CM_ID'];
+      }
+      //insert into cart_child
+      $sql = "INSERT INTO tbl_cart_child (CC_ID,CM_ID,Appliance_ID,Quantity,Price) VALUES (generate_cart_child_id(),'$cart_master_id','$product_detail_id','$quantity','$total_price')";
+      $result = mysqli_query($conn,$sql);
+      $sql = "UPDATE tbl_cart_master SET Total_Amount = Total_Amount + '$total_price' WHERE CM_ID = '$cart_master_id'";
+      $result = mysqli_query($conn,$sql);
+    }
+  }
+  else if($userId != null && $usertype != 'CU') 
+  {
+    //alert you are not a customer
+    echo '<script>alert("You are not a customer. Please login as a customer to add items to cart.")</script>';
+ }
+}
   /*cart_master Table Columns:
 
 id
@@ -69,7 +160,7 @@ cart_master_id
 quantity
 price
 item_id*/
-}
+
 
 
 ?>
@@ -419,9 +510,16 @@ a {
                   //profile page, logout
                   echo '<form action="" method="POST">';
                   echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
-                  //cart button
-                  echo '<td><button type="button" class="profile-box"><img src="cart.png" height="30px" width="30px"><span style="font-size: 0.95em; color: rgb(239,51,36)" class="badge text-bg-secondary">4</span></button></td>';
-                  echo '<td><button class="logout-box" name="logout">Logout</button></td>';
+                   //cart button
+                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+                   $result = mysqli_query($conn,$sql);
+                   $row = mysqli_fetch_assoc($result);
+                   $cm_id = $row['CM_ID'];
+                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
+                   $result = mysqli_query($conn,$sql);
+                   $count = mysqli_num_rows($result);
+                   echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                    echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
                   echo '</form>';
                 }
@@ -506,9 +604,6 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 
 
-
-
-
 echo "<h3>$appliance_brand_name $appliance_name $appliance_type_name</h1>";
 //select Brand_Logo from tbl_brand where Brand_ID = $appliance_brand_id
 $sql = "SELECT Brand_Logo FROM tbl_brand WHERE Brand_ID = '$appliance_brand_id'";
@@ -547,7 +642,7 @@ $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product
         echo "<div class='product_price'><h5 style='color:#109b5a;'>₹$price/-</h5></div>";
         echo "<form action='' method='POST' class='cart_form'>";
         echo "<input type='number' name='quantity' value='1' min='1' max='$appliance_stock' width: 50%; height: 100%;'>";
-        echo "<button type='submit' name='cart' class='add_to_cart_button'>ADD TO CART</button>";
+        echo "<button type='submit' name='add_to_cart' class='add_to_cart_button'>ADD TO CART</button>";
         echo "</form>";
         echo "<h6>IN STOCK: $appliance_stock</h6>";
         echo "<div class='details_bottom'><h6>Description: $appliance_description</h6></div>";

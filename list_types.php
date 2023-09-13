@@ -24,6 +24,12 @@ if(isset($_POST['submit']))
   header("Location: list_products.php"); 
 }
 
+//cart button
+if(isset($_POST['cart']))
+{
+  echo 'cart';
+  header("Location: cart.php");
+}
 // Handle login button
 if (isset($_POST['login'])) {
     header("Location: Login.php");
@@ -411,7 +417,14 @@ a {
                   echo '<form action="" method="POST">';
                   echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
                   //cart button
-                  echo '<td><button type="button" class="profile-box"><img src="cart.png" height="30px" width="30px"><span style="font-size: 0.95em; color: rgb(239,51,36)" class="badge text-bg-secondary">4</span></button></td>';
+                  $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+                  $result = mysqli_query($conn,$sql);
+                  $row = mysqli_fetch_assoc($result);
+                  $cm_id = $row['CM_ID'];
+                  $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
+                  $result = mysqli_query($conn,$sql);
+                  $count = mysqli_num_rows($result);
+                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
                   echo '</form>';

@@ -1,6 +1,12 @@
 <?php
 include ("connection.php");
 session_start();
+$_SESSION['search'] = null;
+$_SESSION['brand_id'] = null;
+$_SESSION['category_id'] = null;
+$_SESSION['type_id'] = null;
+//$product_detail_id = $_SESSION['product_detail_id'];
+
 if(isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
   $userId = $_SESSION['User_ID'];
   $usertype = $_SESSION['User_Type'];
@@ -10,24 +16,12 @@ else {
   $usertype = null;
 }
 
-if(isset($_POST['brand']))
-{
-  $brand_id = $_POST['brand'];
-  echo $brand_id;
-  $_SESSION['brand_id'] = $brand_id;
-  header("Location: list_products.php");
-}
-
 //search appliance
 //search appliance
 if(isset($_POST['submit']))
 {
   $search = $_POST['search'];
   $_SESSION['search'] = $search;
-  echo $search;
-  $_SESSION['brand_id'] = null;
-  $_SESSION['category_id'] = null;
-  $_SESSION['type_id'] = null;
   header("Location: list_products.php"); 
 }
 //login button
@@ -51,21 +45,33 @@ if(isset($_POST['logout']))
   session_destroy();
   header("Location: index.php");
 }
-//cart button
-if(isset($_POST['cart']))
-{
-  echo 'cart';
-  header("Location: cart.php");
-}
 //category button
 if(isset($_POST['category']))
 {
   $category_id = $_POST['category'];
   $_SESSION['category_id'] = $category_id;
-  unset($_SESSION['search']);
-  unset($_SESSION['brand_id']);
-  header("Location: list_products.php");
+  header("Location: list_types.php");
 }
+//cart button
+if(isset($_POST['cart']))
+{
+  $quantity = $_POST['quantity'];
+  header("Location: cart.php");
+  /*cart_master Table Columns:
+
+id
+customer_id
+cart_status
+total_amount
+cart_child Table Columns:
+
+id
+cart_master_id
+quantity
+price
+item_id*/
+}
+
 
 ?>
 
@@ -80,7 +86,7 @@ if(isset($_POST['category']))
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-   
+    
   <script>
 var jsMessage1 = <?php echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
 var jsMessage2 = <?php echo json_encode($usertype); ?>;
@@ -98,7 +104,6 @@ alert(jsMessage2);
   padding: 0%;
   margin: 0%;
   background-color: rgba(255, 255, 255, 0.9);
-  overflow-x: hidden;
 
 }
 .home-outer {
@@ -117,7 +122,7 @@ alert(jsMessage2);
 
 .navigation-logo {
   background-image: url(Picture3.png);
-    background-size: cover;
+    background-size: contain;
     margin-inline-start: 2vh;
     height: 100%;
     width: 33vh;
@@ -169,8 +174,8 @@ background-color:rgb(6, 28, 100);
 .navigation-item {
   
     height: 100%;
-    width: 35%;
-    padding-right: 2%;
+    width: 80%;
+    padding-right: 4%;
 }
 .action-table {
   width: 100%;
@@ -217,8 +222,6 @@ background-color:rgb(6, 28, 100);
 .action table .btn:hover {
     background-color: rgb(256,256,256);
 }
-
-
 .action-table td
 {
   width:auto;
@@ -230,126 +233,50 @@ background-color:rgb(6, 28, 100);
 a {
   text-decoration: none;
 }
-
-.category-navigation {
+.content-section {
+  width: 100%;
+  min-height: 90vh;
   display: flex;
-  background-color:rgb(120, 181, 225);
-  justify-content: center;
   align-items: center;
 }
-
-.category-name
+.items-outer
 {
-  font-size: small;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color:rgb(120, 181, 225);
-  font-weight: 550;
-  border-style:none;
-  width: fit-content;
-  padding-left: 10px;
-  padding-right: 10px;
-  height: 45px;
-  display: flex;
-  color: rgb(256,256,256);
-  justify-content: center;
-  align-items: center;
-  transition: 0.5s;
+    width: 50%;
+    margin-inline-start: 2%;
+    margin-block-start: 2%;
 }
-
-.category-name:hover{
-  background-color:rgba(255, 255, 255, 0.166);
-  color: rgb(0,0,0);
-  border-bottom-width:3px;
-  border-left-width: 0px;
-  border-right-width: 0px;
-  border-top-width: 0px;
-  border-style:solid;
-  border-color:rgb(255, 255, 255);
-  padding-left: 13px;
-  padding-right: 13px;
-}
-
-.carousel-item
-{
-  transition: 0.6s;
-}
-
-.carousel-control-next-icon:hover,
-.carousel-control-prev-icon:hover
-{
-  transition: 0.5s;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 100%;
-
-}
-.products_list
+.each-item
 {
     width: 100%;
-    /* height: initial; */
-    display: table-caption;
-    /* justify-content: center; */
-    padding-bottom: 1.3%;
-    display: flex;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    /* padding: 20px; */
-    height: auto;
+    table-layout:fixed;
+    background-color: rgb(25, 2, 25);
+    border-collapse: collapse;
 }
-.product_card_outer
+.each-item tr
 {
-  width: 17.35%;
-    height: 42vh;
-    display: flex;
-    margin-top: 1.3%;
-    margin-inline: 1.3%;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    background-color: white;
+  
+    color: rgb(0, 0, 0);
 }
-.product_card_outer:hover
+.each-item tr td
 {
-  transition: 0.2s;
-  transform: scale(1.01);
-  box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.35);
-}
-.product_image
-{
-  width: 100%;
-    height: 70%;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center center;
-    border-style: none;
-    background-color: transparent;
-}
-.product_name
-{
-  width: 100%;
-    height: 18%;
-    padding-top: 6%;
-    font-size: 96%;
-    overflow: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 550;
-    color: rgb(57 162 211);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  background-color: rgb(255, 255, 255);
+    padding: 1%;
     text-align: center;
 }
-.product_price
-{
-  width: 100%;
-    height: 7%;
-    font-size: 97%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 550;
-    color: #109b5a;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+.form_button input[type=number]{
+  width: 35%;
+  text-align: center;
+  border: none;
+
+}
+.form_button button{
+  width: 83%;
+  height: 20%;
+  text-align: center;
+  border: none;
+  border-radius: 5px;
+  background-color: rgb(6, 28, 100);
+  color: white;
 }
 </style>
     
@@ -359,16 +286,7 @@ a {
  
   <div class="top-navigation">
         <a href="index.php"><div class="navigation-logo"></div></a>
-        <!-- <div class="search-bar"><input type="search" placeholder="Search for home appliances"></div> -->
-        <nav class="navbar bg-body-tertiary">
-          <div class="container-fluid">
-            <form class="d-flex" role="search" method="POST">
-              <input class="form-control me-2" type="search" placeholder="Search  for appliances" aria-label="Search" name="search">
-              <button class="btn btn-outline-success" type="submit" name="submit">Search</button>
-            </form>
-          </div>
-        </nav>
-            <div class="navigation-item">
+           <div class="navigation-item">
             <table class="action-table">
               <?php
               // if userid and usertype null, display login and signup
@@ -418,49 +336,45 @@ a {
                 ?>
               </table>
             </div> 
-  </div> 
-  <div class="category-navigation">
-    <!--<button class="category-name">TV & Audio</button>-->
-   <form action="" method="POST">
-    <?php
-    //category names
-    $sql = "SELECT * FROM tbl_category";
-    $result = mysqli_query($conn,$sql);
-    while($row = mysqli_fetch_assoc($result))
-    {
-      $categoryname = $row['Cat_Name'];
-      $categoryid = $row['Cat_ID'];
-      echo "<button class='category-name' name='category' value='$categoryid' style='display: inline-block;'>$categoryname</button>";
-    }
-    ?>
-    </form>
-  </div>
-  <form action="" method="POST">
-  <div class="products_list">
- <?php
-echo '<form action="" method="POST">';
-//list all brands
-$sql = "SELECT * FROM tbl_brand";
-$result = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($result))
-{
-  $brandname = $row['Brand_Name'];
-  $brandid = $row['Brand_ID'];
-  $bransimage = $row['Brand_Logo'];
-    echo "<div class='product_card_outer'><button class='product_image' style='background-image: url($bransimage);' name='brand' value='$brandid'></button>";
-    echo "<div class='product_name'>$brandname</div>";
-    echo "</div>";
-}
-?>
-</form>
-</div>
-</div>
-</div>
+            </div>
+            <div class="content-section">
+                <div class="items-outer">
+                    <table class="each-item">
+                      <?php
+                      $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
+                      $result = mysqli_query($conn,$sql);
+                      $count = mysqli_num_rows($result);
+                      if($count > 0)
+                      {
+                        while($row = mysqli_fetch_assoc($result))
+                        {
+                          $item_id = $row['Appliance_ID'];
+                          $quantity = $row['Quantity'];
+                          $price = $row['Price'];
+                          $sql = "SELECT * FROM tbl_appliance WHERE Appliance_ID = '$item_id'";
+                          $result1 = mysqli_query($conn,$sql);
+                          $row1 = mysqli_fetch_assoc($result1);
+                          $product_name = $row1['Appliance_Name'];
+                          $product_image = $row1['Appliance_Image1'];
+                          echo "<tr>";
+                          echo "<td><img src='$product_image' height='100vh'></td>";
+                          echo "<td>$product_name</td>";
+                          
+                          //echo "<td>$quantity</td>";
+                          //$quantity increase and decrease button
+                          echo "<td><form action='cart.php' method='POST' class='form_button'><input type='number' name='quantity' value='$quantity' min='1' max='999'><button type='submit' name='update_quantity' value='$item_id'>Update Quantity</button></form></td>";
+                          echo "<td>₹$price</td>";
+                          echo "</tr>";
+                        }
+                      }
+                        ?>
+                    </table>
+                </div>
 
 
+            </div>
+            
 
-
-
- </div>
-  </body>
-</html>
+            </div>
+            </body>
+            </html>

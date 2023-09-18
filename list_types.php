@@ -419,12 +419,20 @@ a {
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
                   $result = mysqli_query($conn,$sql);
+                  if(mysqli_num_rows($result) > 0)
+                  {
                   $row = mysqli_fetch_assoc($result);
                   $cm_id = $row['CM_ID'];
                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                   $result = mysqli_query($conn,$sql);
                   $count = mysqli_num_rows($result);
                   echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  }
+                  else if(mysqli_num_rows($result) == 0)
+                  {
+                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
+                  
+                  }
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
                   echo '</form>';

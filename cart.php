@@ -241,7 +241,7 @@ a {
 }
 .items-outer
 {
-    width: 50%;
+    width: 60%;
     margin-inline-start: 2%;
     margin-block-start: 2%;
 }
@@ -270,13 +270,27 @@ a {
 
 }
 .form_button button{
-  width: 83%;
+  width: 45%;
   height: 20%;
   text-align: center;
   border: none;
   border-radius: 5px;
   background-color: rgb(6, 28, 100);
   color: white;
+}
+.cart-summary-outer
+{
+  width: 40%;
+    margin-inline-start: 2%;
+    margin-block-start: 2%;
+
+}
+.cart-summary
+{
+  width:100%;
+  height: 30%;
+  background-color: red;
+
 }
 </style>
     
@@ -320,15 +334,23 @@ a {
                   //profile page, logout
                   echo '<form action="" method="POST">';
                   echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
-                   //cart button
-                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
-                   $result = mysqli_query($conn,$sql);
-                   $row = mysqli_fetch_assoc($result);
-                   $cm_id = $row['CM_ID'];
-                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
-                   $result = mysqli_query($conn,$sql);
-                   $count = mysqli_num_rows($result);
-                   echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  //cart button
+                  $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+                  $result = mysqli_query($conn,$sql);
+                  if(mysqli_num_rows($result) > 0)
+                  {
+                  $row = mysqli_fetch_assoc($result);
+                  $cm_id = $row['CM_ID'];
+                  $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
+                  $result = mysqli_query($conn,$sql);
+                  $count = mysqli_num_rows($result);
+                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  }
+                  else if(mysqli_num_rows($result) == 0)
+                  {
+                    $cm_id = null;
+                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
+                  }
                    echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
                   echo '</form>';
@@ -341,6 +363,8 @@ a {
                 <div class="items-outer">
                     <table class="each-item">
                       <?php
+                      if($cm_id != null)
+                      {
                       $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                       $result = mysqli_query($conn,$sql);
                       $count = mysqli_num_rows($result);
@@ -362,14 +386,22 @@ a {
                           
                           //echo "<td>$quantity</td>";
                           //$quantity increase and decrease button
-                          echo "<td><form action='cart.php' method='POST' class='form_button'><input type='number' name='quantity' value='$quantity' min='1' max='999'><button type='submit' name='update_quantity' value='$item_id'>Update Quantity</button></form></td>";
+                          echo "<td><form action='cart.php' method='POST' class='form_button'><input type='number' name='quantity' value='$quantity' min='1' max='999'><button type='submit' name='update_quantity' value='$item_id'>Update</button></form></td>";
                           echo "<td>₹$price</td>";
                           echo "</tr>";
                         }
                       }
+                    }
+                    else{
+                      echo "<tr><td colspan='4'>No items in cart</td></tr>";
+                    }
                         ?>
                     </table>
                 </div>
+                <div class="cart-summary-outer">
+                <div class="cart-summary">
+
+                </div></div>
 
 
             </div>

@@ -33,11 +33,9 @@ if(isset($_POST['submit']))
   // 	Purchase_Child_ID 	Purchase_Master_ID 	Appliance_ID 	Quantity 	Cost_Per_Piece 	Total_Cost_Price
   for($i=0;$i<$count;$i++)
   {
-    $sql = "INSERT INTO tbl_purchase_child (Purchase_Child_ID, Purchase_Master_ID, Appliance_ID, Quantity, Cost_Per_Piece, Total_Cost_Price) VALUES (generate_purchase_child_id(), '$purchase_master_id', '$selectedAppliances[$i]', '$quantity[$i]', '$price[$i]', '$total_price_of_item[$i]')";
+    $sql = "INSERT INTO tbl_purchase_child (Purchase_Child_ID, Purchase_Master_ID, Appliance_ID, Quantity, Balance_Stock, Cost_Per_Piece, Total_Cost_Price) VALUES (generate_purchase_child_id(), '$purchase_master_id', '$selectedAppliances[$i]', '$quantity[$i]','$$quantity[$i]', '$price[$i]', '$total_price_of_item[$i]')";
     $result = mysqli_query($conn, $sql);  
-    //update Stock in tbl_appliance
-    $sql = "UPDATE tbl_appliance SET Stock = Stock + '$quantity[$i]' WHERE Appliance_ID = '$selectedAppliances[$i]'";
-    $result = mysqli_query($conn, $sql);
+   
   } 
   if($result)
   {

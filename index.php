@@ -33,6 +33,11 @@ if(isset($_POST['staff']))
 {
   header("Location: staff.php");
 }
+//profile button
+if(isset($_POST['profile']))
+{
+  header("Location: profile.php");
+}
 //logout button
 if(isset($_POST['logout']))
 {
@@ -499,16 +504,24 @@ a {
                 if($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  echo '<tr><td><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
                   $result = mysqli_query($conn,$sql);
+                  if(mysqli_num_rows($result) > 0)
+                  {
                   $row = mysqli_fetch_assoc($result);
                   $cm_id = $row['CM_ID'];
                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                   $result = mysqli_query($conn,$sql);
                   $count = mysqli_num_rows($result);
                   echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  }
+                  else if(mysqli_num_rows($result) == 0)
+                  {
+                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
+                  
+                  }
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
                   echo '</form>';

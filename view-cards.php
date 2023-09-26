@@ -16,8 +16,7 @@ else {
   $usertype = null;
 }
 
-//search appliance
-//search appliance
+
 //logout button
 if(isset($_POST['logout']))
 {
@@ -30,32 +29,38 @@ if(isset($_POST['cart']))
   $quantity = $_POST['quantity'];
   header("Location: cart.php");
 }
-if(isset($_POST['update_quantity']))
+
+//iffest submit add to tbl card
+if(isset($_POST['submit']))
 {
-  $quantity = $_POST['quantity'];
-  $item_id = $_POST['update_quantity'];
-  $sql = "UPDATE tbl_cart_child SET Quantity = '$quantity' WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-  mysqli_query($conn,$sql);
-  //header("Location: cart.php");
-  //update price in cart child 
-
-    $sql_cost_price="SELECT Cost_Per_Piece FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-    
-    
-
-
-
-
-
-
-  
+  $card_type = $_POST['card-type'];
+  $card_number = $_POST['card-number'];
+  $card_holder_name = $_POST['card-holder-name'];
+  $bank_name = $_POST['bank-name'];
+  $expiry_date = $_POST['expiry-date'];
+  $cvv = $_POST['cvv'];
+// Card_ID 	Customer_ID 	Card_No 	Card_Holder_Name 	CVV 	Bank_Name 	Card_Type 	Expiry_Date 	Card_Status 	
+  $sql = "INSERT INTO tbl_card (Card_ID,Customer_ID,Card_No,Card_Holder_Name,CVV,Bank_Name,Card_Type,Expiry_Date) VALUES (generate_card_id(),'$userId','$card_number','$card_holder_name','$cvv','$bank_name','$card_type','$expiry_date')";
+  mysqli_query($conn,$sql); 	
+    echo "<script>alert('Card added successfully!');</script>";
+    header('Location: profile.php');
 }
-if(isset($_POST['remove_item']))
+//activate and deactivate card status
+if(isset($_POST['deactivate_card_status_button']))
 {
-  $item_id = $_POST['remove_item'];
-  $sql = "DELETE FROM tbl_cart_child WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-  mysqli_query($conn,$sql);
-  header("Location: cart.php");
+  $card_id = $_POST['card_id'];
+  $sql = "UPDATE tbl_card SET Card_Status = '0' WHERE Card_ID = '$card_id'";
+  mysqli_query($conn,$sql); 	
+    echo "<script>alert('Card deactivated successfully!');</script>";
+    header('Location: profile.php');
+}
+if(isset($_POST['activate_card_status_button']))
+{
+  $card_id = $_POST['card_id'];
+  $sql = "UPDATE tbl_card SET Card_Status = '1' WHERE Card_ID = '$card_id'";
+  mysqli_query($conn,$sql); 	
+    echo "<script>alert('Card activated successfully!');</script>";
+    header('Location: profile.php');
 }
 
 ?>
@@ -89,6 +94,7 @@ body {
   padding: 0%;
   margin: 0%;
   background-color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
 }
 .home-outer {
   width: 100%;
@@ -220,135 +226,116 @@ a {
 }
 .content-section {
   width: 100%;
-  min-height: 90vh;
+  height: 90vh;
   background-color: transparent;
+  display: inline-flex;
+}
+.content-section-left {
+  width: 50%;
+  height: 100%;
   display: flex;
+  justify-content: center;
   align-items: center;
 }
-.cart-left-outer
-{
-    width: 60%;
-    height: 90vh;
-    background-color: transparent;
-    display: grid;
+.card-outer
+{    
+  width: 82%;
+    height: 88%;
+    background-color: rgb(255, 255, 255);
+    border-radius: 10px;
     justify-content: center;
-    align-items: center;
+    border-radius: 10px;
 }
-.items-outer
+.card-heading
 {
     width: 100%;
-    margin-inline-start: 2%;
-  max-height: 72vh; /* Set the desired maximum height */
-  overflow-y: scroll;
+    height: 10%;
+    color:rgb(256,256,256);
+    padding-left:5%;
+    background-color: rgb(6, 28, 100);
+    border-radius: 10px 10px 0px 0px;
+    display: flex;
+    align-items: center;
 }
-
-.each-item
+.input-card-details
 {
     width: 100%;
-    table-layout:fixed;
-    background-color: rgb(25, 2, 25);
-    border-collapse: collapse;
+    height: 90%;
+    display: flow;
 }
-.each-item tr
+.card-type
 {
-  
-color: rgb(0, 0, 0);
+    width: 100%;
+    height: 20%;
+    background-color: rgb(255, 255, 255);
 }
-.each-item tr td
-{
-  background-color: rgb(255, 255, 255);
-    padding: 1%;
-    text-align: center;
-}
-.form_button input[type=number]{
-  width: 35%;
-  text-align: center;
-  border: none;
+.card-type td {
 
-}
-.form_button button{
-  width: 45%;
-  height: 20%;
   text-align: center;
-  border: none;
-  border-radius: 5px;
-  background-color: rgb(6, 28, 100);
-  color: white;
+  width: 50%;
 }
-.cart-right-outer
+.input-box
 {
-  padding-inline-start: 2%;
-    width: 40%;
-    height: 90vh;
-    background-color: transparent;
-    display: inline-grid;
-    align-items: center;
-}
-.cart-summary,.cart-summary-bottom,.cart-address,.cart-card
-{
-    width: 98%;
-    height: 28.5vh;
-    background-color: rgb(256,256,256);
-}
-.cart-summary-table
-{
-  width: 34vh;
-  height: 100%;
-  border-collapse: collapse;
-}
-.cart-summary-table tr td
-{
-  padding: 1%;
-  text-align: center;
-}
-.check-out-button
-{
-  width: 80%;
-  height: 100%;
-  border-style: none;
-  background-color: #fb641b;
-  color: white;
-  font-size: large;
-  font-weight: 550;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  transition: 0.4s;
-}
-.items-top
-{ 
-  width: 100%;
-    color: white;
+    width: 100%;
+    height: 10%;
+    background-color: rgb(255, 255, 255);
+    padding-block:5%;
     display: flex;
+    justify-content: space-evenly;
     align-items: center;
-    height: 5vh;
-    background-color: #2874f0;
-    font-family: inherit;
-    font-weight: 480;
-    position: sticky;
-top: 0;
-
 }
-.address-top
+input[type=text],input[type=date],input[type=number],input[type=password],input[type=email],select
 {
-  width: 100%;
+    width: 50%;
+    height: 6vh;
+    border-radius: 5px;
+    border-style: none;
+    font-size: small;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 550;
+    color:rgb(0, 0, 0);
+    background-color: rgb(6, 28, 100,0.1);
+    transition: 0.4s;
+}
+input[type=number]
+{
+    -webkit-appearance: none; 
+    -moz-appearance: textfield;
+}
+.card-details2
+{
+    width: 100%;
+    height: 15%;
+    background-color: rgb(255, 255, 255);
+    margin: auto;
+}
+.card-details2 td
+{
+   
+  text-align: center;
+}
+.input-box button
+{
+    background-color: rgb(255,216,21,0.7);
+    border-radius: 5px;
     color: white;
-    display: flex;
-    align-items: center;
-    height: 5vh;
-    background-color: #2874f0;
-    font-family: inherit;
-    font-weight: 480;
+    width: 180px;
+    cursor: pointer;
+    margin: 20px;
+    padding: 8px 5px;
+    border: none;
+    font-size: 19px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 600;
+    width: 241px;
 }
-.address-table
-{
-  width: 100%;
-  height: max-content;
-  margin-top:5%;
-  margin-inline-start: 2%;
-  font-family:serif;
-  
+.content-section-right {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-
-
 .cards-list
 {
   width: 100%;
@@ -401,9 +388,6 @@ top: 0;
   width: -webkit-fill-available;
   margin:auto;
 }
-
-
-
 
 </style>
     
@@ -472,120 +456,90 @@ top: 0;
               </table>
             </div> 
             </div>
-            <div class="content-section">
-
-            <div class="cart-left-outer">
-                <div class="items-outer">
-                <div class="items-top" style="padding-inline-start:2%;">CART ITEMS</div>
-                    <table class="each-item">
-                      <?php
-                      if($cm_id != null)
-                      {
-                      $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
-                      $result = mysqli_query($conn,$sql);
-                      $count = mysqli_num_rows($result);
-                      if($count > 0)
-                      {
-                        while($row = mysqli_fetch_assoc($result))
-                        {
-                          $item_id = $row['Appliance_ID'];
-                          $quantity = $row['Quantity'];
-                          $price = $row['Price'];
-                          $sql = "SELECT * FROM tbl_appliance WHERE Appliance_ID = '$item_id'";
-                          $result1 = mysqli_query($conn,$sql);
-                          $row1 = mysqli_fetch_assoc($result1);
-                          $product_name = $row1['Appliance_Name'];
-                          $product_image = $row1['Appliance_Image1'];
-                          echo "<tr>";
-                          echo "<td><img src='$product_image' height='100vh'></td>";
-                          echo "<td>$product_name</td>";
-                          
-                          //$sql_quantity
-                          $select_quantity="SELECT Balance_Stock FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-                          $result_quantity = mysqli_query($conn,$select_quantity);
-                          $row_quantity = mysqli_fetch_assoc($result_quantity);
-                          $available_quantity = $row_quantity['Balance_Stock'];
-                          //echo "<td>Available: ".$row_quantity['Balance_Stock']."</td>";
-
-                          //$quantity increase and decrease button
-                          echo "<td><form method='POST' class='form_button'><input type='number' name='quantity' value='$quantity' min='1' max='$available_quantity'><button type='submit' name='update_quantity' value='$item_id'>Update</button></td>";
-                          echo "<td>₹ $price</td>";
-                          echo '<td><button name="remove_item" style="background-color:transparent;border-style:none"><img src="remove.png" height="30px"></button></td>';
-                          echo "</form></tr>";
-                        }
-                      }
-                    }
-                    else{
-                      echo "<tr><td colspan='4'>No items in cart</td></tr>";
-                    }
-                        ?>
-                    </table>
-                </div>
-                </div>
-
-              <div class="cart-right-outer">
-              <div class="cart-address">
-                <div class="address-top" style="padding-inline-start:2%;">DELIVERY ADDRESS</div>
-                <table class="address-table">
-                    <?php
-                    if($userId != null)
-                    {
-                      $sql = "SELECT * FROM tbl_customer WHERE Cust_ID = '$userId'";
-                      $result = mysqli_query($conn,$sql);
-                      $row = mysqli_fetch_assoc($result);
-                      //C_Username 	Cust_Fname 	Cust_Lname 	Cust_Phone 	Cust_Gender 	Cust_Hname 	Cust_Street 	Cust_Dist 	State_Ut 	Cust_Pin
-                      $name = $row['Cust_Fname']." ".$row['Cust_Lname'];
-                      $phone = $row['Cust_Phone'];
-                      $address = $row['Cust_Hname'].", ".$row['Cust_Street'].", ".$row['Cust_Dist'].", ".$row['State_Ut'].", ".$row['Cust_Pin'];
-                      echo "<tr><td>$name</td></tr>";
-                      echo "<tr><td>$phone</td></tr>";
-                      echo "<tr><td>$address</td></tr>";
-                      
-                    }
-                    else{
-                      echo "<td colspan='6'>No address found</td>";
-                    }
-                    ?>
-                 
-
-                  </table>
-               
-               </div>
-
-               <!--card details-->
-               <div class="cart-card">
-               <div class="address-top" style="padding-inline-start:2%;">CARD DETAILS</div>
-               
+                <div class="content-section"> 
+                  <div class="content-section-left">
 
 
-               <div class="cards-list">
+
+                  <form method="POST" style="height:100%;width:100%;display:flex;justify-content:center;align-items:center;">
+                  <div class="card-outer">
+                    <div class="card-heading">Add new card</div>
+                      <div class="input-card-details">
+                            <table class="card-type">
+                            <tr>                        
+                            <td><input type="radio" name="card-type" value="D" required> Debit Card</td>
+                            <td><input type="radio" name="card-type" value="C" required> Credit Card</td>
+                            </tr>             
+                            </table>
+                            <div class="input-box">
+                                <label for="card-number">Card Number</label>
+                                <input type="text" name="card-number" placeholder="Enter card number" pattern="[0-9]{16}" required>
+                            </div>
+                            <div class="input-box">
+                                <label for="card-holder-name">Card Holder Name</label>
+                                <input style="margin-left: -6%;" type="text" name="card-holder-name"  min="1" max="20" placeholder="Enter card holder name" required>
+                            </div>
+                            <div class="input-box">
+                                <label for="bank-name">Bank Name</label>
+                                <input style="margin-left: 2%;" type="text" name="bank-name"  min="1" max="25" placeholder="Enter bank name" required>
+                            </div>
+                            <table class="card-details2">
+                                <tr>
+                                    <td><label for="expiry-date">Expiry Date</label>
+                                    <input type="date" name="expiry-date"  placeholder="MM/YY" min="<?php echo date('Y-m-d'); ?>" required></td>
+
+                                    <td><label for="cvv">CVV</label>  
+                                    <input type="number" name="cvv" min="100" max="9999" placeholder="Enter CVV" required></td>
+                                </tr>
+                            </table>
+                            <div class="input-box" style="border-bottom-left-radius: 10px;border-bottom-right-radius: 10px;">
+                            <button type="submit" name="submit" style="border-radius: 10px;">Add Card</button>
+                            </div>
+                        </div>
+                    </div>
+                  </form>
+                  </div>
+
+                <div class="content-section-right">
+
+                  <form method="POST" style="height:100%;width:100%;display:flex;justify-content:center;align-items:center;">
+                    <div class="card-outer" style="width:90%;">
+                      <div class="card-heading">Added Cards</div>
+                        <div class="cards-list">
                         <table class="cards-outer">
-                         
+                         <tr>
+                          <th>Card Number</th>
+                          <th>Card Holder</th>
+                          <th>Bank</th>
+                          <th>Expiry Date</th>
+                          <th>Action</th>
+                         </tr> 
 
                          <?php
-                          $query = "SELECT * FROM tbl_card WHERE Customer_ID = '$userId' AND Card_Status = 1";
-                          $result = $conn->query($query); 
+                          $query = "SELECT * FROM tbl_card WHERE Customer_ID = '$userId'";
+                          $result = $conn->query($query);
 
                           if ($result->num_rows > 0) {
-                            echo "<tr>";
-                            echo "<th></th>";
-                            echo "<th>Card Number</th>";
-                            echo "<th>Bank Name</th>";
-                            echo "</tr>";
                             while ($row = $result->fetch_assoc()) {
                                 echo "<tr>";
-                                echo "<td><input type='radio' name='card' value='" . $row['Card_No'] . "'></td>";
                                 echo "<td>" . $row['Card_No'] . "</td>";
+                                echo "<td>" . $row['Card_Holder_Name'] . "</td>";
                                 echo "<td>" . $row['Bank_Name'] . "</td>";
-                                
-
-                                echo "<tr>";
-                            }        
-
+                                echo "<td>" . $row['Expiry_Date'] . "</td>";
+                                if($row['Card_Status'] == 1)
+                                {
+                                  echo "<td><form  method='POST'><input type='hidden' name='card_id' value='". $row['Card_ID'] ."'><button type='submit' class='deactivate_button' name='deactivate_card_status_button'>DEACTIVATE</button></form></td>";
+                                }
+                                if($row['Card_Status'] == 0)
+                                {
+                                  echo "<td><form  method='POST'><input type='hidden' name='card_id' value='". $row['Card_ID'] ."'><button type='submit' class='activate_button' name='activate_card_status_button'>ACTIVATE</button></form></td>";
+                                }
+                                echo "</tr>";
+                            }                         
                             }
                           else if ($result->num_rows == 0) {
                             echo "<tr>";
-                            echo "<td colspan='2' style='text-align:center;'>No cards added yet!</td>";
+                            echo "<td colspan='5' style='text-align:center;'>No cards added yet!</td>";
                             echo "</tr>";
                           }
                          ?>
@@ -594,44 +548,27 @@ top: 0;
                          </table>
               </div>
 
+                    </div>
+                  </form>
+              </div>
+
+
+                  </div>
 
 
 
-
-
-
-
-
-               </div>
-               <!--cart summary-->
-              <div class="cart-summary-bottom" style="height:18vh;background-color:transparent;display: grid;text-align: center;justify-content: center;align-items: center;">
-                <div class="cart-summary-body" style="height: 64%;width: max-content;">
-                  <table class="cart-summary-table">
-                    <tr>
-                      <?php
-                      if ($cm_id != null) {
-                          $sql = "SELECT Total_Amount FROM tbl_cart_master WHERE CM_ID = '$cm_id'";
-                          $result = mysqli_query($conn, $sql);
-                          $row = mysqli_fetch_assoc($result);
-                          $total_amount = $row['Total_Amount'];
-                      } else {
-                          $total_amount = 0;
-                      }
-                      echo "<td><h5 style='color:red;'>₹ $total_amount</h5></td>";
-                      ?>
-                    </tr>
-                  </table>
                 </div>
-                <div class="cart-summary-footer" style="height:7vh">
-                <button class="check-out-button">Checkout</button>
-                
-              </div>
-              </div>
-              
-              
 
 
-            </div>
+
+
+
+
+                        
+              </div>
+                </div>
+
             </div>
             </body>
             </html>
+

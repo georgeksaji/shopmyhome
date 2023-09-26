@@ -24,7 +24,7 @@ if(isset($_POST['submit']))
   } 
   else
   {
-    $insert1= "INSERT INTO tbl_vendor(Vendor_ID,Vendor_Username,Staff_Id,Vendor_Name,Vendor_Phno,Vendor_Hname,Vendor_Street,Vendor_Dist,State_Ut,Vendor_Pin)VAlUES(generate_vendor_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$state','$pincode')";
+    $insert1= "INSERT INTO tbl_vendor(Vendor_ID,Vendor_Email,Staff_Id,Vendor_Name,Vendor_Phno,Vendor_Hname,Vendor_Street,Vendor_Dist,State_Ut,Vendor_Pin)VAlUES(generate_vendor_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$state','$pincode')";
     mysqli_query($conn,$insert1);
     echo "<script>alert('Vendor registered successfully!');</script>";
     if($usertype == "AD" && $userId == "ST00001")

@@ -50,7 +50,7 @@ if(isset($_POST['view-cards']))
 <!doctype html>
 <html lang="en">
   <head>
-    <title>shopmyhome</title>
+    <title>Order History</title>
     <link rel="icon" type="image/x-icon" href="favicon.png">
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -75,11 +75,13 @@ alert(jsMessage2);
     body {
   padding: 0%;
   margin: 0%;
+  overflow: hidden;
 
 }
 .home-outer {
   width: 100%;
   height: 100vh;
+  overflow: hidden;
 }
 
 .top-navigation {
@@ -206,89 +208,121 @@ a {
 }
 .content-section {
   width: 100%;
-  height: 90vh;
-  background-color: transparent;
+  padding-top:1%;
+  max-height: 90vh;
+    height: 90vh;
+  background-color: rgb(211 247 255);
+  display: inline-block;
+  overflow-y: scroll;
+}
+.order-box-outer {
+  width: 80%;
+    height:max-content;
+    margin:auto;
+    background-color: rgba(255, 25, 255, 0.1);
+    border-style: solid;
+    border-width: 1px;
+    display:block;
+    margin-block:1.9%;
+}
+.order-box-top {
+  width: 100%;
+  height: 10%;
+  padding-block:1%;
+  background-color: red;
+  display: flex;
+  justify-content: space-evenly;
+}
+.order-box-center {
+  width: 100%;
+  height: 60%;
+  background-color: blue;
+  display: grid;
+}
+.order-box-bottom {
+  width: 100%;
+  height: 20%;
+  background-color: green;
+  display: grid;
+}
+.order-date {
+  width: 20%;
+  height: 100%;
+  background-color: yellow;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.order-total {
+  width: 20%;
+  height: 100%;
+  background-color: orange;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.order-id {
+  width: 20%;
+  height: 100%;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.order-reciept {
+  width: 20%;
+  height: 100%;
+  background-color: violet;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.order-status {
+  width: 100%;
+  height: 10vh;
+  background-color: pink;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.cards-outer
-{
+.order-items {
   width: 100%;
-  height: 100%;
-
+  height: 13vh;
+  background-color: gold;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
   align-items: center;
-}
-.card-button
-{
-  margin:2%;
-  width:20%;
-  height:20%;
-  background-color: transparent;
-  border-style: none;
-}
-.card
-{
-  width: 100%;
-  height: 100%;
-  background-color: rgb(256,256,256);
-  margin: 2%;
-  border-style:solid;
-  border-width: 1px;
-  border-color: grey;
-  display: contents;
-  border-radius: 10px;
-  transition: 0.5s;
-}
-.card-inner-left1,.card-inner-left2,.card-inner-left3,.card-inner-left4
-
-{
-  width: 30%;
-  height: 100%;
-  float: left;
-  background-color: rgb(0,0,0);
-  border-style:solid;
-  border-width: 1px;
-  border-right: none;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  border-radius: 10px 0px 0px 10px;
-}
-.card-inner-right
-
-{
-  width: 70%;
-  height: 100%;
-  float:right;
-  color:white;
-  background-color: black;
-  border-style:solid;
-  border-width: 0px;
-  border-left: none;
-  border-radius: 0px 10px 10px 0px;
-  display:flex;
   justify-content: center;
-  align-items: center;
- 
 }
-.card-inner-left1
-{
-background-image: url('orders.png');
-}
-.card-inner-left2
-{
 
-  background-image: url('lock.png');
-}
-.card-inner-left3
-{
 
-  background-image: url('card.png');
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </style>
     
@@ -358,19 +392,39 @@ background-image: url('orders.png');
             </div> 
             </div>
             <div class="content-section">
-                  <div class="cards-outer">
-                  <form method="POST" style="height:100%;width:100%;display:flex;justify-content:center;align-items:center">
-                  <button class="card-button" name="password-edit"><div class="card"><div class="card-inner-left2"></div><div class="card-inner-right">LOGIN & SECURITY</div></div></button>
-                  <?php
-                  if($usertype == 'CU') {
-                  echo '<button class="card-button" name="view-orders"><div class="card"><div class="card-inner-left1"></div><div class="card-inner-right">ORDERS</div></div></button>';
-                  echo '<button class="card-button" name="view-cards"><div class="card"><div class="card-inner-left3"></div><div class="card-inner-right">CARDS</div></div></button>';
-                  }
-                 ?>  
-                </form>
-                  </div>
-                   
 
+                 <div class="order-box-outer">
+                  <div class="order-box-top">
+                  <div class="order-date">12-09-23</div>
+                  <div class="order-total">₹34567</div>
+                  <div class="order-id">PY12345</div>
+                  <div class="order-reciept">Invoice</div>
+                  </div>
+                  <div class="order-box-center">
+                    <div class="order-status">Delivered</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item 1</div>
+                    <div class="order-items">Item final</div>
+                  </div>
+              </div>
+
+              
+               
+
+
+
+
+
+              </div>
                    </div>
               </body>
               </html>

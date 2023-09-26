@@ -10,6 +10,15 @@ foreach($selectedAppliances as $selectedAppliance)
 {
   echo $selectedAppliance;
 }
+/*find profit percentage
+$sql = "SELECT * FROM tbl_appliance WHERE Appliance_ID = '$product_detail_id'";
+$result = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($result))
+{
+  $appliance_profit_percentage = $row['Appliance_Profit_Percentage'];
+}*/
+
+
 if(isset($_POST['submit']))
 {
   $vendor = $_POST['vendor'];
@@ -20,6 +29,11 @@ if(isset($_POST['submit']))
   {
     echo $total_price_of_item[$i]=$quantity[$i] * $price[$i];
   }
+
+
+  //////////
+
+
   $total_price = array_sum($total_price_of_item);
   // 	Purchase_Master_ID 	Vendor_ID 	Staff_ID 	Total_Amt 	Purchase_Date
   $sql = "INSERT INTO tbl_purchase_master (Purchase_Master_ID, Vendor_ID, Staff_ID, Total_Amt) VALUES (generate_purchase_master_id(), '$vendor', '$userId', '$total_price')"; 

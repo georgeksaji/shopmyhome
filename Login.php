@@ -17,43 +17,58 @@ if (isset($_POST['loginbutton'])) {
     $user_type = $row['User_Type'];
 
    if ($user_type == 'CU') {
-  $sql1 = "SELECT Cust_ID FROM tbl_customer WHERE C_Username = '$email'";
+  $sql1 = "SELECT Cust_ID,Cust_Status FROM tbl_customer WHERE C_Username = '$email'";
   $result1 = mysqli_query($conn, $sql1);
 
   if ($result1) {
     $row1 = mysqli_fetch_assoc($result1);
     $user_id = $row1['Cust_ID'];
+    $status = $row1['Cust_Status'];
+    if ($status == '0') {
+      echo "<script>alert('Your account has been suspended.');</script>";
+    } else if ($status == '1') {
     $_SESSION['User_ID'] = $user_id;
     $_SESSION['User_Type'] = 'CU';
     header('location:index.php');
     echo "<script>alert('Login successful!');</script>";
+    }
   }
 } 
 
 else if ($user_type == 'ST') {
-  $sql1 = "SELECT Staff_ID FROM tbl_staff WHERE Staff_Username = '$email'";
+  $sql1 = "SELECT Staff_ID,Staff_Status FROM tbl_staff WHERE Staff_Username = '$email'";
   $result1 = mysqli_query($conn, $sql1);
 
   if ($result1) {
     $row1 = mysqli_fetch_assoc($result1);
     $user_id = $row1['Staff_ID'];
+    $status = $row1['Staff_Status'];
+    if ($status == '0') {
+      echo "<script>alert('Your account has been suspended. Please contact the administrator.');</script>";
+    } else if ($status == '1') {
     $_SESSION['User_ID'] = $user_id;
     $_SESSION['User_Type'] = 'ST';
     header('location:index.php');
     echo "<script>alert('Login successful!');</script>";
+    }
   }
 } 
 else if ($user_type == 'CR') {
-  $sql1 = "SELECT Cour_Username FROM tbl_courier WHERE Cour_Username = '$email'";
+  $sql1 = "SELECT Cour_Username,Cour_Status FROM tbl_courier WHERE Cour_Username = '$email'";
   $result1 = mysqli_query($conn, $sql1);
   
   if ($result1) {
     $row1 = mysqli_fetch_assoc($result1);
     $user_id = $row1['Cour_Username']; 
+    $status = $row1['Cour_Status'];
+    if ($status == '0') {
+      echo "<script>alert('Your account has been suspended. Please contact the administrator.');</script>";
+    } else if ($status == '1') {
     $_SESSION['User_ID'] = $user_id;
     $_SESSION['User_Type'] = 'CR';
     header('location: index.php');
     echo "<script>alert('Login successful!');</script>";
+    }
   }
 }
 

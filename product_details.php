@@ -7,7 +7,7 @@ $_SESSION['category_id'] = null;
 $_SESSION['type_id'] = null;
 $product_detail_id = $_SESSION['product_detail_id'];
 
-if(isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
+if($_SESSION['User_ID'] && $_SESSION['User_Type'] != null) {
   $userId = $_SESSION['User_ID'];
   $usertype = $_SESSION['User_Type'];
 }
@@ -85,7 +85,7 @@ if(isset($_POST['add_to_cart']))
   {
     $quantity = $_POST['quantity'];
     //calculate price
-    $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id'";
+    $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
     $result_cost_price = mysqli_query($conn,$sql_cost_price);
     $row_cost_price = mysqli_fetch_assoc($result_cost_price);
     if($row_cost_price == null)
@@ -97,33 +97,33 @@ if(isset($_POST['add_to_cart']))
     {
       $cost_price = $row_cost_price['Cost_Per_Piece'];
       $cost_price = $row_cost_price['Cost_Per_Piece'];
-    $price = $cost_price + ($cost_price * $appliance_profit_percentage)/100;
-    $total_price = $price * $quantity;
+      $price = $cost_price + ($cost_price * $appliance_profit_percentage)/100;
+      $total_price = $price * $quantity;
       }
     //check if cart_master exists for the customer
-// 	CM_ID 	Customer_ID 	Total_Amount 	Cart_Status
-    $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+      // 	CM_ID 	Customer_ID 	Total_Amount 	Cart_Status
+    $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
     $result = mysqli_query($conn,$sql);
     if(mysqli_num_rows($result) == 0)
     {
       //insert into cart_master
-      $sql = "INSERT INTO tbl_cart_master(CM_ID,Customer_ID,Cart_Status) VALUES (generate_cart_master_id(),'$userId','AS')";
+      $sql = "INSERT INTO tbl_cart_master(CM_ID,Customer_ID,Cart_Status) VALUES (generate_cart_master_id(),'$userId','ASSIGNED')";
       $result = mysqli_query($conn,$sql);
       //select cart_master_id from tbl_cart_master where customer_id = $userId
-      $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+      $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
       $result = mysqli_query($conn,$sql);
       while($row = mysqli_fetch_assoc($result))
       {
         $cart_master_id = $row['CM_ID'];
       }
       //insert into cart_child
-      $sql = "INSERT INTO tbl_cart_child (CC_ID,CM_ID,Appliance_ID,Quantity,Price) VALUES (generate_cart_child_id(),'$cart_master_id','$product_detail_id','$quantity','$total_price')";
+            $sql = "INSERT INTO tbl_cart_child (CC_ID,CM_ID,Appliance_ID,Quantity,Price) VALUES (generate_cart_child_id(),'$cart_master_id','$product_detail_id','$quantity','$total_price')";
       $result = mysqli_query($conn,$sql);
       //update total amount in tbl_cart_master
       //Total_Amount=Total_Amount+total_price
       $sql = "UPDATE tbl_cart_master SET Total_Amount = Total_Amount + '$total_price' WHERE CM_ID = '$cart_master_id'";
       $result = mysqli_query($conn,$sql);
-
+      
       //**************** decrease quantity*****************
 
     }
@@ -131,18 +131,35 @@ if(isset($_POST['add_to_cart']))
     {
       //select cart_master_id from tbl_cart_master where customer_id = $userId
       
-      $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+      $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
       $result = mysqli_query($conn,$sql);
       while($row = mysqli_fetch_assoc($result))
       {
         $cart_master_id = $row['CM_ID'];
       }
-      //insert into cart_child
-      $sql = "INSERT INTO tbl_cart_child (CC_ID,CM_ID,Appliance_ID,Quantity,Price) VALUES (generate_cart_child_id(),'$cart_master_id','$product_detail_id','$quantity','$total_price')";
+      //check if appliance_id already exists in cart_child with same cart_master_id
+      $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cart_master_id' AND Appliance_ID = '$product_detail_id'";
       $result = mysqli_query($conn,$sql);
-      $sql = "UPDATE tbl_cart_master SET Total_Amount = Total_Amount + '$total_price' WHERE CM_ID = '$cart_master_id'";
-      $result = mysqli_query($conn,$sql);
+      if(mysqli_num_rows($result) == 1)
+      {
+        //update quantity and price in cart_child
+        $sql = "UPDATE tbl_cart_child SET Quantity = Quantity + '$quantity', Price = Price + '$total_price' WHERE CM_ID = '$cart_master_id' AND Appliance_ID = '$product_detail_id'";
+        $result = mysqli_query($conn,$sql);
+        //update total amount in tbl_cart_master
+        //Total_Amount=Total_Amount+total_price
+        $sql = "UPDATE tbl_cart_master SET Total_Amount = Total_Amount + '$total_price' WHERE CM_ID = '$cart_master_id'";
+        $result = mysqli_query($conn,$sql);
+      }
+      else if(mysqli_num_rows($result) == 0)
+      {
+        //insert into cart_child
+        $sql = "INSERT INTO tbl_cart_child (CC_ID,CM_ID,Appliance_ID,Quantity,Price) VALUES (generate_cart_child_id(),'$cart_master_id','$product_detail_id','$quantity','$total_price')";
+        $result = mysqli_query($conn,$sql);
+        $sql = "UPDATE tbl_cart_master SET Total_Amount = Total_Amount + '$total_price' WHERE CM_ID = '$cart_master_id'";
+        $result = mysqli_query($conn,$sql);
+      }
     }
+    header("Location: cart.php");
   }
   else if($userId != null && $usertype != 'CU') 
   {
@@ -514,7 +531,7 @@ a {
                   echo '<form action="" method="POST">';
                   echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
                    //cart button
-                  $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'AS'";
+                  $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);
                   if(mysqli_num_rows($result) > 0)
                   {
@@ -579,12 +596,12 @@ echo '</div>';
 <div class="product_details">
 <?php
 //select stock from tbl_purchase master where appliance_id = $product_detail_id
-$sql = "SELECT Quantity FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id'";
-$result = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($result))
-{
-  $appliance_stock = $row['Quantity'];
-}
+//$sql = "SELECT Quantity FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id'";
+//$result = mysqli_query($conn,$sql);
+//while($row = mysqli_fetch_assoc($result))
+//{/
+ // $appliance_stock = $row['Quantity'];
+//}
 
 
 
@@ -612,9 +629,6 @@ while ($row = mysqli_fetch_assoc($result)) {
     // Now $appliance_type_name contains the modified string without the last character
 }
 
-
-
-
 echo "<h3>$appliance_brand_name $appliance_name $appliance_type_name</h1>";
 //select Brand_Logo from tbl_brand where Brand_ID = $appliance_brand_id
 $sql = "SELECT Brand_Logo FROM tbl_brand WHERE Brand_ID = '$appliance_brand_id'";
@@ -626,7 +640,17 @@ while($row = mysqli_fetch_assoc($result))
 echo "<div class='brand_image' style='background-image: url($appliance_brand_logo);'></div>";
 //calculate price
 //echo "<h5>Profit Percentage: $appliance_profit_percentage</h5>";
-$sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id'";
+
+$sql_quantity="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
+$result_quantity = mysqli_query($conn,$sql_quantity);
+//if result is not null then display price
+if(mysqli_num_rows($result_quantity) > 0)
+{
+  //Balance_Stock from tbl_purchase_child where appliance_id = $product_detail_id
+ $row_quantity = mysqli_fetch_assoc($result_quantity);
+ $appliance_stock = $row_quantity['Balance_Stock'];
+
+      $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id'";
       $result_cost_price = mysqli_query($conn,$sql_cost_price);
       $row_cost_price = mysqli_fetch_assoc($result_cost_price);
       if($row_cost_price == null)
@@ -638,7 +662,7 @@ $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product
       {
         $cost_price = $row_cost_price['Cost_Per_Piece'];
         $cost_price = $row_cost_price['Cost_Per_Piece'];
-      $price = $cost_price + ($cost_price * $appliance_profit_percentage)/100;
+        $price = $cost_price + ($cost_price * $appliance_profit_percentage)/100;
       
       }
       
@@ -658,6 +682,12 @@ $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product
         echo "<h6>IN STOCK: $appliance_stock</h6>";
         echo "<div class='details_bottom'><h6>Description: $appliance_description</h6></div>";
       }
+    }
+    else if(mysqli_num_rows($result_quantity) == 0)
+    {
+      echo "<div class='product_price' style='color:red;'>OUT OF STOCK</div>";
+      echo "<div class='details_bottom'><h6>Description: $appliance_description</h6></div>";
+    }
 
 ?>
 </div>

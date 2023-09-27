@@ -320,8 +320,14 @@ background-image: url('orders.png');
                 if($userId != 'ST00001' && $usertype == 'ST') {
                   //profile page,Staff Dashboard, logout
                   echo '<form action="" method="POST">';
-                  //profile page
-                  //echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  //select name from tbl_customer where customer_id = $userId
+                  $sql = "SELECT * FROM tbl_staff WHERE Staff_ID = '$userId'";
+                  $result = mysqli_query($conn,$sql);
+                  $row = mysqli_fetch_assoc($result);
+                  $name = $row['Staff_Fname'];
+                  //hi name
+                  echo '<tr><td><button class="profile-box" style="display: flex;align-items: end;transform: scale(1)"><h6 style="color:red">Hi, '.$name.'</h6></button></td>';
+                  
                   echo '<td><button class="admin-box" name="admin">Staff Dashboard</button></td>';
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
@@ -331,7 +337,13 @@ background-image: url('orders.png');
                 if($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  //echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  //select name from tbl_customer where customer_id = $userId
+                  $sql = "SELECT * FROM tbl_customer WHERE Cust_ID = '$userId'";
+                  $result = mysqli_query($conn,$sql);
+                  $row = mysqli_fetch_assoc($result);
+                  $name = $row['Cust_Fname'];
+                  //hi name
+                  echo '<tr><td><button class="profile-box" style="display: flex;align-items: end;transform: scale(1)"><h6 style="color:red">Hi, '.$name.'</h6></button></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);

@@ -10,6 +10,8 @@ if(isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
   $usertype = $_SESSION['User_Type'];
 }
 else {
+  $_SESSION['User_ID'] = null;
+  $_SESSION['User_Type'] = null;
   $userId = null;
   $usertype = null;
 }

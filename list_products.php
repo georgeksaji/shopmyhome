@@ -515,41 +515,23 @@ if($search != null)
       echo "<div class='product_name'>$brandname $productname</div>";
       //checking quantity
       //SELECT * FROM tbl_purchase_child WHERE Appliance_ID = 'AP00003' AND Quantity > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1;
-      $sql_quantity="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-      $result_quantity = mysqli_query($conn,$sql_quantity);
-      //if result is not null then display price
-      if(mysqli_num_rows($result_quantity) > 0)
+      $sql_selling_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
+      $result_sp = mysqli_query($conn,$sql_selling_price);
+      if(mysqli_num_rows($result_sp) > 0)
       {
-      $sql_profit_percent="SELECT * FROM tbl_appliance WHERE Appliance_ID = '$productid'";
-      $result_profit_percent = mysqli_query($conn,$sql_profit_percent);
-      $row_profit_percent = mysqli_fetch_assoc($result_profit_percent);
-      $profit_percent = $row_profit_percent['Appliance_Profit_Percentage'];
-      $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid'";
-      $result_cost_price = mysqli_query($conn,$sql_cost_price);
-      $row_cost_price = mysqli_fetch_assoc($result_cost_price);
-      if($row_cost_price == null)
-      {
-        $cost_price = null;
-        $price = null;
-      }
-      else
-      {
-        $cost_price = $row_cost_price['Cost_Per_Piece'];
-        $cost_price = $row_cost_price['Cost_Per_Piece'];
-      $price = $cost_price + ($cost_price * $profit_percent)/100;
-      }
-      
-      if($price==null)
+      $row_sp = mysqli_fetch_assoc($result_sp);
+      $selling_price = $row_sp['Selling_Price'];
+      if($selling_price==null)
       {
         //not even purchased once
         echo "<div class='product_price'>OUT OF STOCK</div>";
       }
-      else if($price!==null)
+      else if($selling_price!==null)
       {
-        echo "<div class='product_price'>₹$price</div>";
+        echo "<div class='product_price'>₹$selling_price</div>";
       }
       }
-      else if(mysqli_num_rows($result_quantity) == 0)
+      else if(mysqli_num_rows($result_sp) == 0)
       {
         //pruchased stock over.
         echo "<div class='product_price'>OUT OF STOCK</div>";
@@ -564,6 +546,8 @@ if($search != null)
       echo "<div style='width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 2em; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 550; color: rgb(57 162 211);'>No results found</div>";
     }
   }
+
+
   if($brand_id != null)
   {
     $sql3="SELECT * FROM tbl_appliance WHERE Brand_ID = '$brand_id'";
@@ -586,46 +570,27 @@ if($search != null)
 
             //checking quantity
       //SELECT * FROM tbl_purchase_child WHERE Appliance_ID = 'AP00003' AND Quantity > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1;
-      $sql_quantity="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-      $result_quantity = mysqli_query($conn,$sql_quantity);
-      //if result is not null then display price
-      if(mysqli_num_rows($result_quantity) > 0)
+      $sql_selling_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
+      $result_sp = mysqli_query($conn,$sql_selling_price);
+      if(mysqli_num_rows($result_sp) > 0)
       {
-      $sql_profit_percent="SELECT * FROM tbl_appliance WHERE Appliance_ID = '$productid'";
-      $result_profit_percent = mysqli_query($conn,$sql_profit_percent);
-      $row_profit_percent = mysqli_fetch_assoc($result_profit_percent);
-      $profit_percent = $row_profit_percent['Appliance_Profit_Percentage'];
-      $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid'";
-      $result_cost_price = mysqli_query($conn,$sql_cost_price);
-      $row_cost_price = mysqli_fetch_assoc($result_cost_price);
-      if($row_cost_price == null)
-      {
-        $cost_price = null;
-        $price = null;
-      }
-      else
-      {
-        $cost_price = $row_cost_price['Cost_Per_Piece'];
-        $cost_price = $row_cost_price['Cost_Per_Piece'];
-      $price = $cost_price + ($cost_price * $profit_percent)/100;
-      }
-      
-      if($price==null)
+      $row_sp = mysqli_fetch_assoc($result_sp);
+      $selling_price = $row_sp['Selling_Price'];
+      if($selling_price==null)
       {
         //not even purchased once
         echo "<div class='product_price'>OUT OF STOCK</div>";
       }
-      else if($price!==null)
+      else if($selling_price!==null)
       {
-        echo "<div class='product_price'>₹$price</div>";
+        echo "<div class='product_price'>₹$selling_price</div>";
       }
       }
-      else if(mysqli_num_rows($result_quantity) == 0)
+      else if(mysqli_num_rows($result_sp) == 0)
       {
         //pruchased stock over.
         echo "<div class='product_price'>OUT OF STOCK</div>";
       }
-
  
       echo "</div></button>";
     }
@@ -657,46 +622,27 @@ if($search != null)
 
             //checking quantity
       //SELECT * FROM tbl_purchase_child WHERE Appliance_ID = 'AP00003' AND Quantity > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1;
-      $sql_quantity="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-      $result_quantity = mysqli_query($conn,$sql_quantity);
-      //if result is not null then display price
-      if(mysqli_num_rows($result_quantity) > 0)
+      $sql_selling_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
+      $result_sp = mysqli_query($conn,$sql_selling_price);
+      if(mysqli_num_rows($result_sp) > 0)
       {
-      $sql_profit_percent="SELECT * FROM tbl_appliance WHERE Appliance_ID = '$productid'";
-      $result_profit_percent = mysqli_query($conn,$sql_profit_percent);
-      $row_profit_percent = mysqli_fetch_assoc($result_profit_percent);
-      $profit_percent = $row_profit_percent['Appliance_Profit_Percentage'];
-      $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid'";
-      $result_cost_price = mysqli_query($conn,$sql_cost_price);
-      $row_cost_price = mysqli_fetch_assoc($result_cost_price);
-      if($row_cost_price == null)
-      {
-        $cost_price = null;
-        $price = null;
-      }
-      else
-      {
-        $cost_price = $row_cost_price['Cost_Per_Piece'];
-        $cost_price = $row_cost_price['Cost_Per_Piece'];
-      $price = $cost_price + ($cost_price * $profit_percent)/100;
-      }
-      
-      if($price==null)
+      $row_sp = mysqli_fetch_assoc($result_sp);
+      $selling_price = $row_sp['Selling_Price'];
+      if($selling_price==null)
       {
         //not even purchased once
         echo "<div class='product_price'>OUT OF STOCK</div>";
       }
-      else if($price!==null)
+      else if($selling_price!==null)
       {
-        echo "<div class='product_price'>₹$price</div>";
+        echo "<div class='product_price'>₹$selling_price</div>";
       }
       }
-      else if(mysqli_num_rows($result_quantity) == 0)
+      else if(mysqli_num_rows($result_sp) == 0)
       {
         //pruchased stock over.
         echo "<div class='product_price'>OUT OF STOCK</div>";
       }
-
     
       echo "</div></button>";
     }

@@ -5,6 +5,17 @@ $_SESSION['search'] = null;
 $_SESSION['brand_id'] = null;
 $_SESSION['category_id'] = null;
 $_SESSION['type_id'] = null;
+
+$quantity_update_status = null;
+if(isset($_SESSION['quantity_update_status']) && $_SESSION['quantity_update_status'] !== null) {
+  $quantity_update_status = $_SESSION['quantity_update_status']; 
+    if($quantity_update_status == 1)
+    {
+       $_SESSION['quantity_update_status'] = null;
+    }
+}
+
+
 //$product_detail_id = $_SESSION['product_detail_id'];
 
 if(isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
@@ -40,7 +51,28 @@ if(isset($_POST['update_quantity']))
   //update price in cart child 
 
     $sql_cost_price="SELECT Cost_Per_Piece FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-    
+    $result_cost_price = mysqli_query($conn,$sql_cost_price);
+    $row_cost_price = mysqli_fetch_assoc($result_cost_price);
+  /* $sql_cost_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$product_detail_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
+    $result_cost_price = mysqli_query($conn,$sql_cost_price);
+    $row_cost_price = mysqli_fetch_assoc($result_cost_price);
+    if($row_cost_price == null)
+    {
+      $cost_price = null;
+      $price = null;
+    }
+    else
+    {
+      $cost_price = $row_cost_price['Cost_Per_Piece'];
+      $cost_price = $row_cost_price['Cost_Per_Piece'];
+      $price = $cost_price + ($cost_price * $appliance_profit_percentage)/100;
+      $total_price = $price * $quantity;
+      }*/
+      $cost_price = $row_cost_price['Cost_Per_Piece'];
+      $price = $cost_price + ($cost_price * $appliance_profit_percentage)/100;
+      $total_price = $price * $quantity;
+      
+
     
 
 
@@ -406,7 +438,14 @@ top: 0;
 
 
 </style>
-    
+<script>
+  var update_quantity_status = <?php echo json_encode($quantity_update_status); ?>;
+  var jsMessage1 = "Quantity decreased to available stock as Stocks decreased."; 
+  if (update_quantity_status !== null) {
+    alert(jsMessage1);
+  }
+</script>
+
   </head>
   <body>
  <div class="home-outer">

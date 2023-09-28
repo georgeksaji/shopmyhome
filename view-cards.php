@@ -522,7 +522,8 @@ input[type=number]
                           if ($result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
                                 echo "<tr>";
-                                echo "<td>" . $row['Card_No'] . "</td>";
+                                //echo "<td>" . $row['Card_No'] . "</td>";
+                                echo "<td>XXXX-XXXX-XXXX-" . substr($row['Card_No'], -4) . "</td>";
                                 echo "<td>" . $row['Card_Holder_Name'] . "</td>";
                                 echo "<td>" . $row['Bank_Name'] . "</td>";
                                 echo "<td>" . $row['Expiry_Date'] . "</td>";

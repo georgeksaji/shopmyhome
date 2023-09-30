@@ -83,57 +83,57 @@ if ($cm_id != null) {
 
 if (isset($_POST['checkout'])) {
   try {
-      if (!isset($_POST['card_id'])) {
-          throw new Exception('Please select a card to checkout');
+    if (!isset($_POST['card_id'])) {
+      throw new Exception('Please select a card to checkout');
+    }
+
+    if (!isset($_POST['Master_ID'])) {
+      throw new Exception('Cart is Empty');
+    }
+
+    $card_id = $_POST['card_id'];
+
+    $cm_id = $_POST['Master_ID'];
+
+    // Check if any row with cm_id exists in tbl_cart_child
+    $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
+    $result = mysqli_query($conn, $sql);
+
+    if (mysqli_num_rows($result) == 0) {
+      throw new Exception('Cart is Empty');
+    }
+
+    $canProceedToPayment = true;
+
+    if ($cm_id != null) {
+      while ($row = mysqli_fetch_assoc($result)) {
+        $item_id = $row['Appliance_ID'];
+        $quantity = $row['Quantity'];
+        $select_quantity = "SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
+        $result_quantity = mysqli_query($conn, $select_quantity);
+
+        if (mysqli_num_rows($result_quantity) == 0) {
+          // An item in the cart is out of stock
+          $canProceedToPayment = false;
+          break; // Exit the loop early
+        }
       }
+    }
 
-      if (!isset($_POST['Master_ID'])) {
-          throw new Exception('Cart is Empty');
-      }
-      
-      $card_id = $_POST['card_id'];
-
-      $cm_id = $_POST['Master_ID'];
-      
-      // Check if any row with cm_id exists in tbl_cart_child
-      $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
-      $result = mysqli_query($conn, $sql);
-
-      if (mysqli_num_rows($result) == 0) {
-          throw new Exception('Cart is Empty');
-      }
-
-      $canProceedToPayment = true;
-
-      if ($cm_id != null) {
-          while ($row = mysqli_fetch_assoc($result)) {
-              $item_id = $row['Appliance_ID'];
-              $quantity = $row['Quantity'];
-              $select_quantity = "SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-              $result_quantity = mysqli_query($conn, $select_quantity);
-
-              if (mysqli_num_rows($result_quantity) == 0) {
-                  // An item in the cart is out of stock
-                  $canProceedToPayment = false;
-                  break; // Exit the loop early
-              }
-          }
-      }
-
-      if ($canProceedToPayment) {
-          $_SESSION['cm_id'] = $cm_id;
-          $_SESSION['card_id'] = $card_id;
-          header("Location: payment.php");
-          echo "Go to payment page";
-          // You can uncomment the header line if you want to redirect to the payment page
-          // header("Location: Payment.php");
-      } else {
-          throw new Exception('An item in your cart is out of stock. Please remove it to proceed to checkout');
-      }
+    if ($canProceedToPayment) {
+      $_SESSION['cm_id'] = $cm_id;
+      $_SESSION['card_id'] = $card_id;
+      header("Location: payment.php");
+      echo "Go to payment page";
+      // You can uncomment the header line if you want to redirect to the payment page
+      // header("Location: Payment.php");
+    } else {
+      throw new Exception('An item in your cart is out of stock. Please remove it to proceed to checkout');
+    }
 
   } catch (Exception $e) {
-      // Handle the exception by displaying an alert
-      echo "<script>alert('" . $e->getMessage() . "')</script>";
+    // Handle the exception by displaying an alert
+    echo "<script>alert('" . $e->getMessage() . "')</script>";
   }
 }
 
@@ -785,128 +785,128 @@ if (isset($_POST['remove_item'])) {
         <form method="POST" action="" style="height:100%;width:100%;display: contents;">
 
 
-        <div class="cart-address">
-          <div class="address-top" style="padding-inline-start:2%;">DELIVERY ADDRESS</div>
-          <table class="address-table">
-            <?php
-            if ($userId != null) {
-              $sql = "SELECT * FROM tbl_customer WHERE Cust_ID = '$userId'";
-              $result = mysqli_query($conn, $sql);
-              $row = mysqli_fetch_assoc($result);
-              //C_Username 	Cust_Fname 	Cust_Lname 	Cust_Phone 	Cust_Gender 	Cust_Hname 	Cust_Street 	Cust_Dist 	State_Ut 	Cust_Pin
-              $name = $row['Cust_Fname'] . " " . $row['Cust_Lname'];
-              $phone = $row['Cust_Phone'];
-              $address = $row['Cust_Hname'] . ", " . $row['Cust_Street'] . ", " . $row['Cust_Dist'] . ", " . $row['State_Ut'] . ", " . $row['Cust_Pin'];
-              echo "<tr><td>$name</td></tr>";
-              echo "<tr><td>$phone</td></tr>";
-              echo "<tr><td>$address</td></tr>";
+          <div class="cart-address">
+            <div class="address-top" style="padding-inline-start:2%;">DELIVERY ADDRESS</div>
+            <table class="address-table">
+              <?php
+              if ($userId != null) {
+                $sql = "SELECT * FROM tbl_customer WHERE Cust_ID = '$userId'";
+                $result = mysqli_query($conn, $sql);
+                $row = mysqli_fetch_assoc($result);
+                //C_Username 	Cust_Fname 	Cust_Lname 	Cust_Phone 	Cust_Gender 	Cust_Hname 	Cust_Street 	Cust_Dist 	State_Ut 	Cust_Pin
+                $name = $row['Cust_Fname'] . " " . $row['Cust_Lname'];
+                $phone = $row['Cust_Phone'];
+                $address = $row['Cust_Hname'] . ", " . $row['Cust_Street'] . ", " . $row['Cust_Dist'] . ", " . $row['State_Ut'] . ", " . $row['Cust_Pin'];
+                echo "<tr><td>$name</td></tr>";
+                echo "<tr><td>$phone</td></tr>";
+                echo "<tr><td>$address</td></tr>";
 
-            } else {
-              echo "<td colspan='6'>No address found</td>";
-            }
-            ?>
-
-
-          </table>
-
-        </div>
-
-        <!--card details-->
-        <div class="cart-card">
-          <div class="address-top" style="padding-inline-start:2%;">CARD DETAILS</div>
+              } else {
+                echo "<td colspan='6'>No address found</td>";
+              }
+              ?>
 
 
+            </table>
 
-          <div class="cards-list">
-            <table class="cards-outer">
+          </div>
 
+          <!--card details-->
+          <div class="cart-card">
+            <div class="address-top" style="padding-inline-start:2%;">CARD DETAILS</div>
+
+
+
+            <div class="cards-list">
+              <table class="cards-outer">
+
+
+                <?php
+                $query = "SELECT * FROM tbl_card WHERE Customer_ID = '$userId' AND Card_Status = 1";
+                $result = $conn->query($query);
+
+                if ($result->num_rows > 0) {
+                  echo "<tr>";
+                  echo "<th></th>";
+                  echo "<th>Card Number</th>";
+                  echo "<th>Bank Name</th>";
+                  echo "</tr>";
+                  while ($row = $result->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td><input type='radio' name='card_id' value='" . $row['Card_ID'] . "'></td>";
+                    //echo "<td>" . $row['Card_No'] . "</td>";
+                    echo "<td>XXXX-XXXX-XXXX-" . substr($row['Card_No'], -4) . "</td>";
+                    echo "<td>" . $row['Bank_Name'] . "</td>";
+                    echo "<tr>";
+                  }
+
+                } else if ($result->num_rows == 0) {
+                  echo "<tr>";
+                  echo "<td colspan='2' style='text-align:center;'>No cards added yet!</td>";
+                  echo "</tr>";
+                }
+
+
+
+
+                ?>
+
+              </table>
+            </div>
+
+
+
+
+
+
+
+
+
+          </div>
+          <!--cart summary-->
+          <div class="cart-summary-bottom"
+            style="height:18vh;background-color:transparent;display: grid;text-align: center;justify-content: center;align-items: center;">
+            <div class="cart-summary-body" style="height: 64%;width: max-content;">
+              <table class="cart-summary-table">
+                <tr>
+                  <?php
+                  if ($cm_id != null) {
+                    //select * from tbl_cart_child where cm_id = '$cm_id'
+                    $sql = "SELECT Price FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
+                    $result = mysqli_query($conn, $sql);
+                    $total_amount = 0;
+                    while ($row = mysqli_fetch_assoc($result)) {
+                      $price = $row['Price'];
+                      $total_amount = $total_amount + $price;
+                    }
+                    //update total amount in tbl_cart_master
+                    $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
+                    mysqli_query($conn, $sql);
+                  } else {
+                    $total_amount = 0;
+                  }
+                  echo "<td><h5 style='color:red;'>₹ $total_amount</h5></td>";
+                  ?>
+                </tr>
+              </table>
+            </div>
+            <div class="cart-summary-footer" style="height:7vh">
 
               <?php
-              $query = "SELECT * FROM tbl_card WHERE Customer_ID = '$userId' AND Card_Status = 1";
-              $result = $conn->query($query);
-
-              if ($result->num_rows > 0) {
-                echo "<tr>";
-                echo "<th></th>";
-                echo "<th>Card Number</th>";
-                echo "<th>Bank Name</th>";
-                echo "</tr>";
-                while ($row = $result->fetch_assoc()) {
-                  echo "<tr>";
-                  echo "<td><input type='radio' name='card_id' value='" . $row['Card_ID'] . "'></td>";
-                  //echo "<td>" . $row['Card_No'] . "</td>";
-                  echo "<td>XXXX-XXXX-XXXX-" . substr($row['Card_No'], -4) . "</td>";
-                  echo "<td>" . $row['Bank_Name'] . "</td>";
-                  echo "<tr>";
-                }
-
-              } else if ($result->num_rows == 0) {
-                echo "<tr>";
-                echo "<td colspan='2' style='text-align:center;'>No cards added yet!</td>";
-                echo "</tr>";
-              }
-
-
-
-
+              echo "<input type='hidden' name='Master_ID' value='$cm_id'>";
               ?>
-                
-            </table>
-          </div>
-
-
-
-
-
-
-
-
-
-        </div>
-        <!--cart summary-->
-        <div class="cart-summary-bottom"
-          style="height:18vh;background-color:transparent;display: grid;text-align: center;justify-content: center;align-items: center;">
-          <div class="cart-summary-body" style="height: 64%;width: max-content;">
-            <table class="cart-summary-table">
-              <tr>
-                <?php
-                if ($cm_id != null) {
-                  //select * from tbl_cart_child where cm_id = '$cm_id'
-                  $sql = "SELECT Price FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
-                  $result = mysqli_query($conn, $sql);
-                  $total_amount = 0;
-                  while ($row = mysqli_fetch_assoc($result)) {
-                    $price = $row['Price'];
-                    $total_amount = $total_amount + $price;
-                  }
-                  //update total amount in tbl_cart_master
-                  $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
-                  mysqli_query($conn, $sql);
-                } else {
-                  $total_amount = 0;
-                }
-                echo "<td><h5 style='color:red;'>₹ $total_amount</h5></td>";
-                ?>
-              </tr>
-            </table>
-          </div>
-          <div class="cart-summary-footer" style="height:7vh">
-                
-                  <?php
-                  echo "<input type='hidden' name='Master_ID' value='$cm_id'>";
-                  ?>
-                  <button type="submit" name="checkout" class="check-out-button">Checkout</button>
-              </form>
-          </div>
-              
-        </div>
-
+              <button type="submit" name="checkout" class="check-out-button">Checkout</button>
         </form>
-
-
       </div>
 
     </div>
+
+    </form>
+
+
+  </div>
+
+  </div>
 
 </body>
 <?php

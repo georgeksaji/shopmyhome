@@ -881,7 +881,7 @@ alert(jsMessage2);
                       while ($row_v = $vendor_num2->fetch_assoc()) {
                           echo "<tr>";
                           echo "<td>" . $row_v['Vendor_ID'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Username'] . "</td>";
+                          echo "<td>" . $row_v['Vendor_Email'] . "</td>";
                           echo "<td>" . $row_v['Vendor_Name'] . "</td>";
                           echo "<td>" . $row_v['Staff_Id'] . "</td>";
                           echo "<td>" . $row_v['Vendor_Phno'] . "</td>";

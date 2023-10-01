@@ -157,6 +157,28 @@ if(isset($_POST['update_brand']))
   header('location:Update_Brand.php');
 }
 
+//assign courier button
+if(isset($_POST['assign_courier']))
+{
+  $pay_id=$_POST['payment_id'];
+  $assigned_delivery_partner=$_POST['courier_assign_id'];
+  $customer_id=$_POST['Customer_Id'];
+  $cm_id=$_POST['master_cart_id'];
+  //generate_courier_assignment_id()
+  //insert into tbl_courier_assign
+  // 	Courier_Assign_ID 	Courier_ID 	CM_ID 	Customer_ID 	Courier_Assign_Date 
+  mysqli_query($conn,"INSERT INTO tbl_courier_assign(Courier_Assign_ID,Courier_ID,CM_ID,Customer_ID) VALUES(generate_courier_assignment_id(),'$assigned_delivery_partner','$cm_id','$customer_id')");
+  
+  //update Courier_Assignment_Status=1 in tbl_payment
+  mysqli_query($conn,"UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
+  echo "<script>alert('Courier Assigned Successfully');</script>";
+
+
+
+
+  echo "<script>alert('Courier Assigned Successfully');</script>";
+}
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -632,7 +654,32 @@ padding:3%;
   max-height: 60vh; /* Set the desired maximum height */
   overflow-y: scroll;
 }
+
+
 /*assign css content*/
+.assign-content-inner
+{   
+    margin-top: 10vh;
+    height: 80vh;
+    width: 90%;
+    background-color: rgb(182 232 255);
+}
+.assign-content-inner-top{
+height:20%;
+width:100%;
+background-color:rgb(54, 46, 212,0.9);
+padding:3%;
+}
+.assign-content-inner-bottom
+{
+  padding-top: 1%;
+  padding-inline:1%;
+}
+.view_table_wrapper {
+  max-height: 60vh; /* Set the desired maximum height */
+  overflow-y: scroll;
+}
+
 
 /*sales css content*/
 .sales-content-inner
@@ -1345,10 +1392,121 @@ alert(jsMessage2);
             <!--purchase content completed-->
 
                 <!--assign courier goes here-->
-            <div class="product-content section">
-              <div class="product-content-inner">
+
+
+
+
+            <div class="assign-content section">
+              <div class="assign-content-inner">
+              <div class="assign-content-inner-top">
+
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="float: right;">
+            <a href="Make_Purchase1.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">View Assigned Orders</button></a>
+             </div>
               </div>
+              <div class="assign-content-inner-bottom">
+              <div class="view_table_wrapper">
+              <table class="table-bordered table-striped view_table">
+              <tr> 
+                <th>Payment ID</th> 
+                <th>Customer ID</th> 
+                <th>Purchase Date</th>
+                <th>Delivery Address</th>
+                <th colspan="2">Assign Delivery Partner</th>
+                </tr>
+              <?php
+              //delivery partner
+              $sql_list_all_delivery_partner="SELECT Cour_ID,Cour_Name FROM tbl_courier WHERE Cour_Status=1";
+              $result_list_all_delivery_partner=$conn->query($sql_list_all_delivery_partner);
+              $delivery_partners = [];
+              while ($row_list_all_delivery_partner = $result_list_all_delivery_partner->fetch_assoc()) {
+              $delivery_partners[] = $row_list_all_delivery_partner;
+              }
+              $query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=0"; // Replace with your actual query
+                $payment_num2 = $conn->query($query);
+                if ($payment_num2) 
+                {
+                  while ($row_pay = $payment_num2->fetch_assoc()) 
+                  {
+                        $payment_id=$row_pay['Payment_ID'];
+                        $cart_master_id=$row_pay['CM_ID'];
+                        $date=$row_pay['Payment_Date'];
+                        //customer details
+                        $sql_customer_details="SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='$cart_master_id'";
+                        $result_customer_details=$conn->query($sql_customer_details);
+                        $row_customer_details=$result_customer_details->fetch_assoc();
+                        $customer_id=$row_customer_details['Customer_ID'];
+                        //customer address
+                        $sql_customer_address="SELECT Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin FROM tbl_customer WHERE Cust_ID='$customer_id'";
+                        $result_customer_address=$conn->query($sql_customer_address);
+                        $row_customer_address=$result_customer_address->fetch_assoc();
+                        $customer_address=$row_customer_address['Cust_Hname'].", ".$row_customer_address['Cust_Street'].", ".$row_customer_address['Cust_Dist'].", ".$row_customer_address['State_Ut'].", ".$row_customer_address['Cust_Pin'];
+                        
+                        echo "<tr>";
+                        echo "<td>" . $payment_id . "</td>";
+                        echo "<td>" . $customer_id . "</td>";
+                        echo "<td>" . $date . "</td>";
+                        echo "<td>" . $customer_address . "</td>";
+                        echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='". $payment_id ."'><select name='courier_assign_id' id='courier_id' style='width: 100%;'><option value=''>Select Delivery Partner</option>";
+                        foreach ($delivery_partners as $delivery_partner) {
+                        echo "<option value='".$delivery_partner['Cour_ID']."'>".$delivery_partner['Cour_Name']."</option>";
+                        }
+                        echo "</select></td><input type='hidden' name='master_cart_id' value='". $cart_master_id ."'><input type='hidden' name='Customer_Id' value='". $customer_id ."'>";
+                        echo "<td><button type='submit' class='btn btn-primary me-md-2' name='assign_courier'>ASSIGN</button></form></td>";
+                        echo "</tr>";
+                     }
+                
+                 } 
+                 else 
+                 {
+                     echo "No data available.";
+                 }
+
+
+
+
+
+                  ?>
+              </table>
+              </div>
+              </div>
+            
+              
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             </div>
+            </div>
+
+
+
+
+
+
+
+
             <!--assign courier content completed-->
 
             <!--sales content goes here-->

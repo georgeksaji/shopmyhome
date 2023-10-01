@@ -343,7 +343,7 @@ background-image: url('orders.png');
                   $row = mysqli_fetch_assoc($result);
                   $name = $row['Cust_Fname'];
                   //hi name
-                  echo '<tr><td><button class="profile-box" style="display: flex;align-items: end;transform: scale(1)"><h6 style="color:red">Hi, '.$name.'</h6></button></td>';
+                  echo '<tr><td><button class="profile-box" style="display: flex;align-items: end;transform: scale(1)"><h6 style="">'.$name.'</h6></button></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);

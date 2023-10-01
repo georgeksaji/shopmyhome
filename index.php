@@ -481,7 +481,7 @@ a {
         <nav class="navbar bg-body-tertiary">
           <div class="container-fluid">
             <form class="d-flex" role="search" method="POST">
-              <input class="form-control me-2" type="search" placeholder="Search  for home appliances" aria-label="Search" name="search">
+              <input class="form-control me-2" type="search" style="border-style:none;" placeholder="Search  for home appliances" aria-label="Search" name="search">
               <button class="btn btn-outline-success" type="submit" name="submit">Search</button>
             </form>
           </div>
@@ -617,7 +617,7 @@ a {
       echo "</form>";   
     }
   echo '<form action="" method="POST">';
-       echo "<button class='brand-images-boxes' name='all_brands' style=\"background-image:url('more.png');\"></button>";
+       echo "<button class='brand-images-boxes' name='all_brands' style=\"background-image:url('more1.png');\"></button>";
        echo "</form>";
     ?>
   </div> 

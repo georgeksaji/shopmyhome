@@ -29,6 +29,9 @@ if(isset($_POST['cart']))
   $quantity = $_POST['quantity'];
   header("Location: cart.php");
 }
+if (isset($_POST['show_profile_page'])) {
+  header("Location: profile.php");
+}
 
 //iffest submit add to tbl card
 if(isset($_POST['submit']))
@@ -401,7 +404,7 @@ input[type=number]
             <table class="action-table">
               <?php
               // if userid and usertype null, display login and signup
-              if($userId == null && $usertype == null) {
+              /*if($userId == null && $usertype == null) {
                 echo '<form action="" method="POST">';
                 echo '<tr><td><button class="login-box" name="login">Login</button></td>';
                 echo '<td><button class="signup-box" name="signup">Sign Up</button></td>';
@@ -425,12 +428,12 @@ input[type=number]
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
                   echo '</form>';//    
-                }
+                }*/
                 //if usertype=CU
                 if($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="show_profile_page"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);

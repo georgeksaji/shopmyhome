@@ -679,6 +679,10 @@ padding:3%;
   max-height: 60vh; /* Set the desired maximum height */
   overflow-y: scroll;
 }
+#unassigned-table, #assigned-table {
+    display: none;
+}
+
 
 
 /*sales css content*/
@@ -728,31 +732,32 @@ alert(jsMessage2);
 </script>
 -->
 
-<!--script-->
-    <script>
-      function scrollToSection(selector) 
-      {
-          const section = document.querySelector(selector);
-          if (section) {
-              window.scrollTo({ top: section.offsetTop, behavior: 'smooth' });
-          }
-        };
+<script>
+function showTable(tableId) {
+    var unassignedTable = document.getElementById('unassigned-table');
+    var assignedTable = document.getElementById('assigned-table');
+    var defaultTable = document.getElementById('default-table');
 
-        document.addEventListener("DOMContentLoaded", function() {
-            var buttonToClick = document.getElementById("buttonToClick");
-            buttonToClick.click();
-            buttonToClick.focus()
-        });
+    if (tableId === 'unassigned-table') {
+        unassignedTable.style.display = 'table';
+        assignedTable.style.display = 'none';
+        defaultTable.style.display = 'none';
+    } else if (tableId === 'assigned-table') {
+        unassignedTable.style.display = 'none';
+        assignedTable.style.display = 'table';
+        defaultTable.style.display = 'none';
+    }
 
-        function submitForm() {
-            document.getElementById("typeForm").submit();
-        }
+    // If neither button is pressed, show the default table
+    if (tableId !== 'unassigned-table' && tableId !== 'assigned-table') {
+        unassignedTable.style.display = 'none';
+        assignedTable.style.display = 'none';
+        defaultTable.style.display = 'table';
+    }
+}
+</script>
 
-     
 
-       
-  </script>
-<!--script-->
     <div class="outer-div">
             
           <div class="top-navigation">
@@ -1396,25 +1401,39 @@ alert(jsMessage2);
 
 
 
-            <div class="assign-content section">
+              <div class="assign-content section" id="assign-courier-id">
               <div class="assign-content-inner">
               <div class="assign-content-inner-top">
 
-              <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="float: right;">
-            <a href="Make_Purchase1.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">View Assigned Orders</button></a>
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end" >
+              <form method="POST" style="float: right;height:100%;widht:100%;">
+              <!--<button class="btn btn-primary me-md-2 add_buttons" type="submit" name="Unassigned">Unassigned Orders</button>-->
+              <button class="btn btn-primary me-md-2 add_buttons" type="button" onclick="showTable('unassigned-table')">Unassigned Orders</button>
+              <!--<button class="btn btn-primary me-md-2 add_buttons" type="submit" name="Assigned">Assigned Orders</button>-->
+              <button class="btn btn-primary me-md-2 add_buttons" type="button" onclick="showTable('assigned-table')">Assigned Orders</button>
+
+            </form>
              </div>
               </div>
-              <div class="assign-content-inner-bottom">
+              <div class="assign-content-inner-bottom">    
+                
+              <table class="table-bordered table-striped view_table" id="default-table">
+              <tr>
+              <td colspan="6" style="text-align:center;background-color:rgb(255 46 46);color:rgb(256 256 256)">Select "Unassigned Orders" or "Assigned Orders" to view the respective tables.</td>
+              </tr>
+              </table> 
               <div class="view_table_wrapper">
-              <table class="table-bordered table-striped view_table">
-              <tr> 
-                <th>Payment ID</th> 
-                <th>Customer ID</th> 
-                <th>Purchase Date</th>
-                <th>Delivery Address</th>
-                <th colspan="2">Assign Delivery Partner</th>
-                </tr>
               <?php
+               //Unassigned table
+              echo '<table class="table-bordered table-striped view_table" id="unassigned-table">';
+              echo '<tr>';
+              echo '<th>Payment ID</th>'; 
+              echo '<th>Customer ID</th>'; 
+              echo '<th>Purchase Date</th>';
+              echo '<th>Delivery Address</th>';
+              echo '<th colspan="2">Assign Delivery Partner</th>';
+              echo '</tr>';
+              
               //delivery partner
               $sql_list_all_delivery_partner="SELECT Cour_ID,Cour_Name FROM tbl_courier WHERE Cour_Status=1";
               $result_list_all_delivery_partner=$conn->query($sql_list_all_delivery_partner);
@@ -1424,7 +1443,8 @@ alert(jsMessage2);
               }
               $query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=0"; // Replace with your actual query
                 $payment_num2 = $conn->query($query);
-                if ($payment_num2) 
+                //if ($payment_num2) 
+                if ($payment_num2->num_rows > 0)
                 {
                   while ($row_pay = $payment_num2->fetch_assoc()) 
                   {
@@ -1457,44 +1477,93 @@ alert(jsMessage2);
                      }
                 
                  } 
+                 
+                 else {
+                  echo '<tr>';
+                  echo '<td colspan="6" style="text-align:center">No Unassigned Orders Available</td>';
+                  echo '</tr>';
+              }
+              
+                 
+                echo '</table>';
+                
+
+
+                //Assigned table
+                echo '<table class="table-bordered table-striped view_table" id="assigned-table">'; 
+                echo '<tr>';
+                echo '<th>Payment ID</th>';
+                echo '<th>Customer ID</th>';
+                echo '<th>Delivery Partner</th>';
+                echo '<th>Purchase Date</th>';
+                //courier assign date
+                echo '<th>Courier Assign Date</th>';
+                echo '<th>Expected Delivery Before</th>';//10 days from courier assign date
+                echo '</tr>';
+                $query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=1";
+                $payment_num2 = $conn->query($query);
+                //if ($payment_num2)
+                if ($payment_num2->num_rows > 0)
+                {
+                  while ($row_pay = $payment_num2->fetch_assoc())
+                  {
+                        $payment_id=$row_pay['Payment_ID'];
+                        $cart_master_id=$row_pay['CM_ID'];
+                        $date=$row_pay['Payment_Date'];
+                        //customer details
+                        $sql_customer_details="SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='$cart_master_id'";
+                        $result_customer_details=$conn->query($sql_customer_details);
+                        $row_customer_details=$result_customer_details->fetch_assoc();
+                        $customer_id=$row_customer_details['Customer_ID'];
+                        //customer address
+                        $sql_customer_address="SELECT Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin FROM tbl_customer WHERE Cust_ID='$customer_id'";
+                        $result_customer_address=$conn->query($sql_customer_address);
+                        $row_customer_address=$result_customer_address->fetch_assoc();
+                        $customer_address=$row_customer_address['Cust_Hname'].", ".$row_customer_address['Cust_Street'].", ".$row_customer_address['Cust_Dist'].", ".$row_customer_address['State_Ut'].", ".$row_customer_address['Cust_Pin'];
+                        //delivery partner
+                        $sql_delivery_partner="SELECT Courier_ID,Courier_Assign_Date FROM tbl_courier_assign WHERE CM_ID='$cart_master_id'";
+                        $result_delivery_partner=$conn->query($sql_delivery_partner);
+                        $row_delivery_partner=$result_delivery_partner->fetch_assoc();
+                        $delivery_partner_id=$row_delivery_partner['Courier_ID'];
+                        $delivery_partner_assign_date=$row_delivery_partner['Courier_Assign_Date'];
+                        //delivery partner name
+                        $sql_delivery_partner_name="SELECT Cour_Name FROM tbl_courier WHERE Cour_ID='$delivery_partner_id'";
+                        $result_delivery_partner_name=$conn->query($sql_delivery_partner_name);
+                        $row_delivery_partner_name=$result_delivery_partner_name->fetch_assoc();
+                        $delivery_partner_name=$row_delivery_partner_name['Cour_Name'];
+                        //expected delivery date including time
+                        $assignDateTime = new DateTime($delivery_partner_assign_date);
+                        $assignDateTime->modify('+10 days');
+                        $expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
+                        
+                        echo "<tr>";
+                        echo "<td>" . $payment_id . "</td>";
+                        echo "<td>" . $customer_id . "</td>";
+                        echo "<td>" . $delivery_partner_name . "</td>";
+                        echo "<td>" . $date . "</td>";
+                        echo "<td>" . $delivery_partner_assign_date . "</td>";
+                        echo "<td>" . $expectedDeliveryDate . "</td>";
+                        echo "</tr>";
+                      }
+                
+                    } 
+                    
                  else 
                  {
-                     echo "No data available.";
+                  echo '<tr>';
+                  echo '<td colspan="6" style="text-align:center">No Assigned Orders pending for delivery</td>';
+                  echo '</tr>';
                  }
+                    echo '</table>';
 
 
 
 
-
+                    
                   ?>
-              </table>
-              </div>
-              </div>
-            
               
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+              </div>
+              </div>
             
             
             </div>
@@ -1522,5 +1591,31 @@ alert(jsMessage2);
             </div>
 <script type="text/js" src="js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>   
+<script>
+      function scrollToSection(selector) 
+      {
+          const section = document.querySelector(selector);
+          if (section) {
+              window.scrollTo({ top: section.offsetTop, behavior: 'smooth' });
+          }
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var buttonToClick = document.getElementById("buttonToClick");
+            buttonToClick.click();
+            buttonToClick.focus()
+        });
+
+        function submitForm() {
+            document.getElementById("typeForm").submit();
+        }
+       
+  function scrollToSection(selector) {
+    var element = document.querySelector(selector);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+</script>
 </body>
 </html>

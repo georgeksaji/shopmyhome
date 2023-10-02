@@ -35,6 +35,11 @@ if(isset($_POST['staff']))
 {
   header("Location: staff.php");
 }
+//courier button
+if(isset($_POST['courier']))
+{
+  header("Location: courier.php");
+}
 //profile button
 if(isset($_POST['profile']))
 {
@@ -516,6 +521,25 @@ a {
                   echo '</tr>';
                   echo '</form>';
                 }
+                //if courier
+                //CR
+                if($usertype == 'CR') {
+                  //profile page, logout
+                  echo '<form action="" method="POST">';
+                  echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
+                  //courier dashboard
+                  echo '<td><button class="admin-box" name="courier">Courier Dashboard</button></td>';
+                  echo '<td><button class="logout-box" name="logout">Logout</button></td>';
+                  echo '</tr>';
+                  echo '</form>';
+                }
+
+
+
+
+
+
+
                 //if usertype=CU
                 if($usertype == 'CU') {
                   //profile page, logout

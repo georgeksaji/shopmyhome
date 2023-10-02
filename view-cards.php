@@ -43,10 +43,21 @@ if(isset($_POST['submit']))
   $expiry_date = $_POST['expiry-date'];
   $cvv = $_POST['cvv'];
 // Card_ID 	Customer_ID 	Card_No 	Card_Holder_Name 	CVV 	Bank_Name 	Card_Type 	Expiry_Date 	Card_Status 	
+  //find if card number already exists
+  $sql = "SELECT * FROM tbl_card WHERE Card_No = '$card_number'";
+  $result = mysqli_query($conn,$sql);
+  if(mysqli_num_rows($result) > 0)
+  {
+    echo "<script>alert('Card number already exists!');</script>";
+  }
+  else if(mysqli_num_rows($result) == 0)
+  {
+    //insert into tbl_card
   $sql = "INSERT INTO tbl_card (Card_ID,Customer_ID,Card_No,Card_Holder_Name,CVV,Bank_Name,Card_Type,Expiry_Date) VALUES (generate_card_id(),'$userId','$card_number','$card_holder_name','$cvv','$bank_name','$card_type','$expiry_date')";
   mysqli_query($conn,$sql); 	
     echo "<script>alert('Card added successfully!');</script>";
     header('Location: profile.php');
+}
 }
 //activate and deactivate card status
 if(isset($_POST['deactivate_card_status_button']))

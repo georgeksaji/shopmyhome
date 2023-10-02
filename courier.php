@@ -769,16 +769,9 @@ alert(jsMessage2);
               <form action="admin.php" method="POST" style="margin-block:auto"><li><button type="submit" class="btn btn-primary buttons" name="home">HOME</button></li></form>
               <li><button type="button" class="btn btn-primary buttons" id="buttonToClick" onclick="scrollToSection('.dashboard-content')">DASHBOARD</button></li>
               <!--<li> <button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.staff-content')">STAFFS</button></li>-->
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.courier-content')">COURIERS</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.vendor-content')">VENDORS</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.customer-content')">CUSTOMERS</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.category-content')">CATEGORY</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.type-content')">TYPE</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.brand-content')">BRAND</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.appliances-content')">APPLIANCE</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.purchase-content')">PURCHASES</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.assign-content')">ASSIGN COURIER</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.sales-content')">SALES</button></li>
+              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.courier-content')">ASSIGNED ORDERS</button></li>
+              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.vendor-content')">OUT FOR DELIVERY</button></li>
+              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.customer-content')">DELIVERED</button></li>
               <form action="admin.php" method="POST" style="margin-block:auto; "><li><button type="submit" class="btn btn-primary logout-button" name="destroy">LOGOUT</button></li></form>
               </ul>
           </div>
@@ -1066,7 +1059,7 @@ alert(jsMessage2);
             </div>
             <!--customer content completed-->
 
-            <!--category content goes here-->
+            <!--category content goes here
           <div class="category-content section">
           <div class="category-content-inner">
             <div class="category-content-inner-top">
@@ -1082,7 +1075,7 @@ alert(jsMessage2);
             <th>Category Name</th>
             <th>Action</th> 
             </tr>
-                <?php
+                <?php/*
               
                       $query_category = "SELECT * FROM tbl_category";
                       $category_num2 = $conn->query($query_category);
@@ -1494,7 +1487,8 @@ alert(jsMessage2);
 
 
             
-            </div>
+            </div>*/
+            ?>-->
 <script type="text/js" src="js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>   
 </body>

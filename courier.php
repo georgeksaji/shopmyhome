@@ -156,6 +156,51 @@ if(isset($_POST['update_brand']))
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Brand.php');
 }
+//accept courier button
+if(isset($_POST['accept_courier']))
+{
+  $cour_id = $_POST['courier_assign_id'];
+  //Accept_CA_Status
+  mysqli_query($conn,"UPDATE tbl_courier_assign SET Accept_CA_Status=1 WHERE Courier_Assign_ID='$cour_id'");
+}
+//delivered consignment button
+if(isset($_POST['accept_courier']))
+{
+  $cour_id = $_POST['courier_assign_id'];
+  //Accept_CA_Status
+  mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='DELIVERED' WHERE Courier_Assign_ID='$cour_id'");
+  echo "<script>alert('Consignment Accepted for delivery')</script>";
+}
+
+//unreachable consignment button
+if(isset($_POST['unreachable']))
+{
+  $cour_id = $_POST['courier_assign_id'];
+  //Accept_CA_Status
+  //mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='UNREACHABLE' WHERE Courier_Assign_ID='$cour_id'");
+  
+  //$cour_id = $_POST['courier_assign_id'];
+  // 	Delivery_Error_Status+1 if and only if <=3
+  $find_status="SELECT Delivery_Error_Status,Max_Delivery_Date FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
+  $result=mysqli_query($conn,$find_status);
+  $row=mysqli_fetch_assoc($result);
+  if($row['Delivery_Error_Status']<=2)
+  {
+    $delivery_date=$row['Max_Delivery_Date'];
+    $delivery_date = new DateTime($delivery_date);
+    $delivery_date->modify('+3 days');
+    // Format the modified date with time to 'Y-m-d H:i:s' format
+    $new_delivery_date = $delivery_date->format('Y-m-d H:i:s');
+    mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Error_Status=Delivery_Error_Status+1,Max_Delivery_Date='$new_delivery_date' WHERE Courier_Assign_ID='$cour_id'");    
+  echo "<script>alert('Consignment Unreachable')</script>"; 
+  }
+  else if($row['Delivery_Error_Status']>2)
+  {
+   echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
+  }
+}
+
+
 
 ?>
 <!doctype html>
@@ -468,7 +513,6 @@ padding:3%;
 {
   padding-top: 1%;
   padding-inline:1%;
-  overflow-y:scroll;
 }
 
 /*Vendor css content*/
@@ -770,7 +814,7 @@ alert(jsMessage2);
               <li><button type="button" class="btn btn-primary buttons" id="buttonToClick" onclick="scrollToSection('.dashboard-content')">DASHBOARD</button></li>
               <!--<li> <button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.staff-content')">STAFFS</button></li>-->
               <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.courier-content')">ASSIGNED ORDERS</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.vendor-content')">OUT FOR DELIVERY</button></li>
+              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.vendor-content')">PENDING DELIVERY</button></li>
               <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.customer-content')">DELIVERED</button></li>
               <form action="admin.php" method="POST" style="margin-block:auto; "><li><button type="submit" class="btn btn-primary logout-button" name="destroy">LOGOUT</button></li></form>
               </ul>
@@ -779,10 +823,10 @@ alert(jsMessage2);
         <!--dashboard content goes here-->
           <div class="dashboard-content section">
           <div class="cards-outer">
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/courier.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Courier Partners</p><p class="card-text-content"><?php echo $courier_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/vendor.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Vendors</p><p class="card-text-content"><?php echo $vendor_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/customer.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Customers</p><p class="card-text-content"><?php echo $customer_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/staff.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Staffs</p><p class="card-text-content"><?php echo $staff_num ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/delivered.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Delivered</p><p class="card-text-content"><?php echo $courier_num ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/calender.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Joined On</p><p class="card-text-content"><?php echo $vendor_num ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/courier.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Delivery Pending</p><p class="card-text-content"><?php echo $customer_num ?></p></div></div>
+          <!--<div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/staff.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Staffs</p><p class="card-text-content"><?php echo $staff_num ?></p></div></div>
           </div><div class="cards-outer" style="margin-block-start: 3%;">
           <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/category.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Categories</p><p class="card-text-content"><?php echo $category_num ?></p></div></div>
           <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/type.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Types</p><p class="card-text-content"><?php echo $type_num ?></p></div></div>
@@ -790,7 +834,7 @@ alert(jsMessage2);
           <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/appliance.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Appliances</p><p class="card-text-content"><?php echo $appliances_num ?></p></div></div>
           </div><div class="cards-outer" style="margin-block-start: 3%;">
           <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/purchase.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Purchases</p><p class="card-text-content"><?php echo $purchase_num ?></p></div></div>
-          <!--<div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/sales.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Sales</p><p class="card-text-content"><?php echo $sales_num ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/sales.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Sales</p><p class="card-text-content"><?php echo $sales_num ?></p></div></div>
       -->
         </div>
           
@@ -807,85 +851,72 @@ alert(jsMessage2);
             <div class="vendor-content-inner">
             
             <div class="vendor-content-inner-top">
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <a href="Register_Vendor.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">Add Vendors</button></a>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="color:white;">
+                Deliver the Consignments on time and update the status of the delivery. 
+                If you are unable to deliver the consignment, please update the status as "Customer Unreachable" and your deliery time will be extended by 3 days. 
+                If you are unable to deliver the consignment for 3 times, the consignment will be reassigned to another courier partner and you will be suspended.
                 </div>
                 </div>
             <div class="vendor-content-inner-bottom">
               <div class="view_table_wrapper">
-            <table class="table-bordered table-striped view_table">
+              <table class="table-bordered table-striped view_table"> 
                 <tr> 
-                  <th>ID</th> 
-                  <th>Username</th> 
-                  <th>Courier Name</th>
-                  <th>Registrant Staff ID</th>
-                  <th>Phone</th>
-                  <th>Building</th>
-                  <th>Street</th>
-                  <th>District</th>
-                  <th>State</th>
-                  <th>Pincode</th>
-                  <th>Joining Date</th>
-                  <th>Status</th>
+                <th>Assign ID</th>
+                  <th>Cart ID</th>
+                  <th>Delivery Details</th>
+                  <th>Assign Date</th>
+                  <th>Deliver Before</th>
                   <th colspan="2">Action</th>
+                </tr>
                 </tr>
                 <?php
                   // Assuming you have an SQL query stored in the $result2 variable
-                  $query = "SELECT * FROM tbl_vendor"; // Replace with your actual query
-
-                  $vendor_num2 = $conn->query($query);
-
-                  if ($vendor_num2) {
-                      while ($row_v = $vendor_num2->fetch_assoc()) {
+                  $query = "SELECT * FROM tbl_courier_assign WHERE Accept_CA_Status=1";
+                  $courier_num2 = $conn->query($query);
+                    if ($courier_num2) {
+                      while ($row_c = $courier_num2->fetch_assoc()) {
                           echo "<tr>";
-                          echo "<td>" . $row_v['Vendor_ID'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Username'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Name'] . "</td>";
-                          echo "<td>" . $row_v['Staff_Id'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Phno'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Hname'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Street'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Dist'] . "</td>";
-                          echo "<td>" . $row_v['State_Ut'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Pin'] . "</td>";
-                          echo "<td>" . $row_v['Vjoining_Date'] . "</td>";
-                          if($row_v['Vendor_Status'] == 1){
-                            echo "<td>Active</td>";
-                          }else{  
-                            echo "<td>Inactive</td>";
-                          }
-
-                          //update status button
-                        
-                          if($row_v['Vendor_Status'] == 1)
+                          echo "<td>" . $row_c['Courier_Assign_ID'] . "</td>";
+                          echo "<td>" . $row_c['CM_ID'] . "</td>";
+                          //select customer details from tbl_customer where cust_id = $row_c['Customer_ID']
+                          // 	Cust_Fname 	Cust_Lname 	Cust_Phone 	Cust_Gender 	Cust_Hname 	Cust_Street 	Cust_Dist 	State_Ut 	Cust_Pin
+                          $customer_id=$row_c['Customer_ID'];
+                          $query_c = "SELECT * FROM tbl_customer WHERE Cust_ID='$customer_id'";
+                          $customer_num2 = mysqli_query($conn,$query_c);
+                          $row_cust = mysqli_fetch_array($customer_num2);
+                          //if(mysqli_num_rows($row_cust)=1)
+                          if($row_cust)
                           {
-                            echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='vendor_id' value='". $row_v['Vendor_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_vendor_status_button'>DEACTIVATE</button></form></td>";
+                            echo "<td>" . $row_cust['Cust_Fname'] . " " . $row_cust['Cust_Lname'] . "<br>" . $row_cust['Cust_Phone'] . "<br>" . $row_cust['Cust_Hname'] . ", " . $row_cust['Cust_Street'] . "<br>" . $row_cust['Cust_Dist'] . ", " . $row_cust['State_Ut'] . ", " . $row_cust['Cust_Pin'] . "</td>";
                           }
-                          if($row_v['Vendor_Status'] == 0)
+                          //echo "<td>" . $row_c['Delivery_Details'] . "</td>";
+                          echo "<td>" . $row_c['Courier_Assign_Date'] . "</td>";
+                          echo "<td>" . $row_c['Max_Delivery_Date'] . "</td>";
+                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="delivered">DELIVERED</button></form></td>';
+                          //Customer Unreachable button
+                          //Delivery_Error_Status
+                          $delivery_error_status=$row_c['Delivery_Error_Status'];
+                          if($delivery_error_status<3)
                           {
-                            echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='vendor_id' value='". $row_v['Vendor_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_vendor_status_button'>ACTIVATE</button></form></td>";
+                          $delivery_error_status=$delivery_error_status+1;
+                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="unreachable">CUSTOMER UNREACHABLE x'.$delivery_error_status.'</button></form></td>';
                           }
-                          //edit vendor button
-                          echo '<td><form action="admin.php" method="POST"><input type="hidden" name="vendor_updateid" value="'. $row_v['Vendor_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="update_vendor">UPDATE</button></form></td>';
+                          else
+                          {
+                            echo '<td style="text-align:center;"><form method="POST"><button type="submit" class="btn btn-primary me-md-2" name="unreachable" disabled>CUSTOMER UNREACHABLE</button></form></td>';
+                          }
                           echo "</tr>";
-                      
-                        
-
-
-
                       }
-                  }   
-                  else {
-                      echo "No data available.";
-                  }
-
-                  // Close the database connection
-                  $vendor_num2->close();
-                  ?>
- 
-              </table>
-            </div>       
+                    }
+                      else {
+                        echo '<tr>';
+                        echo '<td colspan="6" style="text-align:center">No Consignments left to deliver</td>';
+                        echo '</tr>';
+                      }
+                    echo'</table>';
+                  ?>  
             </div>
+                    </div>
             </div>
             </div>
             <!--vendor content completed-->
@@ -897,84 +928,60 @@ alert(jsMessage2);
 
               <div class="courier-content-inner-top">
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <a href="Register_Courier.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">Add Courier Partners</button></a>
+                <!--<a href="Register_Courier.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">Add Courier Partners</button></a>-->
                 </div>
                 </div>
             <div class="courier-content-inner-bottom">
+            <div class="view_table_wrapper">
             <table class="table-bordered table-striped view_table">
                 <tr> 
-                  <th>ID</th> 
-                  <th>Username</th> 
-                  <th>Courier Name</th>
-                  <th>Registrant Staff ID</th>
-                  <th>Phone</th>
-                  <th>Building</th>
-                  <th>Street</th>
-                  <th>District</th>
-                  <th>State</th>
-                  <th>Pincode</th>
-                  <th>Joining Date</th>
-                  <th>Status</th>
-                  <th colspan="2">Action</th>
+                <th>Assign ID</th>
+                  <th>Cart ID</th>
+                  <th>Delivery Details</th>
+                  <th>Assign Date</th>
+                  <th>Deliver Before</th>
+                  <th>Action</th>
+                </tr>
                 </tr>
                 <?php
                   // Assuming you have an SQL query stored in the $result2 variable
-                  $query = "SELECT * FROM tbl_courier"; // Replace with your actual query
-
+                  $query = "SELECT * FROM tbl_courier_assign WHERE Accept_CA_Status=0";
                   $courier_num2 = $conn->query($query);
-
-                  if ($courier_num2) {
+                    if ($courier_num2) {
                       while ($row_c = $courier_num2->fetch_assoc()) {
                           echo "<tr>";
-                          echo "<td>" . $row_c['Cour_ID'] . "</td>";
-                          echo "<td>" . $row_c['Cour_Username'] . "</td>";
-                          echo "<td>" . $row_c['Cour_Name'] . "</td>";
-                          echo "<td>" . $row_c['Staff_ID'] . "</td>";
-                          echo "<td>" . $row_c['Cour_Phone'] . "</td>";
-                          echo "<td>" . $row_c['Cour_Building_name'] . "</td>";
-                          echo "<td>" . $row_c['Cour_Street'] . "</td>";
-                          echo "<td>" . $row_c['Cour_Dist'] . "</td>";
-                          echo "<td>" . $row_c['Cour_State_ut'] . "</td>";
-                          echo "<td>" . $row_c['Cour_Pin'] . "</td>";
-                          echo "<td>" . $row_c['Cour_Joining_Date'] . "</td>";
-                          if($row_c['Cour_Status'] == 1){
-                            echo "<td>Active</td>";
-                          }else{  
-                            echo "<td>Inactive</td>";
-                          }
-
-                          //update status button
-                        
-                          if($row_c['Cour_Status'] == 1)
+                          echo "<td>" . $row_c['Courier_Assign_ID'] . "</td>";
+                          echo "<td>" . $row_c['CM_ID'] . "</td>";
+                          //select customer details from tbl_customer where cust_id = $row_c['Customer_ID']
+                          // 	Cust_Fname 	Cust_Lname 	Cust_Phone 	Cust_Gender 	Cust_Hname 	Cust_Street 	Cust_Dist 	State_Ut 	Cust_Pin
+                          $customer_id=$row_c['Customer_ID'];
+                          $query_c = "SELECT * FROM tbl_customer WHERE Cust_ID='$customer_id'";
+                          $customer_num2 = mysqli_query($conn,$query_c);
+                          $row_cust = mysqli_fetch_array($customer_num2);
+                          //if(mysqli_num_rows($row_cust)=1)
+                          if($row_cust)
                           {
-                            echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='". $row_c['Cour_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_cour_status_button'>DEACTIVATE</button></form></td>";
+                            echo "<td>" . $row_cust['Cust_Fname'] . " " . $row_cust['Cust_Lname'] . "<br>" . $row_cust['Cust_Phone'] . "<br>" . $row_cust['Cust_Hname'] . ", " . $row_cust['Cust_Street'] . "<br>" . $row_cust['Cust_Dist'] . ", " . $row_cust['State_Ut'] . ", " . $row_cust['Cust_Pin'] . "</td>";
                           }
-                          if($row_c['Cour_Status'] == 0)
-                          {
-                            echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='". $row_c['Cour_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cour_status_button'>ACTIVATE</button></form></td>";
-                          }
-                          //edit cour button
-                          echo '<td><form action="admin.php" method="POST"><input type="hidden" name="cour_updateid" value="'. $row_c['Cour_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="update_cour">UPDATE</button></form></td>';
+                          //echo "<td>" . $row_c['Delivery_Details'] . "</td>";
+                          echo "<td>" . $row_c['Courier_Assign_Date'] . "</td>";
+                          echo "<td>" . $row_c['Max_Delivery_Date'] . "</td>";
+                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="accept_courier">ACCEPT</button></form></td>';
                           echo "</tr>";
-                      
-                        
-
-
-
-
                       }
-                  } else {
-                      echo "No data available.";
-                  }
+                    }
+                      else {
+                        echo '<tr>';
+                        echo '<td colspan="6" style="text-align:center">No Consignments assigned</td>';
+                        echo '</tr>';
+                      }
+                    echo'</table>';
+                  ?>  
+            </div>
+                    </div>
+            </div>
+            </div>
 
-                  // Close the database connection
-                  $courier_num2->close();
-                  ?>
- 
-              </table>
-            </div>
-            </div>
-            </div>
 
             <!--courier content completed-->
 
@@ -983,14 +990,14 @@ alert(jsMessage2);
               <div class="customer-content-inner">
 
               <div class="customer-content-inner-top">
-<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 </div>
                 </div>
             <div class="customer-content-inner-bottom">
             <div class="view_table_wrapper">
-                  <table class="table-bordered table-striped view_table">
+            <table class="table-bordered table-striped view_table">
                 <tr> 
-                  <th>ID</th> 
+                <th>ID</th>
                   <th>Username</th> 
                   <th>Full&nbspName</th>
                   <th>Phone</th>
@@ -1004,16 +1011,16 @@ alert(jsMessage2);
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
-                <?php
-              
-                      $query_customer = "SELECT * FROM tbl_customer";
-                      $customer_num2 = $conn->query($query_customer);
+                                <?php
+                  
+                  $query_customer = "SELECT * FROM tbl_customer";
+                  $customer_num2 = $conn->query($query_customer);
 
-                      if ($customer_num2) {
-                          while ($row_c = $customer_num2->fetch_assoc()) {
-                              echo "<tr>";
-                              echo "<td>" . $row_c['Cust_ID'] . "</td>";
-                              echo "<td>" . $row_c['C_Username'] . "</td>";
+                    if ($customer_num2) {
+                      while ($row_c = $customer_num2->fetch_assoc()) {
+                          echo "<tr>";
+                          echo "<td>" . $row_c['Cust_ID'] . "</td>";
+                          echo "<td>" . $row_c['C_Username'] . "</td>";
                               echo "<td>" . $row_c['Cust_Fname'] . "</td>";
                               echo "<td>" . $row_c['Cust_Phone'] . "</td>";
                               echo "<td>" . $row_c['Cust_Hname'] . "</td>";
@@ -1026,7 +1033,7 @@ alert(jsMessage2);
 
                               if ($row_c['Cust_Status'] == 1) {
                                   echo "<td>Active</td>";
-                              } else {
+                          } else {
                                   echo "<td>Inactive</td>";
                               }
                                   //update status button
@@ -1039,13 +1046,13 @@ alert(jsMessage2);
                                   {
                                     echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cust_id' value='". $row_c['Cust_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cust_status_button'>ACTIVATE</button></form></td>";
                                   }
-                                  echo "</tr>";
+                          echo "</tr>";
+                      
 
 
-
-                             }
+                    }
                       } else {
-                          echo "No data available.";
+                        echo "No data available.";
                       }
 
                       // Close the database connection

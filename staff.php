@@ -157,6 +157,38 @@ if(isset($_POST['update_brand']))
   header('location:Update_Brand.php');
 }
 
+//assign courier button
+if(isset($_POST['assign_courier']))
+{
+  $pay_id=$_POST['payment_id'];
+  $assigned_delivery_partner=$_POST['courier_assign_id'];
+  $customer_id=$_POST['Customer_Id'];
+  $cm_id=$_POST['master_cart_id'];
+  $date_of_assign = $_POST['date'];
+$assignDateTime = new DateTime($date_of_assign);
+$assignDateTime->modify('+10 days');
+
+// Format the modified delivery date with both date and time components
+$expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
+echo $expectedDeliveryDate;
+
+// Now $expectedDeliveryDate contains the updated date and time
+
+  //generate_courier_assignment_id()
+  //insert into tbl_courier_assign
+  // 	Courier_Assign_ID 	Courier_ID 	CM_ID 	Customer_ID 	Courier_Assign_Date 
+  mysqli_query($conn,"INSERT INTO tbl_courier_assign(Courier_Assign_ID,Courier_ID,CM_ID,Max_Delivery_Date,Customer_ID) VALUES(generate_courier_assignment_id(),'$assigned_delivery_partner','$cm_id','$expectedDeliveryDate','$customer_id')");
+  
+  //update Courier_Assignment_Status=1 in tbl_payment
+  mysqli_query($conn,"UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
+  echo "<script>alert('Courier Assigned Successfully');</script>";
+
+
+
+
+  echo "<script>alert('Courier Assigned Successfully');</script>";
+}
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -468,7 +500,6 @@ padding:3%;
 {
   padding-top: 1%;
   padding-inline:1%;
-  overflow-y:scroll;
 }
 
 /*Vendor css content*/
@@ -846,7 +877,7 @@ alert(jsMessage2);
                       while ($row_v = $vendor_num2->fetch_assoc()) {
                           echo "<tr>";
                           echo "<td>" . $row_v['Vendor_ID'] . "</td>";
-                          echo "<td>" . $row_v['Vendor_Username'] . "</td>";
+                          echo "<td>" . $row_v['Vendor_Email'] . "</td>";
                           echo "<td>" . $row_v['Vendor_Name'] . "</td>";
                           echo "<td>" . $row_v['Staff_Id'] . "</td>";
                           echo "<td>" . $row_v['Vendor_Phno'] . "</td>";
@@ -908,6 +939,7 @@ alert(jsMessage2);
                 </div>
                 </div>
             <div class="courier-content-inner-bottom">
+            <div class="view_table_wrapper">
             <table class="table-bordered table-striped view_table">
                 <tr> 
                   <th>ID</th> 
@@ -982,6 +1014,7 @@ alert(jsMessage2);
             </div>
             </div>
             </div>
+                </div>
 
             <!--courier content completed-->
 
@@ -1382,7 +1415,7 @@ alert(jsMessage2);
                         foreach ($delivery_partners as $delivery_partner) {
                         echo "<option value='".$delivery_partner['Cour_ID']."'>".$delivery_partner['Cour_Name']."</option>";
                         }
-                        echo "</select></td><input type='hidden' name='master_cart_id' value='". $cart_master_id ."'><input type='hidden' name='Customer_Id' value='". $customer_id ."'>";
+                        echo "</select></td><input type='hidden' name='master_cart_id' value='". $cart_master_id ."'><input type='hidden' name='date' value='". $date ."'><input type='hidden' name='Customer_Id' value='". $customer_id ."'>";
                         echo "<td><button type='submit' class='btn btn-primary me-md-2' name='assign_courier'>ASSIGN</button></form></td>";
                         echo "</tr>";
                      }
@@ -1432,20 +1465,21 @@ alert(jsMessage2);
                         $row_customer_address=$result_customer_address->fetch_assoc();
                         $customer_address=$row_customer_address['Cust_Hname'].", ".$row_customer_address['Cust_Street'].", ".$row_customer_address['Cust_Dist'].", ".$row_customer_address['State_Ut'].", ".$row_customer_address['Cust_Pin'];
                         //delivery partner
-                        $sql_delivery_partner="SELECT Courier_ID,Courier_Assign_Date FROM tbl_courier_assign WHERE CM_ID='$cart_master_id'";
+                        $sql_delivery_partner="SELECT Courier_ID,Courier_Assign_Date,Max_Delivery_Date  FROM tbl_courier_assign WHERE CM_ID='$cart_master_id'";
                         $result_delivery_partner=$conn->query($sql_delivery_partner);
                         $row_delivery_partner=$result_delivery_partner->fetch_assoc();
                         $delivery_partner_id=$row_delivery_partner['Courier_ID'];
                         $delivery_partner_assign_date=$row_delivery_partner['Courier_Assign_Date'];
+                        $expectedDeliveryDate=$row_delivery_partner['Max_Delivery_Date'];
                         //delivery partner name
                         $sql_delivery_partner_name="SELECT Cour_Name FROM tbl_courier WHERE Cour_ID='$delivery_partner_id'";
                         $result_delivery_partner_name=$conn->query($sql_delivery_partner_name);
                         $row_delivery_partner_name=$result_delivery_partner_name->fetch_assoc();
                         $delivery_partner_name=$row_delivery_partner_name['Cour_Name'];
                         //expected delivery date including time
-                        $assignDateTime = new DateTime($delivery_partner_assign_date);
-                        $assignDateTime->modify('+10 days');
-                        $expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
+                        //$assignDateTime = new DateTime($delivery_partner_assign_date);
+                        //$assignDateTime->modify('+10 days');
+                        //$expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
                         
                         echo "<tr>";
                         echo "<td>" . $payment_id . "</td>";
@@ -1472,6 +1506,7 @@ alert(jsMessage2);
 
                     
                   ?>
+              
               
               </div>
               </div>

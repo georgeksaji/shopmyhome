@@ -5,38 +5,33 @@ include('connection.php');
 session_start();
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
+//$user_name=//select Cour_ID tbl_courier where Cour_Username='$userId'
+$user_id2="SELECT Cour_ID FROM tbl_courier WHERE Cour_Username='$userId'";
+$result=mysqli_query($conn,$user_id2);
+$row=mysqli_fetch_assoc($result);
+$user_number=$row['Cour_ID'];
 
 //dashboard box values 
 
-$result1=mysqli_query($conn,"SELECT * FROM tbl_staff");
-$staff_num=mysqli_num_rows($result1);
+//$result1=mysqli_query($conn,"SELECT * FROM tbl_staff");
+//$staff_num=mysqli_num_rows($result1);
+//courier_delivered
+$result2=mysqli_query($conn,"SELECT * FROM tbl_courier_assign WHERE Delivery_Status='DELIVERED' AND Courier_ID='$user_number'");
+$courier_delivered=mysqli_num_rows($result2);
+//courier_joined date 
+//select * from tbl_courier
+$result3=mysqli_query($conn,"SELECT * FROM tbl_courier WHERE Cour_ID='$user_number'");
+$row3=mysqli_fetch_assoc($result3);
+//Cour_Joining_Date
+$courier_joined=$row3['Cour_Joining_Date'];
 
-$result2=mysqli_query($conn,"SELECT * FROM tbl_courier");
-$courier_num=mysqli_num_rows($result2);
 
-$result3=mysqli_query($conn,"SELECT * FROM tbl_vendor");
-$vendor_num=mysqli_num_rows($result3);
+//pending_delivery
+$result4=mysqli_query($conn,"SELECT * FROM tbl_courier_assign WHERE Delivery_Status='NOT DELIVERED' AND Courier_ID='$user_number'");	
+$pending_delivery=mysqli_num_rows($result4);
 
-$result4=mysqli_query($conn,"SELECT * FROM tbl_customer");
-$customer_num=mysqli_num_rows($result4);
 
-$result5=mysqli_query($conn,"SELECT * FROM tbl_category");
-$category_num=mysqli_num_rows($result5);
 
-$result6=mysqli_query($conn,"SELECT * FROM tbl_type");
-$type_num=mysqli_num_rows($result6);
-
-$result7=mysqli_query($conn,"SELECT * FROM tbl_brand");
-$brand_num=mysqli_num_rows($result7);
-
-$result8=mysqli_query($conn,"SELECT * FROM tbl_appliance");
-$appliances_num=mysqli_num_rows($result8);
-
-$result9=mysqli_query($conn,"SELECT * FROM tbl_purchase_master");
-$purchase_num=mysqli_num_rows($result9);
-
-//$result10=mysqli_query($conn,"SELECT * FROM tbl_sales");
-//$sales_num=mysqli_num_rows($result10);
 
 
 
@@ -164,13 +159,13 @@ if(isset($_POST['accept_courier']))
   mysqli_query($conn,"UPDATE tbl_courier_assign SET Accept_CA_Status=1 WHERE Courier_Assign_ID='$cour_id'");
 }
 //delivered consignment button
-if(isset($_POST['accept_courier']))
+/*if(isset($_POST['accept_courier']))
 {
   $cour_id = $_POST['courier_assign_id'];
   //Accept_CA_Status
-  mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='DELIVERED' WHERE Courier_Assign_ID='$cour_id'");
+  mysqli_query($conn,"UPDATE tbl_courier_assign SET Accept_CA_Status=1 WHERE Courier_Assign_ID='$cour_id'");
   echo "<script>alert('Consignment Accepted for delivery')</script>";
-}
+}*/
 
 //unreachable consignment button
 if(isset($_POST['unreachable']))
@@ -198,6 +193,21 @@ if(isset($_POST['unreachable']))
   {
    echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
   }
+}
+
+//delivered consignment button
+if(isset($_POST['delivered']))
+{
+  $cour_id = $_POST['courier_assign_id'];
+  //cart_m_id
+  $delivered_cart_id = $_POST['cart_m_id'];
+  mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='DELIVERED' WHERE Courier_Assign_ID='$cour_id'");
+  // 	Delivery_ID 	Courier_Assign_ID 	CM_ID 	Delivery_Date 
+  $insert_delivery_details="INSERT INTO tbl_delivery(Delivery_ID,Courier_Assign_ID,CM_ID) VALUES(generate_delivery_id(),'$cour_id','$delivered_cart_id')";
+  mysqli_query($conn,$insert_delivery_details);
+  //update Cart_Status 	in tbl_cart_master to DELIVERED
+  mysqli_query($conn,"UPDATE tbl_cart_master SET Cart_Status='DELIVERED' WHERE CM_ID='$delivered_cart_id'");
+  echo "<script>alert('Consignment Delivered')</script>";
 }
 
 
@@ -823,9 +833,9 @@ alert(jsMessage2);
         <!--dashboard content goes here-->
           <div class="dashboard-content section">
           <div class="cards-outer">
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/delivered.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Delivered</p><p class="card-text-content"><?php echo $courier_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/calender.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Joined On</p><p class="card-text-content"><?php echo $vendor_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/courier.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Delivery Pending</p><p class="card-text-content"><?php echo $customer_num ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/delivered.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Delivered</p><p class="card-text-content"><?php echo $courier_delivered ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/calender.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Joined On</p><p class="card-text-content"><?php echo $courier_joined ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/courier.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Delivery Pending</p><p class="card-text-content"><?php echo $pending_delivery ?></p></div></div>
           <!--<div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/staff.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Staffs</p><p class="card-text-content"><?php echo $staff_num ?></p></div></div>
           </div><div class="cards-outer" style="margin-block-start: 3%;">
           <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/category.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Categories</p><p class="card-text-content"><?php echo $category_num ?></p></div></div>
@@ -871,13 +881,15 @@ alert(jsMessage2);
                 </tr>
                 <?php
                   // Assuming you have an SQL query stored in the $result2 variable
-                  $query = "SELECT * FROM tbl_courier_assign WHERE Accept_CA_Status=1";
+                  $query = "SELECT * FROM tbl_courier_assign WHERE Accept_CA_Status = 1 AND Delivery_Status = 'NOT DELIVERED' AND Courier_ID ='$user_number'";
                   $courier_num2 = $conn->query($query);
-                    if ($courier_num2) {
+                  if(mysqli_num_rows($courier_num2)>0)
+                    {
                       while ($row_c = $courier_num2->fetch_assoc()) {
                           echo "<tr>";
                           echo "<td>" . $row_c['Courier_Assign_ID'] . "</td>";
                           echo "<td>" . $row_c['CM_ID'] . "</td>";
+                          //$master_c_id=$row_c['CM_ID'];
                           //select customer details from tbl_customer where cust_id = $row_c['Customer_ID']
                           // 	Cust_Fname 	Cust_Lname 	Cust_Phone 	Cust_Gender 	Cust_Hname 	Cust_Street 	Cust_Dist 	State_Ut 	Cust_Pin
                           $customer_id=$row_c['Customer_ID'];
@@ -892,7 +904,7 @@ alert(jsMessage2);
                           //echo "<td>" . $row_c['Delivery_Details'] . "</td>";
                           echo "<td>" . $row_c['Courier_Assign_Date'] . "</td>";
                           echo "<td>" . $row_c['Max_Delivery_Date'] . "</td>";
-                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="delivered">DELIVERED</button></form></td>';
+                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="cart_m_id" value="'. $row_c['CM_ID'] .'"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="delivered">DELIVERED</button></form></td>';
                           //Customer Unreachable button
                           //Delivery_Error_Status
                           $delivery_error_status=$row_c['Delivery_Error_Status'];
@@ -935,7 +947,7 @@ alert(jsMessage2);
             <div class="view_table_wrapper">
             <table class="table-bordered table-striped view_table">
                 <tr> 
-                <th>Assign ID</th>
+                  <th>Assign ID</th>
                   <th>Cart ID</th>
                   <th>Delivery Details</th>
                   <th>Assign Date</th>
@@ -945,9 +957,11 @@ alert(jsMessage2);
                 </tr>
                 <?php
                   // Assuming you have an SQL query stored in the $result2 variable
-                  $query = "SELECT * FROM tbl_courier_assign WHERE Accept_CA_Status=0";
+                  $query = "SELECT * FROM tbl_courier_assign WHERE Accept_CA_Status=0 AND Courier_ID ='$user_number'";
                   $courier_num2 = $conn->query($query);
-                    if ($courier_num2) {
+                  if(mysqli_num_rows($courier_num2)>0)
+                  {
+                    //if ($courier_num2) {
                       while ($row_c = $courier_num2->fetch_assoc()) {
                           echo "<tr>";
                           echo "<td>" . $row_c['Courier_Assign_ID'] . "</td>";
@@ -997,66 +1011,43 @@ alert(jsMessage2);
             <div class="view_table_wrapper">
             <table class="table-bordered table-striped view_table">
                 <tr> 
-                <th>ID</th>
-                  <th>Username</th> 
-                  <th>Full&nbspName</th>
-                  <th>Phone</th>
-                  <th>House</th>
-                  <th>Street</th>
-                  <th>District</th>
-                  <th>State</th>
-                  <th>Pincode</th>
-                  <th>Gender</th>
-                  <th>Joining Date</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                <th>Delivery ID</th>
+                  <th>Cart ID</th>
+                  <th>Courier Assign ID</th>
+                  <th>Customer ID</th>
+                  <th>Delivery Date</th>
                 </tr>
-                                <?php
-                  
-                  $query_customer = "SELECT * FROM tbl_customer";
-                  $customer_num2 = $conn->query($query_customer);
-
-                    if ($customer_num2) {
-                      while ($row_c = $customer_num2->fetch_assoc()) {
-                          echo "<tr>";
-                          echo "<td>" . $row_c['Cust_ID'] . "</td>";
-                          echo "<td>" . $row_c['C_Username'] . "</td>";
-                              echo "<td>" . $row_c['Cust_Fname'] . "</td>";
-                              echo "<td>" . $row_c['Cust_Phone'] . "</td>";
-                              echo "<td>" . $row_c['Cust_Hname'] . "</td>";
-                              echo "<td>" . $row_c['Cust_Street'] . "</td>";
-                              echo "<td>" . $row_c['Cust_Dist'] . "</td>";
-                              echo "<td>" . $row_c['State_Ut'] . "</td>";
-                              echo "<td>" . $row_c['Cust_Pin'] . "</td>";
-                              echo "<td>" . $row_c['Cust_Gender'] . "</td>";
-                              echo "<td>" . $row_c['Cust_Date'] . "</td>";
-
-                              if ($row_c['Cust_Status'] == 1) {
-                                  echo "<td>Active</td>";
-                          } else {
-                                  echo "<td>Inactive</td>";
-                              }
-                                  //update status button
-                                                          
-                                  if($row_c['Cust_Status'] == 1)
-                                  {
-                                    echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cust_id' value='". $row_c['Cust_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_cust_status_button'>DEACTIVATE</button></form></td>";
-                                  }
-                                  if($row_c['Cust_Status'] == 0)
-                                  {
-                                    echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cust_id' value='". $row_c['Cust_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cust_status_button'>ACTIVATE</button></form></td>";
-                                  }
-                          echo "</tr>";
-                      
-
-
+                  <?php
+                  //select * from tbl_delivered
+                  $select_delivered_items="SELECT * FROM tbl_delivery WHERE Courier_Assign_ID IN (SELECT Courier_Assign_ID FROM tbl_courier_assign WHERE Delivery_Status = 'DELIVERED' AND Courier_ID = '$user_number')";
+                  $delivered_app=mysqli_query($conn,$select_delivered_items);
+                  if(mysqli_num_rows($delivered_app)>0)
+                  {
+                    while($row_del=mysqli_fetch_array($delivered_app))
+                    {
+                      //Delivery_ID 	Courier_Assign_ID 	CM_ID 	Delivery_Date 	
+                      echo "<tr>";
+                      echo "<td>" . $row_del['Delivery_ID'] . "</td>";
+                      echo "<td>" . $row_del['CM_ID'] . "</td>";
+                      echo "<td>" . $row_del['Courier_Assign_ID'] . "</td>";
+                      //select Customer_ID from tbl_cart_master where CM_ID=$row_del['CM_ID']
+                      $select_customer_id = "SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='" . $row_del['CM_ID'] . "'";
+                      $customer_id_app=mysqli_query($conn,$select_customer_id);
+                      $row_customer_id=mysqli_fetch_array($customer_id_app);
+                      $ordered_cust_id=$row_customer_id['Customer_ID'];
+                      echo "<td>" . $ordered_cust_id . "</td>";
+                      echo "<td>" . $row_del['Delivery_Date'] . "</td>";
+                      echo "</tr>";
                     }
-                      } else {
-                        echo "No data available.";
-                      }
-
+                  }
+                  else
+                  {
+                    echo '<tr>';
+                    echo '<td colspan="5" style="text-align:center">No Consignments delivered yet.</td>';
+                    echo '</tr>';
+                  }
                       // Close the database connection
-                      $customer_num2->close();
+                      $delivered_app->close();
                       ?>
 
               </table>
@@ -1064,6 +1055,8 @@ alert(jsMessage2);
             </div>
             </div>
             </div>
+            //SELECT * FROM tbl_delivery WHERE Courier_Assign_ID IN (SELECT Courier_Assign_ID FROM tbl_courier_assign WHERE Delivery_Status = 'DELIVERED' AND Courier_ID = $user_number);
+ 
             <!--customer content completed-->
 
             <!--category content goes here

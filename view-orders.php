@@ -15,6 +15,7 @@ else {
   $userId = null;
   $usertype = null;
 }
+echo $userId;
 
 
 //logout button
@@ -216,39 +217,42 @@ a {
   overflow-y: scroll;
 }
 .order-box-outer {
-  width: 80%;
+  width: 65%;
     height:max-content;
     margin:auto;
     background-color: rgba(255, 25, 255, 0.1);
-    border-style: solid;
-    border-width: 1px;
-    display:block;
+    
+       display:block;
     margin-block:1.9%;
 }
 .order-box-top {
   width: 100%;
   height: 10%;
   padding-block:1%;
-  background-color: red;
+  background-color: rgba(0,0,0);
+  color: white; 
+
   display: flex;
   justify-content: space-evenly;
 }
 .order-box-center {
   width: 100%;
   height: 60%;
-  background-color: blue;
+  
+  background-color: rgba(256,256,256);
+  
   display: grid;
 }
 .order-box-bottom {
   width: 100%;
   height: 20%;
-  background-color: green;
+
   display: grid;
 }
 .order-date {
   width: 20%;
   height: 100%;
-  background-color: yellow;
+  
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -257,7 +261,7 @@ a {
 .order-total {
   width: 20%;
   height: 100%;
-  background-color: orange;
+  
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -266,33 +270,45 @@ a {
 .order-id {
   width: 20%;
   height: 100%;
-  background-color: white;
+  
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
+
 .order-reciept {
   width: 20%;
   height: 100%;
-  background-color: violet;
+  
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+.invoice-button {
+  width: 100%;
+  height: 100%;
+  background-color: rgb(6, 28, 100);
+  border-style: none;
+  color: white;
+  font-size: 112%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 400;
+  transition: 0.3s;
 }
 .order-status {
   width: 100%;
   height: 10vh;
-  background-color: pink;
+  
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .order-items {
   width: 100%;
-  height: 13vh;
-  background-color: gold;
+  height: 16vh;
+  
   display: flex;
   align-items: center;
   justify-content: center;
@@ -393,11 +409,11 @@ a {
             </div>
             <div class="content-section">
 
-                 <div class="order-box-outer">
+                 <!--<div class="order-box-outer">
                   <div class="order-box-top">
-                  <div class="order-date">12-09-23</div>
-                  <div class="order-total">₹34567</div>
-                  <div class="order-id">PY12345</div>
+                  <div class="order-date">Order Date: 12-09-23</div>
+                  <div class="order-total">Total Cost: ₹34567</div>
+                  <div class="order-id">Order ID: PY12345</div>
                   <div class="order-reciept">Invoice</div>
                   </div>
                   <div class="order-box-center">
@@ -415,7 +431,75 @@ a {
                     <div class="order-items">Item 1</div>
                     <div class="order-items">Item final</div>
                   </div>
-              </div>
+              </div>-->
+              <?php
+              $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status!= 'ASSIGNED'";
+              $result = mysqli_query($conn,$sql);
+              if(mysqli_num_rows($result) > 0)
+              {
+                //Total_Amount 	Cart_Status 	
+                while($row = mysqli_fetch_assoc($result))
+                {
+                  $cm_id = $row['CM_ID'];
+                  $total_amount = $row['Total_Amount'];
+                  $status = $row['Cart_Status'];
+                  $sql1 = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
+                  $result1 = mysqli_query($conn,$sql1);
+                  $count = mysqli_num_rows($result1);
+                  echo "<div class='order-box-outer'>";
+                  echo "<div class='order-box-top'>";
+                  $sql_payment="SELECT Payment_Date FROM tbl_payment WHERE CM_ID = '$cm_id'";
+                  $result_payment = mysqli_query($conn,$sql_payment);
+                  $row_payment = mysqli_fetch_assoc($result_payment);
+                  $payment_date = $row_payment['Payment_Date'];
+                  echo "<div class='order-date'>Order Date: $payment_date</div>";
+                  echo "<div class='order-total'>Total Cost: ₹$total_amount</div>";
+                  echo "<div class='order-id'>Order ID: $cm_id</div>";
+                  echo "<div class='order-reciept'><form method='POST' style='width: 100%;height: 100%;'><button type='submit' name='invoice' class='invoice-button'>Invoice</button><form></div>";
+                  echo "</div>";
+                  echo "<div class='order-box-center'>";
+                  echo "<div class='order-status'>$status</div>";
+                  while($row1 = mysqli_fetch_assoc($result1))
+                  {
+                    //Appliance_ID 	Quantity 	Price 
+                    $appliance_id = $row1['Appliance_ID'];
+                    $quantity = $row1['Quantity'];
+                    $price = $row1['Price'];
+                    $sql2 = "SELECT * FROM tbl_appliance WHERE Appliance_ID = '$appliance_id'";
+                    $result2 = mysqli_query($conn,$sql2);
+                    $row2 = mysqli_fetch_assoc($result2);
+                    // Appliance_ID 	Appliance_Name 	Type_ID 	Brand_ID 	Appliance_Description 	Appliance_Image1	
+                    $appliance_name = $row2['Appliance_Name'];
+                    $type_id = $row2['Type_ID'];
+                    $brand_id = $row2['Brand_ID'];
+                    //$appliance_description = $row2['Appliance_Description'];
+                    $appliance_image1 = $row2['Appliance_Image1'];
+                    $sql3 = "SELECT * FROM tbl_type WHERE Type_ID = '$type_id'";
+                    $result3 = mysqli_query($conn,$sql3);
+                    $row3 = mysqli_fetch_assoc($result3);
+                    $type_name = $row3['Type_Name'];
+                    // Check if the string is not empty and has at least one character
+                    if (!empty($type_name)) {
+            // Remove the last character
+                      $type_name = substr($type_name, 0, -1);
+                    }
+                    $sql4 = "SELECT * FROM tbl_brand WHERE Brand_ID = '$brand_id'";
+                    $result4 = mysqli_query($conn,$sql4);
+                    $row4 = mysqli_fetch_assoc($result4);
+                    $brand_name = $row4['Brand_Name'];
+                    echo "<div class='order-items'><img src='$appliance_image1' height='95%'><br>$brand_name $appliance_name $type_name<br>Quantity: $quantity<br>Price: ₹$price</div>";
+          
+
+                  }
+                  echo "</div>";
+                  echo "</div>";
+                }
+              }
+              else if(mysqli_num_rows($result) == 0)
+              {
+                echo "<h1>No Orders Yet</h1>";
+              }
+              ?>
 
               
                

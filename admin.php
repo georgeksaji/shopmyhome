@@ -170,7 +170,7 @@ $assignDateTime->modify('+10 days');
 
 // Format the modified delivery date with both date and time components
 $expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
-echo $expectedDeliveryDate;
+//echo $expectedDeliveryDate;
 
 // Now $expectedDeliveryDate contains the updated date and time
 
@@ -1510,6 +1510,7 @@ function showTable(tableId) {
                 //courier assign date
                 echo '<th>Courier Assign Date</th>';
                 echo '<th>Expected Delivery Before</th>';//10 days from courier assign date
+                echo '<th>Status</th>';
                 echo '</tr>';
                 $query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=1";
                 $payment_num2 = $conn->query($query);
@@ -1532,12 +1533,13 @@ function showTable(tableId) {
                         $row_customer_address=$result_customer_address->fetch_assoc();
                         $customer_address=$row_customer_address['Cust_Hname'].", ".$row_customer_address['Cust_Street'].", ".$row_customer_address['Cust_Dist'].", ".$row_customer_address['State_Ut'].", ".$row_customer_address['Cust_Pin'];
                         //delivery partner
-                        $sql_delivery_partner="SELECT Courier_ID,Courier_Assign_Date,Max_Delivery_Date  FROM tbl_courier_assign WHERE CM_ID='$cart_master_id'";
+                        $sql_delivery_partner="SELECT Courier_ID,Courier_Assign_Date,Max_Delivery_Date,Delivery_Status FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND Delivery_Status != 'REASSIGNED'";
                         $result_delivery_partner=$conn->query($sql_delivery_partner);
                         $row_delivery_partner=$result_delivery_partner->fetch_assoc();
                         $delivery_partner_id=$row_delivery_partner['Courier_ID'];
                         $delivery_partner_assign_date=$row_delivery_partner['Courier_Assign_Date'];
                         $expectedDeliveryDate=$row_delivery_partner['Max_Delivery_Date'];
+                        $delivery_status=$row_delivery_partner['Delivery_Status'];
                         //delivery partner name
                         $sql_delivery_partner_name="SELECT Cour_Name FROM tbl_courier WHERE Cour_ID='$delivery_partner_id'";
                         $result_delivery_partner_name=$conn->query($sql_delivery_partner_name);
@@ -1555,6 +1557,14 @@ function showTable(tableId) {
                         echo "<td>" . $date . "</td>";
                         echo "<td>" . $delivery_partner_assign_date . "</td>";
                         echo "<td>" . $expectedDeliveryDate . "</td>";
+                        if($delivery_status == 'DELIVERED')
+                        {
+                          echo "<td style='color:green'>" . $delivery_status . "</td>";
+                        }
+                        else
+                        {
+                          echo "<td style='color:red'>" . $delivery_status . "</td>";
+                        }
                         echo "</tr>";
                       }
                 

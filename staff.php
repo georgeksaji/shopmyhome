@@ -160,8 +160,10 @@ if (isset($_POST['assign_courier'])) {
   mysqli_query($conn, "INSERT INTO tbl_courier_assign(Courier_Assign_ID,Courier_ID,CM_ID,Max_Delivery_Date,Customer_ID) VALUES(generate_courier_assignment_id(),'$assigned_delivery_partner','$cm_id','$expectedDeliveryDate','$customer_id')");
 
   //update Courier_Assignment_Status=1 in tbl_payment
-  mysqli_query($conn, "UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
-  echo "<script>alert('Courier Assigned Successfully');</script>";
+  //mysqli_query($conn, "UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
+  //echo "<script>alert('Courier Assigned Successfully');</script>";
+  //update Cart_Status='COURIER ASSIGNED' in tbl_cart_master
+  mysqli_query($conn,"UPDATE tbl_cart_master SET Cart_Status='COURIER ASSIGNED' WHERE CM_ID='$cm_id'");
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
 }
@@ -462,6 +464,13 @@ if (isset($_POST['assign_courier'])) {
       color: rgb(256, 256, 256);
       margin: auto;
     }
+    
+.terminated_button,.terminated_button:hover,.terminated_button:active
+{
+  background-color:rgb(0 0 0);
+  color:rgb(256,256,256);
+  margin:auto;
+}
 
 
     /*Staff css content*/
@@ -1087,20 +1096,29 @@ if (isset($_POST['assign_courier'])) {
                 echo "<td>" . $row_c['Cour_State_ut'] . "</td>";
                 echo "<td>" . $row_c['Cour_Pin'] . "</td>";
                 echo "<td>" . $row_c['Cour_Joining_Date'] . "</td>";
-                if ($row_c['Cour_Status'] == 1) {
+                if($row_c['Cour_Status'] == 1){
                   echo "<td>Active</td>";
-                } else {
+                }
+                else{  
                   echo "<td>Inactive</td>";
                 }
 
                 //update status button
-            
-                if ($row_c['Cour_Status'] == 1) {
-                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='" . $row_c['Cour_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_cour_status_button'>DEACTIVATE</button></form></td>";
+              
+                if($row_c['Cour_Status'] == 1)
+                {
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='". $row_c['Cour_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_cour_status_button'>DEACTIVATE</button></form></td>";
                 }
-                if ($row_c['Cour_Status'] == 0) {
-                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='" . $row_c['Cour_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cour_status_button'>ACTIVATE</button></form></td>";
+                if($row_c['Cour_Status'] == 0)
+                {
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='". $row_c['Cour_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cour_status_button'>ACTIVATE</button></form></td>";
                 }
+                
+                if($row_c['Cour_Status'] == 2)
+                {
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><button type='submit' class='btn btn-primary me-md-2 terminated_button' disabled>TERMINATED</button></form></td>";
+                }
+                
                 //edit cour button
                 echo '<td><form action="admin.php" method="POST"><input type="hidden" name="cour_updateid" value="' . $row_c['Cour_ID'] . '"><button type="submit" class="btn btn-primary me-md-2" name="update_cour">UPDATE</button></form></td>';
                 echo "</tr>";
@@ -1448,191 +1466,194 @@ if (isset($_POST['assign_courier'])) {
   </div>
   <!--purchase content completed-->
 
-  <!--assign courier goes here-->
+
+    <!--assign courier goes here-->
 
 
 
 
+    <div class="assign-content section" id="assign-courier-id">
+              <div class="assign-content-inner">
+              <div class="assign-content-inner-top">
 
-  <div class="assign-content section" id="assign-courier-id">
-    <div class="assign-content-inner">
-      <div class="assign-content-inner-top">
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end" >
+              <form method="POST" style="float: right;height:100%;widht:100%;">
+              <!--<button class="btn btn-primary me-md-2 add_buttons" type="submit" name="Unassigned">Unassigned Orders</button>-->
+              <button class="btn btn-primary me-md-2 add_buttons" type="button" onclick="showTable('unassigned-table')">Unassigned Orders</button>
+              <!--<button class="btn btn-primary me-md-2 add_buttons" type="submit" name="Assigned">Assigned Orders</button>-->
+              <button class="btn btn-primary me-md-2 add_buttons" type="button" onclick="showTable('assigned-table')">Assigned Orders</button>
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-          <form method="POST" style="float: right;height:100%;widht:100%;">
-            <!--<button class="btn btn-primary me-md-2 add_buttons" type="submit" name="Unassigned">Unassigned Orders</button>-->
-            <button class="btn btn-primary me-md-2 add_buttons" type="button"
-              onclick="showTable('unassigned-table')">Unassigned Orders</button>
-            <!--<button class="btn btn-primary me-md-2 add_buttons" type="submit" name="Assigned">Assigned Orders</button>-->
-            <button class="btn btn-primary me-md-2 add_buttons" type="button"
-              onclick="showTable('assigned-table')">Assigned Orders</button>
-
-          </form>
-        </div>
-      </div>
-      <div class="assign-content-inner-bottom">
-
-        <table class="table-bordered table-striped view_table" id="default-table">
-          <tr>
-            <td colspan="6" style="text-align:center;background-color:rgb(255 46 46);color:rgb(256 256 256)">Select
-              "Unassigned Orders" or "Assigned Orders" to view the respective tables.</td>
-          </tr>
-        </table>
-        <div class="view_table_wrapper">
-          <?php
-          //Unassigned table
-          echo '<table class="table-bordered table-striped view_table" id="unassigned-table">';
-          echo '<tr>';
-          echo '<th>Payment ID</th>';
-          echo '<th>Customer ID</th>';
-          echo '<th>Purchase Date</th>';
-          echo '<th>Delivery Address</th>';
-          echo '<th colspan="2">Assign Delivery Partner</th>';
-          echo '</tr>';
-
-          //delivery partner
-          $sql_list_all_delivery_partner = "SELECT Cour_ID,Cour_Name FROM tbl_courier WHERE Cour_Status=1";
-          $result_list_all_delivery_partner = $conn->query($sql_list_all_delivery_partner);
-          $delivery_partners = [];
-          while ($row_list_all_delivery_partner = $result_list_all_delivery_partner->fetch_assoc()) {
-            $delivery_partners[] = $row_list_all_delivery_partner;
-          }
-          $query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=0"; // Replace with your actual query
-          $payment_num2 = $conn->query($query);
-          //if ($payment_num2) 
-          if ($payment_num2->num_rows > 0) {
-            while ($row_pay = $payment_num2->fetch_assoc()) {
-              $payment_id = $row_pay['Payment_ID'];
-              $cart_master_id = $row_pay['CM_ID'];
-              $date = $row_pay['Payment_Date'];
-              //customer details
-              $sql_customer_details = "SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='$cart_master_id'";
-              $result_customer_details = $conn->query($sql_customer_details);
-              $row_customer_details = $result_customer_details->fetch_assoc();
-              $customer_id = $row_customer_details['Customer_ID'];
-              //customer address
-              $sql_customer_address = "SELECT Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin FROM tbl_customer WHERE Cust_ID='$customer_id'";
-              $result_customer_address = $conn->query($sql_customer_address);
-              $row_customer_address = $result_customer_address->fetch_assoc();
-              $customer_address = $row_customer_address['Cust_Hname'] . ", " . $row_customer_address['Cust_Street'] . ", " . $row_customer_address['Cust_Dist'] . ", " . $row_customer_address['State_Ut'] . ", " . $row_customer_address['Cust_Pin'];
-
-              echo "<tr>";
-              echo "<td>" . $payment_id . "</td>";
-              echo "<td>" . $customer_id . "</td>";
-              echo "<td>" . $date . "</td>";
-              echo "<td>" . $customer_address . "</td>";
-              echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='" . $payment_id . "'><select name='courier_assign_id' id='courier_id' style='width: 100%;'><option value=''>Select Delivery Partner</option>";
-              foreach ($delivery_partners as $delivery_partner) {
-                echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
-              }
-              echo "</select></td><input type='hidden' name='master_cart_id' value='" . $cart_master_id . "'><input type='hidden' name='date' value='" . $date . "'><input type='hidden' name='Customer_Id' value='" . $customer_id . "'>";
-              echo "<td><button type='submit' class='btn btn-primary me-md-2' name='assign_courier'>ASSIGN</button></form></td>";
-              echo "</tr>";
-            }
-
-          } else {
-            echo '<tr>';
-            echo '<td colspan="6" style="text-align:center">No Unassigned Orders Available</td>';
-            echo '</tr>';
-          }
-
-
-          echo '</table>';
-
-
-
-          //Assigned table
-          echo '<table class="table-bordered table-striped view_table" id="assigned-table">';
-          echo '<tr>';
-          echo '<th>Payment ID</th>';
-          echo '<th>Customer ID</th>';
-          echo '<th>Delivery Partner</th>';
-          echo '<th>Purchase Date</th>';
-          //courier assign date
-          echo '<th>Courier Assign Date</th>';
-          echo '<th>Expected Delivery Before</th>'; //10 days from courier assign date
-          echo '<th>Status</th>';
-          echo '</tr>';
-          $query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=1";
-          $payment_num2 = $conn->query($query);
-          //if ($payment_num2)
-          if ($payment_num2->num_rows > 0) {
-            while ($row_pay = $payment_num2->fetch_assoc()) {
-              $payment_id = $row_pay['Payment_ID'];
-              $cart_master_id = $row_pay['CM_ID'];
-              $date = $row_pay['Payment_Date'];
-              //customer details
-              $sql_customer_details = "SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='$cart_master_id'";
-              $result_customer_details = $conn->query($sql_customer_details);
-              $row_customer_details = $result_customer_details->fetch_assoc();
-              $customer_id = $row_customer_details['Customer_ID'];
-              //customer address
-              $sql_customer_address = "SELECT Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin FROM tbl_customer WHERE Cust_ID='$customer_id'";
-              $result_customer_address = $conn->query($sql_customer_address);
-              $row_customer_address = $result_customer_address->fetch_assoc();
-              $customer_address = $row_customer_address['Cust_Hname'] . ", " . $row_customer_address['Cust_Street'] . ", " . $row_customer_address['Cust_Dist'] . ", " . $row_customer_address['State_Ut'] . ", " . $row_customer_address['Cust_Pin'];
+            </form>
+             </div>
+              </div>
+              <div class="assign-content-inner-bottom">    
+                
+              <table class="table-bordered table-striped view_table" id="default-table">
+              <tr>
+              <td colspan="6" style="text-align:center;background-color:rgb(255 46 46);color:rgb(256 256 256)">Select "Unassigned Orders" or "Assigned Orders" to view the respective tables.</td>
+              </tr>
+              </table> 
+              <div class="view_table_wrapper">
+              <?php
+               //Unassigned table
+              echo '<table class="table-bordered table-striped view_table" id="unassigned-table">';
+              echo '<tr>';
+              echo '<th>Payment ID</th>'; 
+              echo '<th>Customer ID</th>'; 
+              echo '<th>Purchase Date</th>';
+              echo '<th>Delivery Address</th>';
+              echo '<th colspan="2">Assign Delivery Partner</th>';
+              echo '</tr>';
+              
               //delivery partner
-              $sql_delivery_partner = "SELECT Courier_ID,Courier_Assign_Date,Max_Delivery_Date,Delivery_Status FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND Delivery_Status != 'REASSIGNED'";
-              $result_delivery_partner = $conn->query($sql_delivery_partner);
-              $row_delivery_partner = $result_delivery_partner->fetch_assoc();
-              $delivery_partner_id = $row_delivery_partner['Courier_ID'];
-              $delivery_partner_assign_date = $row_delivery_partner['Courier_Assign_Date'];
-              $expectedDeliveryDate = $row_delivery_partner['Max_Delivery_Date'];
-              $delivery_status = $row_delivery_partner['Delivery_Status'];
-              //delivery partner name
-              $sql_delivery_partner_name = "SELECT Cour_Name FROM tbl_courier WHERE Cour_ID='$delivery_partner_id'";
-              $result_delivery_partner_name = $conn->query($sql_delivery_partner_name);
-              $row_delivery_partner_name = $result_delivery_partner_name->fetch_assoc();
-              $delivery_partner_name = $row_delivery_partner_name['Cour_Name'];
-              //expected delivery date including time
-              //$assignDateTime = new DateTime($delivery_partner_assign_date);
-              //$assignDateTime->modify('+10 days');
-              //$expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
-          
-              echo "<tr>";
-              echo "<td>" . $payment_id . "</td>";
-              echo "<td>" . $customer_id . "</td>";
-              echo "<td>" . $delivery_partner_name . "</td>";
-              echo "<td>" . $date . "</td>";
-              echo "<td>" . $delivery_partner_assign_date . "</td>";
-              echo "<td>" . $expectedDeliveryDate . "</td>";
-              if ($delivery_status == 'DELIVERED') {
-                echo "<td style='color:green'>" . $delivery_status . "</td>";
-              } else {
-                echo "<td style='color:red'>" . $delivery_status . "</td>";
+              $sql_list_all_delivery_partner="SELECT Cour_ID,Cour_Name FROM tbl_courier WHERE Cour_Status=1";
+              $result_list_all_delivery_partner=$conn->query($sql_list_all_delivery_partner);
+              $delivery_partners = [];
+              while ($row_list_all_delivery_partner = $result_list_all_delivery_partner->fetch_assoc()) {
+              $delivery_partners[] = $row_list_all_delivery_partner;
               }
-              echo "</tr>";
-            }
+              //select * from tbl_cart_master where  Cart_Status 	=PAID
+              $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='PAID' OR Cart_Status='REASSIGNED')"; 
+              // Replace with your actual query
+                $payment_num2 = $conn->query($query);
+                //if ($payment_num2) 
+                if ($payment_num2->num_rows > 0)
+                {
+                  while ($row_pay = $payment_num2->fetch_assoc()) 
+                  {
+                        $payment_id=$row_pay['Payment_ID'];
+                        $cart_master_id=$row_pay['CM_ID'];
+                        $date=$row_pay['Payment_Date'];
+                        //customer details
+                        $sql_customer_details="SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='$cart_master_id'";
+                        $result_customer_details=$conn->query($sql_customer_details);
+                        $row_customer_details=$result_customer_details->fetch_assoc();
+                        $customer_id=$row_customer_details['Customer_ID'];
+                        //customer address
+                        $sql_customer_address="SELECT Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin FROM tbl_customer WHERE Cust_ID='$customer_id'";
+                        $result_customer_address=$conn->query($sql_customer_address);
+                        $row_customer_address=$result_customer_address->fetch_assoc();
+                        $customer_address=$row_customer_address['Cust_Hname'].", ".$row_customer_address['Cust_Street'].", ".$row_customer_address['Cust_Dist'].", ".$row_customer_address['State_Ut'].", ".$row_customer_address['Cust_Pin'];
+                        
+                        echo "<tr>";
+                        echo "<td>" . $payment_id . "</td>";
+                        echo "<td>" . $customer_id . "</td>";
+                        echo "<td>" . $date . "</td>";
+                        echo "<td>" . $customer_address . "</td>";
+                        echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='". $payment_id ."'><select name='courier_assign_id' id='courier_id' style='width: 100%;'><option value=''>Select Delivery Partner</option>";
+                        foreach ($delivery_partners as $delivery_partner) {
+                        echo "<option value='".$delivery_partner['Cour_ID']."'>".$delivery_partner['Cour_Name']."</option>";
+                        }
+                        echo "</select></td><input type='hidden' name='master_cart_id' value='". $cart_master_id ."'><input type='hidden' name='date' value='". $date ."'><input type='hidden' name='Customer_Id' value='". $customer_id ."'>";
+                        echo "<td><button type='submit' class='btn btn-primary me-md-2' name='assign_courier'>ASSIGN</button></form></td>";
+                        echo "</tr>";
+                     }
+                
+                 } 
+                 
+                 else {
+                  echo '<tr>';
+                  echo '<td colspan="6" style="text-align:center">No Unassigned Orders Available</td>';
+                  echo '</tr>';
+              }
+              
+                 
+                echo '</table>';
+                
 
-          } else {
-            echo '<tr>';
-            echo '<td colspan="6" style="text-align:center">No Assigned Orders pending for delivery</td>';
-            echo '</tr>';
-          }
-          echo '</table>';
+
+                //Assigned table
+                echo '<table class="table-bordered table-striped view_table" id="assigned-table">'; 
+                echo '<tr>';
+                echo '<th>Payment ID</th>';
+                echo '<th>Customer ID</th>';
+                echo '<th>Delivery Partner</th>';
+                echo '<th>Purchase Date</th>';
+                //courier assign date
+                echo '<th>Courier Assign Date</th>';
+                echo '<th>Expected Delivery Before</th>';//10 days from courier assign date
+                echo '<th>Status</th>';
+                echo '</tr>';
+                //$query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=1";
+                $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='COURIER ASSIGNED' OR Cart_Status='SHIPPED')"; 
+                $payment_num2 = $conn->query($query);
+                //if ($payment_num2)
+                if ($payment_num2->num_rows > 0)
+                {
+                  while ($row_pay = $payment_num2->fetch_assoc())
+                  {
+                        $payment_id=$row_pay['Payment_ID'];
+                        $cart_master_id=$row_pay['CM_ID'];
+                        $date=$row_pay['Payment_Date'];
+                        //customer details
+                        $sql_customer_details="SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='$cart_master_id'";
+                        $result_customer_details=$conn->query($sql_customer_details);
+                        $row_customer_details=$result_customer_details->fetch_assoc();
+                        $customer_id=$row_customer_details['Customer_ID'];
+                        //customer address
+                        $sql_customer_address="SELECT Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin FROM tbl_customer WHERE Cust_ID='$customer_id'";
+                        $result_customer_address=$conn->query($sql_customer_address);
+                        $row_customer_address=$result_customer_address->fetch_assoc();
+                        $customer_address=$row_customer_address['Cust_Hname'].", ".$row_customer_address['Cust_Street'].", ".$row_customer_address['Cust_Dist'].", ".$row_customer_address['State_Ut'].", ".$row_customer_address['Cust_Pin'];
+                        //delivery partner
+                        $sql_delivery_partner="SELECT Courier_ID,Courier_Assign_Date,Max_Delivery_Date,Delivery_Status FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND Delivery_Status != 'REASSIGNED'";
+                        $result_delivery_partner=$conn->query($sql_delivery_partner);
+                        $row_delivery_partner=$result_delivery_partner->fetch_assoc();
+                        $delivery_partner_id=$row_delivery_partner['Courier_ID'];
+                        $delivery_partner_assign_date=$row_delivery_partner['Courier_Assign_Date'];
+                        $expectedDeliveryDate=$row_delivery_partner['Max_Delivery_Date'];
+                        $delivery_status=$row_delivery_partner['Delivery_Status'];
+                        //delivery partner name
+                        $sql_delivery_partner_name="SELECT Cour_Name FROM tbl_courier WHERE Cour_ID='$delivery_partner_id'";
+                        $result_delivery_partner_name=$conn->query($sql_delivery_partner_name);
+                        $row_delivery_partner_name=$result_delivery_partner_name->fetch_assoc();
+                        $delivery_partner_name=$row_delivery_partner_name['Cour_Name'];
+                        //expected delivery date including time
+                        //$assignDateTime = new DateTime($delivery_partner_assign_date);
+                        //$assignDateTime->modify('+10 days');
+                        //$expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
+                        
+                        echo "<tr>";
+                        echo "<td>" . $payment_id . "</td>";
+                        echo "<td>" . $customer_id . "</td>";
+                        echo "<td>" . $delivery_partner_name . "</td>";
+                        echo "<td>" . $date . "</td>";
+                        echo "<td>" . $delivery_partner_assign_date . "</td>";
+                        echo "<td>" . $expectedDeliveryDate . "</td>";
+                        if($delivery_status == 'DELIVERED')
+                        {
+                          echo "<td style='color:green'>" . $delivery_status . "</td>";
+                        }
+                        else
+                        {
+                          echo "<td style='color:red'>" . $delivery_status . "</td>";
+                        }
+                        echo "</tr>";
+                      }
+                
+                    } 
+                    
+                 else 
+                 {
+                  echo '<tr>';
+                  echo '<td colspan="6" style="text-align:center">No Assigned Orders pending for delivery</td>';
+                  echo '</tr>';
+                 }
+                    echo '</table>';
 
 
 
 
-
-          ?>
-
-        </div>
-      </div>
-
-
-    </div>
-  </div>
-
-
-
-
-
-
-
-
-  <!--assign courier content completed-->
-  <!--assign courier content completed-->
+                    
+                  ?>
+              
+              </div>
+              </div>
+            
+            
+            </div>
+            </div>
+            <!--assign courier content completed-->
 
   </div>
   <script type="text/js" src="js/bootstrap.min.js"></script>

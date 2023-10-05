@@ -224,7 +224,7 @@ alert(jsMessage2);
         <div class="registration-form">
           <div class="registration-form-left">
               <label for="Name">Courier Partner name</label>
-              <input type="text" id="firstName" name="name" placeholder="Name" required>
+              <input type="text" id="firstName" name="name" placeholder="Name" maxlength="15" required>
 
               <label for="phoneNumber">Phone number</label>
             <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">

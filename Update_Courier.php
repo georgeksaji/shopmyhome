@@ -246,7 +246,7 @@ alert(jsMessage2);
     $password = $row['Password'];
     ?>
 
-              <input type="text" id="firstName" name="name" value="<?php echo $name; ?>" placeholder="Update Name" required>
+              <input type="text" id="firstName" name="name" value="<?php echo $name; ?>" placeholder="Update Name" maxlength="15" required>
 
               <label for="phoneNumber">Phone number</label>
             <input type="tel" id="phoneNumber" name="phoneNumber" value="<?php echo $phoneNumber; ?>" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">

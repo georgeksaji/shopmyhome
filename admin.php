@@ -165,8 +165,8 @@ if(isset($_POST['assign_courier']))
   $customer_id=$_POST['Customer_Id'];
   $cm_id=$_POST['master_cart_id'];
   $date_of_assign = $_POST['date'];
-$assignDateTime = new DateTime($date_of_assign);
-$assignDateTime->modify('+10 days');
+  $assignDateTime = new DateTime($date_of_assign);
+  $assignDateTime->modify('+10 days');
 
 // Format the modified delivery date with both date and time components
 $expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
@@ -180,9 +180,11 @@ $expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
   mysqli_query($conn,"INSERT INTO tbl_courier_assign(Courier_Assign_ID,Courier_ID,CM_ID,Max_Delivery_Date,Customer_ID) VALUES(generate_courier_assignment_id(),'$assigned_delivery_partner','$cm_id','$expectedDeliveryDate','$customer_id')");
   
   //update Courier_Assignment_Status=1 in tbl_payment
-  mysqli_query($conn,"UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
+  //mysqli_query($conn,"UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
   //echo "<script>alert('Courier Assigned Successfully');</script>";
-  echo "<script>alert('Courier Assigned Successfully');</script>";
+  // 	Cart_Status 	="COURIER ASSIGNED"
+  mysqli_query($conn,"UPDATE tbl_cart_master SET Cart_Status='COURIER ASSIGNED' WHERE CM_ID='$cm_id'");
+
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
 }
@@ -454,6 +456,12 @@ color:rgb(256,256,256);
 .activate_button,.activate_button:hover,.activate_button:active
 {
   background-color:rgb(78 198 111);
+  color:rgb(256,256,256);
+  margin:auto;
+}
+.terminated_button,.terminated_button:hover,.terminated_button:active
+{
+  background-color:rgb(0 0 0);
   color:rgb(256,256,256);
   margin:auto;
 }
@@ -1041,7 +1049,8 @@ function showTable(tableId) {
                           echo "<td>" . $row_c['Cour_Joining_Date'] . "</td>";
                           if($row_c['Cour_Status'] == 1){
                             echo "<td>Active</td>";
-                          }else{  
+                          }
+                          else{  
                             echo "<td>Inactive</td>";
                           }
 
@@ -1055,14 +1064,15 @@ function showTable(tableId) {
                           {
                             echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='". $row_c['Cour_ID'] ."'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cour_status_button'>ACTIVATE</button></form></td>";
                           }
+                          
+                          if($row_c['Cour_Status'] == 2)
+                          {
+                            echo "<td style='display: flex;align-items: center;justify-content: center;'><button type='submit' class='btn btn-primary me-md-2 terminated_button' disabled>TERMINATED</button></form></td>";
+                          }
                           //edit cour button
                           echo '<td><form action="admin.php" method="POST"><input type="hidden" name="cour_updateid" value="'. $row_c['Cour_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="update_cour">UPDATE</button></form></td>';
                           echo "</tr>";
                       
-                        
-
-
-
 
                       }
                   } else {
@@ -1450,7 +1460,9 @@ function showTable(tableId) {
               while ($row_list_all_delivery_partner = $result_list_all_delivery_partner->fetch_assoc()) {
               $delivery_partners[] = $row_list_all_delivery_partner;
               }
-              $query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=0"; // Replace with your actual query
+              //select * from tbl_cart_master where  Cart_Status 	=PAID
+              $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='PAID' OR Cart_Status='REASSIGNED')"; 
+              // Replace with your actual query
                 $payment_num2 = $conn->query($query);
                 //if ($payment_num2) 
                 if ($payment_num2->num_rows > 0)
@@ -1510,7 +1522,8 @@ function showTable(tableId) {
                 echo '<th>Expected Delivery Before</th>';//10 days from courier assign date
                 echo '<th>Status</th>';
                 echo '</tr>';
-                $query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=1";
+                //$query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=1";
+                $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='COURIER ASSIGNED' OR Cart_Status='SHIPPED')"; 
                 $payment_num2 = $conn->query($query);
                 //if ($payment_num2)
                 if ($payment_num2->num_rows > 0)

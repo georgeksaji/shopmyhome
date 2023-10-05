@@ -152,13 +152,17 @@ if(isset($_POST['update_brand']))
   header('location:Update_Brand.php');
 }
 //accept courier button
-if(isset($_POST['accept_courier']))
+if(isset($_POST['ship_courier']))
 {
   $cour_id = $_POST['courier_assign_id'];
   //Accept_CA_Status
   $this__cour_id = $cour_id;
   
-  mysqli_query($conn,"UPDATE tbl_courier_assign SET Accept_CA_Status=1 WHERE Courier_Assign_ID='$cour_id'");
+  mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='SHIPPED' WHERE Courier_Assign_ID='$cour_id'");
+
+  mysqli_query($conn,"UPDATE tbl_cart_master SET Cart_Status='SHIPPED' WHERE CM_ID IN(SELECT CM_ID FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id')");
+
+
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
   }
@@ -832,7 +836,7 @@ alert(jsMessage2);
               <li><button type="button" class="btn btn-primary buttons" id="buttonToClick" onclick="scrollToSection('.dashboard-content')">DASHBOARD</button></li>
               <!--<li> <button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.staff-content')">STAFFS</button></li>-->
               <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.courier-content')">ASSIGNED ORDERS</button></li>
-              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.vendor-content')">PENDING DELIVERY</button></li>
+              <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.vendor-content')">IN TRANSIT</button></li>
               <li><button type="button" class="btn btn-primary buttons" onclick="scrollToSection('.customer-content')">DELIVERED</button></li>
               <form action="admin.php" method="POST" style="margin-block:auto; "><li><button type="submit" class="btn btn-primary logout-button" name="destroy">LOGOUT</button></li></form>
               </ul>
@@ -889,7 +893,7 @@ alert(jsMessage2);
                 </tr>
                 <?php
                   // Assuming you have an SQL query stored in the $result2 variable
-                  $query = "SELECT * FROM tbl_courier_assign WHERE Accept_CA_Status = 1 AND Delivery_Status = 'NOT DELIVERED' AND Courier_ID ='$user_number'";
+                  $query = "SELECT * FROM tbl_courier_assign WHERE Delivery_Status = 'SHIPPED' AND Courier_ID ='$user_number'";
                   $courier_num2 = $conn->query($query);
                   if(mysqli_num_rows($courier_num2)>0)
                     {
@@ -960,12 +964,12 @@ alert(jsMessage2);
                   <th>Delivery Details</th>
                   <th>Assign Date</th>
                   <th>Deliver Before</th>
-                  <th>Action</th>
+                  <th>Update Status</th>
                 </tr>
                 </tr>
                 <?php
                   // Assuming you have an SQL query stored in the $result2 variable
-                  $query = "SELECT * FROM tbl_courier_assign WHERE Accept_CA_Status=0 AND Courier_ID ='$user_number'";
+                  $query = "SELECT * FROM tbl_courier_assign WHERE Delivery_Status='ASSIGNED' AND Courier_ID ='$user_number'";
                   $courier_num2 = $conn->query($query);
                   if(mysqli_num_rows($courier_num2)>0)
                   {
@@ -988,7 +992,7 @@ alert(jsMessage2);
                           //echo "<td>" . $row_c['Delivery_Details'] . "</td>";
                           echo "<td>" . $row_c['Courier_Assign_Date'] . "</td>";
                           echo "<td>" . $row_c['Max_Delivery_Date'] . "</td>";
-                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="accept_courier">ACCEPT</button></form></td>';
+                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="ship_courier">SHIP CONSIGNMENT</button></form></td>';
                           echo "</tr>";
                       }
                     }

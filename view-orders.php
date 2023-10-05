@@ -15,7 +15,7 @@ else {
   $userId = null;
   $usertype = null;
 }
-echo $userId;
+//echo $userId;
 
 
 //logout button

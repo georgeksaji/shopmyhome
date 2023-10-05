@@ -156,8 +156,12 @@ if(isset($_POST['accept_courier']))
 {
   $cour_id = $_POST['courier_assign_id'];
   //Accept_CA_Status
+  $this__cour_id = $cour_id;
+  
   mysqli_query($conn,"UPDATE tbl_courier_assign SET Accept_CA_Status=1 WHERE Courier_Assign_ID='$cour_id'");
-}
+  header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
+  exit();
+  }
 //delivered consignment button
 /*if(isset($_POST['accept_courier']))
 {
@@ -171,6 +175,7 @@ if(isset($_POST['accept_courier']))
 if(isset($_POST['unreachable']))
 {
   $cour_id = $_POST['courier_assign_id'];
+  
   //Accept_CA_Status
   //mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='UNREACHABLE' WHERE Courier_Assign_ID='$cour_id'");
   
@@ -193,6 +198,8 @@ if(isset($_POST['unreachable']))
   {
    echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
   }
+  header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
+  exit();
 }
 
 //delivered consignment button
@@ -208,8 +215,9 @@ if(isset($_POST['delivered']))
   //update Cart_Status 	in tbl_cart_master to DELIVERED
   mysqli_query($conn,"UPDATE tbl_cart_master SET Cart_Status='DELIVERED' WHERE CM_ID='$delivered_cart_id'");
   echo "<script>alert('Consignment Delivered')</script>";
+  header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
+  exit();
 }
-
 
 
 ?>
@@ -864,7 +872,7 @@ alert(jsMessage2);
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="color:white;">
                 Deliver the Consignments on time and update the status of the delivery. 
                 If you are unable to deliver the consignment, please update the status as "Customer Unreachable" and your deliery time will be extended by 3 days. 
-                If you are unable to deliver the consignment for 3 times, the consignment will be reassigned to another courier partner and you will be suspended.
+                If you are unable to deliver the consignment after the third time, the consignment will be reassigned to another courier partner and you will be suspended.
                 </div>
                 </div>
             <div class="vendor-content-inner-bottom">
@@ -1055,8 +1063,6 @@ alert(jsMessage2);
             </div>
             </div>
             </div>
-            //SELECT * FROM tbl_delivery WHERE Courier_Assign_ID IN (SELECT Courier_Assign_ID FROM tbl_courier_assign WHERE Delivery_Status = 'DELIVERED' AND Courier_ID = $user_number);
- 
             <!--customer content completed-->
 
             <!--category content goes here

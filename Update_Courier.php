@@ -25,17 +25,13 @@ if(isset($_POST['submit']))
     $sql = "SELECT * FROM tbl_login WHERE Username = '$email'";
     $result = mysqli_query($conn, $sql);
     $num = mysqli_num_rows($result);
-    if($num > 0) 
+    if($num == 1) //if email already exists
     {
-      echo "<script>alert('Username already exists!');</script>";
-    } 
-    else
-    {
-      $insert1= "INSERT INTO tbl_login(Username,Password,User_Type)VALUES('$email','$passwordleft','CR')";
-      mysqli_query($conn,$insert1);
-      $insert1= "INSERT INTO tbl_courier(Cour_ID,Cour_Username,Staff_ID,Cour_Name,Cour_Phone,Cour_Building_name,Cour_Street,Cour_Dist,Cour_Pin,Cour_State_ut)VALUES(generate_cour_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$pincode','$state')";
-      mysqli_query($conn,$insert1);
-      echo "<script>alert('Courier registered successfully!');</script>";
+      $sql = "UPDATE tbl_courier SET Cour_Name = '$name', Cour_Phone = '$phoneNumber', Cour_Building_name = '$buildingName', Cour_Pin = '$pincode', Cour_State_ut = '$state', Cour_Street = '$street', Cour_Dist = '$district' WHERE Cour_ID = '$updateid'";
+      mysqli_query($conn, $sql);
+      $sql = "UPDATE tbl_login SET Password = '$passwordleft' WHERE Username = '$email'";
+      mysqli_query($conn, $sql);
+      echo "<script>alert('Courier updated successfully!');</script>";
       if($usertype == "AD" && $userId == "ST00001")
       {
         header("location: admin.php");
@@ -45,11 +41,15 @@ if(isset($_POST['submit']))
         header("location: staff.php");
       }
     }
-  }
-  else
-  {
-  echo "<script>alert('Passwords do not match!');</script>";
-  }
+    else //if email does not exist
+    {
+      echo "<script>alert('More than one user in same mail address');</script>";
+    }
+}
+else
+{
+  echo "<script>alert('Passwords do not match');</script>";
+}
 }
 ?>
 <html>
@@ -243,7 +243,7 @@ alert(jsMessage2);
     $sql = "SELECT * FROM tbl_login WHERE Username = '$email'";
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_assoc($result);
-    $passwordright = $row['Password'];
+    $password = $row['Password'];
     ?>
 
               <input type="text" id="firstName" name="name" value="<?php echo $name; ?>" placeholder="Update Name" required>
@@ -268,7 +268,7 @@ s
 
             <label for="houseName">Building name</label>
             <input type="text" id="buildingName" name="buildingName" value="<?php echo $buildingName; ?>" placeholder="Building, apartment, suit, etc." required>
-             ame
+
             <label for="address">Street</label>
              <input type="text" id="address" name="street" value="<?php echo $street; ?>" placeholder="Street" required>
 

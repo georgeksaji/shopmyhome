@@ -181,12 +181,10 @@ $expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
   
   //update Courier_Assignment_Status=1 in tbl_payment
   mysqli_query($conn,"UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
+  //echo "<script>alert('Courier Assigned Successfully');</script>";
   echo "<script>alert('Courier Assigned Successfully');</script>";
-
-
-
-
-  echo "<script>alert('Courier Assigned Successfully');</script>";
+  header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
+  exit();
 }
 
 ?>
@@ -1590,19 +1588,59 @@ function showTable(tableId) {
             
             </div>
             </div>
-
-
-
-
-
-
-
-
             <!--assign courier content completed-->
 
             <!--sales content goes here-->
             <div class="sales-content section">
-            <div class="sales-content-inner">
+            <div class="purchase-content-inner">
+            <div class="purchase-content-inner-top">
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="float: right;">
+             </div>
+              </div>
+              <div class="purchase-content-inner-bottom">
+              <div class="view_table_wrapper">
+              <table class="table-bordered table-striped view_table">
+              <tr> 
+                <th>Total Deliviries</th> 
+                <th>Total Orders Paid</th>
+                <th>Total Sales Amount</th>
+                </tr>
+              <?php
+               $query_d = "SELECT * FROM tbl_delivery"; // Replace with your actual query
+                $delivery_num2 =(mysqli_query($conn,$query_d));
+                $total_deliveries = mysqli_num_rows($delivery_num2);
+                //CM_ID
+                $query_cs = "SELECT Total_Amount FROM tbl_cart_master WHERE Cart_Status != 'ASSIGNED'"; 
+                $cart_master_num2 =(mysqli_query($conn,$query_cs));
+                $total_sales_amount = 0;
+                while ($row_cs = $cart_master_num2->fetch_assoc()) {
+                  $total_sales_amount = $total_sales_amount + $row_cs['Total_Amount'];
+                }
+                $query_s = "SELECT * FROM tbl_payment"; // Replace with your actual query
+                $payment_num2 =(mysqli_query($conn,$query_s));
+                $total_orders_paid = mysqli_num_rows($payment_num2);
+                if ($total_deliveries>0) {
+                echo "<tr>";
+                echo "<td>" . $total_deliveries . "</td>";
+                echo "<td>" . $total_orders_paid . "</td>";
+                echo "<td>" . $total_sales_amount . "</td>";
+                echo "</tr>";
+                }
+                else {
+                  echo '<tr>';
+                  echo '<td colspan="6" style="text-align:center">No Sales Yet.</td>';
+                  echo '</tr>';
+              }
+
+
+                
+
+
+                  ?>
+              </table>
+              </div>
+              </div>
               </div>
             </div>
             <!--sales content completed-->

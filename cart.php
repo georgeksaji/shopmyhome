@@ -276,14 +276,14 @@ if (isset($_POST['remove_item'])) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-  <script>
-    var jsMessage1 = <?php echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
-    var jsMessage2 = <?php echo json_encode($usertype); ?>;
+  <!-- <script>
+    var jsMessage1 = <?php //echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
+    var jsMessage2 = <?php //echo json_encode($usertype); ?>;
 
     // Display the PHP variable value as an alert in JavaScript
     alert(jsMessage1);
     alert(jsMessage2);
-  </script>
+  </script> -->
 
 
   <!--script-->
@@ -643,6 +643,7 @@ if (isset($_POST['remove_item'])) {
     }
   </script>
 
+<link rel="icon" type="image/x-icon" href="favicon.png">
 </head>
 
 <body>

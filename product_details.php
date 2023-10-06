@@ -171,15 +171,15 @@ if (isset($_POST['add_to_cart'])) {
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
+<!-- 
   <script>
-var jsM    essage1 = <?php echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
-var jsM    essage2 = <?php echo json_encode($usertype); ?>;
+var jsM    essage1 = <?php //echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
+var jsM    essage2 = <?php //echo json_encode($usertype); ?>;
 
 // Disp    lay the PHP variable value as an     alert in JavaScript
 alert(j    sMessage1);
 alert(j    sMess    age2);
-  </script>
+  </script> -->
 
 
   <!--script-->

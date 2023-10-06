@@ -28,6 +28,8 @@ if (isset($_POST['submit']))
 ?>
 <html>
 <head>
+  
+<link rel="icon" type="image/x-icon" href="favicon.png">
   <title>Login & Security</title>
   <style>
     body {

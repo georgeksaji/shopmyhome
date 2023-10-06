@@ -54,6 +54,7 @@ else
 ?>
 <html>
 <head>
+    <link rel="icon" type="image/x-icon" href="favicon.png">
   <title>Update Courier</title>
   <style>
     body {

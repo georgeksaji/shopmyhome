@@ -53,6 +53,8 @@ if(isset($_POST['submit']))
 <html>
 <head>
   <title>Register Courier</title>
+  
+  <link rel="icon" type="image/x-icon" href="favicon.png">
   <style>
     body {
       background-image: url("background.png");

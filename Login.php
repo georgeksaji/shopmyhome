@@ -100,6 +100,8 @@ else if ($user_type == 'AD') {
 
 <html>
 <head>
+  
+<link rel="icon" type="image/x-icon" href="favicon.png">
   <title>Customer Login</title>
   <style>
     body {

@@ -402,6 +402,14 @@ input[type=number]
   width: -webkit-fill-available;
   margin:auto;
 }
+.expired_button,.expired_button:hover,.expired_button:active
+{
+  background-color:rgb(0 0 0 / 50%);
+  color:rgb(256,256,256);
+  border-style: none;
+  width: -webkit-fill-available;
+  margin:auto;
+}
 
 </style>
     
@@ -548,6 +556,10 @@ input[type=number]
                                 if($row['Card_Status'] == 0)
                                 {
                                   echo "<td><form  method='POST'><input type='hidden' name='card_id' value='". $row['Card_ID'] ."'><button type='submit' class='activate_button' name='activate_card_status_button'>ACTIVATE</button></form></td>";
+                                }
+                                if($row['Card_Status'] == 2)
+                                {
+                                  echo "<td><form method='POST'><button type='submit' class='expired_button' disabled>EXPIRED</button></form></td>";
                                 }
                                 echo "</tr>";
                             }                         

@@ -13,10 +13,7 @@ else{
     //echo '<script>alert("Connected Successfully")</script>';
 }
 
-
-
-//Full texts
-	//Courier_Assign_ID 	Courier_ID 	CM_ID 	Customer_ID 	Courier_Assign_Date 	Max_Delivery_Date 	Accept_CA_Status 	Delivery_Error_Status 	Delivery_Status 
+    //reassigning courier
     $sql_select_max_delivery_date="SELECT * FROM tbl_courier_assign WHERE Max_Delivery_Date < CURDATE() AND Delivery_Status != 'REASSIGNED' AND Delivery_Status != 'DELIVERED'";
     $result_select_max_delivery_date = mysqli_query($conn, $sql_select_max_delivery_date);
     $count_select_max_delivery_date = mysqli_num_rows($result_select_max_delivery_date);
@@ -45,5 +42,19 @@ else{
 
         }
     }
+
+    
+    //set status to 2 for expired cards
+      $select_all_cards="SELECT * FROM tbl_card WHERE Expiry_Date < CURDATE() AND Card_Status != '2'";
+        $result_select_all_cards = mysqli_query($conn, $select_all_cards);
+        $count_select_all_cards = mysqli_num_rows($result_select_all_cards);
+        if($count_select_all_cards > 0){
+            while($row_select_all_cards = mysqli_fetch_assoc($result_select_all_cards)){
+                $card_id = $row_select_all_cards['Card_ID'];
+                $sql_update_card_status = "UPDATE tbl_card SET Card_Status = '2' WHERE Card_ID = '$card_id'";
+                $result_update_card_status = mysqli_query($conn, $sql_update_card_status);
+            }
+        }
+
 
 ?>  

@@ -209,15 +209,15 @@ if(isset($_POST['submit']))
 
   </style>
   </head>
-<body>
+<!-- <body>
 <script>
-var jsMessage1 = <?php echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
-var jsMessage2 = <?php echo json_encode($usertype); ?>;
+var jsMessage1 = <?php //echo json_encode($userId); ?>; // Embedding PHP variable in JavaScript
+var jsMessage2 = <?php //echo json_encode($usertype); ?>;
 
 // Display the PHP variable value as an alert in JavaScript
 alert(jsMessage1);
 alert(jsMessage2);
-</script>
+</script> -->
   <div class="outercontainer">
     <div class="registration-box">
       <div class="registration-box-logo"></div>

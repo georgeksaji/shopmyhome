@@ -35,8 +35,12 @@ $appliances_num=mysqli_num_rows($result8);
 $result9=mysqli_query($conn,"SELECT * FROM tbl_purchase_master");
 $purchase_num=mysqli_num_rows($result9);
 
-//$result10=mysqli_query($conn,"SELECT * FROM tbl_sales");
-//$sales_num=mysqli_num_rows($result10);
+$result10=mysqli_query($conn,"SELECT * FROM tbl_cart_master WHERE Cart_Status='DELIVERED'");
+$sales_num=mysqli_num_rows($result10);
+
+$result11=mysqli_query($conn,"SELECT * FROM tbl_payment");
+$payment_num=mysqli_num_rows($result11);
+
 
 
 
@@ -809,6 +813,9 @@ function showTable(tableId) {
           <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/appliance.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Appliances</p><p class="card-text-content"><?php echo $appliances_num ?></p></div></div>
           </div><div class="cards-outer" style="margin-block-start: 3%;">
           <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/purchase.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Purchases</p><p class="card-text-content"><?php echo $purchase_num ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/paid.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Paid Orders</p><p class="card-text-content"><?php echo $payment_num ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/delivered.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Deliveries</p><p class="card-text-content"><?php echo $sales_num ?></p></div></div>
+          
           <!--<div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/sales.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Sales</p><p class="card-text-content"><?php echo $sales_num ?></p></div></div>
       -->
         </div>
@@ -1577,6 +1584,7 @@ function showTable(tableId) {
                           echo "<td style='color:red'>" . $delivery_status . "</td>";
                         }
                         echo "</tr>";
+
                       }
                 
                     } 
@@ -1586,8 +1594,10 @@ function showTable(tableId) {
                   echo '<tr>';
                   echo '<td colspan="6" style="text-align:center">No Assigned Orders pending for delivery</td>';
                   echo '</tr>';
+                
                  }
                     echo '</table>';
+
 
 
 
@@ -1609,47 +1619,70 @@ function showTable(tableId) {
             <div class="purchase-content-inner-top">
 
             <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="float: right;">
+            <form method='POST'><button class="btn btn-primary me-md-2 add_buttons" type="button">Download Report</button></form>
+            
              </div>
               </div>
               <div class="purchase-content-inner-bottom">
               <div class="view_table_wrapper">
               <table class="table-bordered table-striped view_table">
               <tr> 
-                <th>Total Deliviries</th> 
-                <th>Total Orders Paid</th>
-                <th>Total Sales Amount</th>
+                <th>Delivery ID</th>
+                <th>Cart Master ID</th> 
+                <th>Customer ID</th>
+                <th>Order Date</th>
+                <th>Order Amount</th>
+                <th>Delivery Date</th>
+                <th>Delivered Courier</th>
+
                 </tr>
               <?php
                $query_d = "SELECT * FROM tbl_delivery"; // Replace with your actual query
-                $delivery_num2 =(mysqli_query($conn,$query_d));
-                $total_deliveries = mysqli_num_rows($delivery_num2);
-                //CM_ID
-                $query_cs = "SELECT Total_Amount FROM tbl_cart_master WHERE Cart_Status != 'ASSIGNED'"; 
-                $cart_master_num2 =(mysqli_query($conn,$query_cs));
-                $total_sales_amount = 0;
-                while ($row_cs = $cart_master_num2->fetch_assoc()) {
-                  $total_sales_amount = $total_sales_amount + $row_cs['Total_Amount'];
-                }
-                $query_s = "SELECT * FROM tbl_payment"; // Replace with your actual query
-                $payment_num2 =(mysqli_query($conn,$query_s));
-                $total_orders_paid = mysqli_num_rows($payment_num2);
-                if ($total_deliveries>0) {
-                echo "<tr>";
-                echo "<td>" . $total_deliveries . "</td>";
-                echo "<td>" . $total_orders_paid . "</td>";
-                echo "<td>" . $total_sales_amount . "</td>";
-                echo "</tr>";
-                }
-                else {
-                  echo '<tr>';
-                  echo '<td colspan="6" style="text-align:center">No Sales Yet.</td>';
-                  echo '</tr>';
-              }
+                $delivery_num2 = $conn->query($query_d);
+                if (mysqli_num_rows($delivery_num2) > 0) 
+                {
+                    while ($row_d = $delivery_num2->fetch_assoc()) 
+                    {
+                        //Delivery_ID 	Courier_Assign_ID 	CM_ID 	Delivery_Date 	
+                        $delivery_id=$row_d['Delivery_ID'];
+                        $delivered_cart_id=$row_d['CM_ID'];
+                        $delivery_date=$row_d['Delivery_Date'];
+                        //cart master details
+                        $sql_cart_master_details="SELECT Customer_ID,Total_Amount,Cart_Status FROM tbl_cart_master WHERE CM_ID='$delivered_cart_id' AND Cart_Status='DELIVERED'";
+                        $result_cart_master_details=$conn->query($sql_cart_master_details);
+                        $row_cart_master_details=$result_cart_master_details->fetch_assoc();
+                        // 	CM_ID 	Customer_ID 	Total_Amount 	Cart_Status 	
+                        $customer_id=$row_cart_master_details['Customer_ID'];
+                        $total_amount=$row_cart_master_details['Total_Amount'];
+                        $cart_status=$row_cart_master_details['Cart_Status'];
+                        
+                        echo '<tr>';
+                        echo '<td>' . $delivery_id . '</td>';
+                        echo '<td>' . $delivered_cart_id . '</td>';
+                        //select $payment_date from tbl_payment where CM_ID='$delivered_cart_id'
+                        $sql_payment_date="SELECT Payment_Date FROM tbl_payment WHERE CM_ID='$delivered_cart_id'";
+                        $result_payment_date=$conn->query($sql_payment_date);
+                        $row_payment_date=$result_payment_date->fetch_assoc();
+                        $payment_date=$row_payment_date['Payment_Date'];
+                        echo '<td>' . $customer_id . '</td>';
+                        echo '<td>' . $payment_date . '</td>';
+                        echo '<td>' . $total_amount . '</td>';
+                        echo '<td>' . $delivery_date . '</td>';
+                        //delivery partner
+                        $sql_delivery_partner="SELECT Cour_Name FROM tbl_courier WHERE Cour_ID IN (SELECT Courier_ID FROM tbl_courier_assign WHERE CM_ID='$delivered_cart_id' AND Delivery_Status='DELIVERED')";
+                        $result_delivery_partner=$conn->query($sql_delivery_partner);
+                        $row_delivery_partner=$result_delivery_partner->fetch_assoc();
+                        $delivery_partner_name=$row_delivery_partner['Cour_Name'];
+                        echo '<td>' . $delivery_partner_name . '</td>';
+                        echo '</tr>';
 
-
-                
-
-
+                     }
+                    }
+                     else {
+                      echo '<tr>';
+                      echo '<td colspan="6" style="text-align:center">No Sales Available</td>';
+                      echo '</tr>';
+                     }
                   ?>
               </table>
               </div>

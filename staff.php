@@ -167,6 +167,11 @@ if (isset($_POST['assign_courier'])) {
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
 }
+//download_purchase_report_to_pdf
+if(isset($_POST['download_purchase_report']))
+{
+  header('location:Purchase_report.php');
+}
 
 ?>
 <!doctype html>
@@ -187,6 +192,7 @@ if (isset($_POST['assign_courier'])) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="table2excel.js"></script>
   <style>
     body {
       background-color: rgb(255, 255, 255);
@@ -216,7 +222,9 @@ if (isset($_POST['assign_courier'])) {
       height: 10vh;
       width: 17%;
       background-image: url('picture3.png');
-      background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     }
 
     .top-navigation-list {
@@ -1181,7 +1189,9 @@ if (isset($_POST['assign_courier'])) {
                 echo "<tr>";
                 echo "<td>" . $row_c['Cust_ID'] . "</td>";
                 echo "<td>" . $row_c['C_Username'] . "</td>";
-                echo "<td>" . $row_c['Cust_Fname'] . "</td>";
+                //combine fname and lname
+                echo "<td>" . $row_c['Cust_Fname'] . " " . $row_c['Cust_Lname'] . "</td>";
+                
                 echo "<td>" . $row_c['Cust_Phone'] . "</td>";
                 echo "<td>" . $row_c['Cust_Hname'] . "</td>";
                 echo "<td>" . $row_c['Cust_Street'] . "</td>";
@@ -1364,12 +1374,12 @@ if (isset($_POST['assign_courier'])) {
       </div>
       <div class="staff-content-inner-bottom">
         <div class="view_table_wrapper">
-          <table class="table-bordered table-striped view_table">
+        <table class="table-bordered table-striped view_table">
             <tr>
               <th>Appliance ID</th>
               <th>Appliance Name</th>
-              <th>Type ID</th>
-              <th>Brand ID</th>
+              <th>Appliance Type</th>
+              <th>Appliance Brand</th>
               <th colspan="2">Images</th>
               <th>Profit Percentage</th>
               <th>Description</th>
@@ -1389,8 +1399,19 @@ if (isset($_POST['assign_courier'])) {
                 echo "<tr>";
                 echo "<td>" . $row_app['Appliance_ID'] . "</td>";
                 echo "<td>" . $row_app['Appliance_Name'] . "</td>";
-                echo "<td>" . $row_app['Type_ID'] . "</td>";
-                echo "<td>" . $row_app['Brand_ID'] . "</td>";
+                //echo "<td>" . $row_app['Type_ID'] . "</td>";
+                $app_type=$row_app['Type_ID'];
+                $sql_type="SELECT Type_Name FROM tbl_type WHERE Type_ID='$app_type'";
+                $result_type=$conn->query($sql_type);
+                $row_type=$result_type->fetch_assoc();
+                //remove last letter from string
+                $row_type['Type_Name']=substr($row_type['Type_Name'],0,-1);
+                echo "<td>" . $row_type['Type_Name'] . "</td>";
+                $app_brand=$row_app['Brand_ID'];
+                $sql_brand="SELECT Brand_Name FROM tbl_brand WHERE Brand_ID='$app_brand'";
+                $result_brand=$conn->query($sql_brand);
+                $row_brand=$result_brand->fetch_assoc();
+                echo "<td>" . $row_brand['Brand_Name'] . "</td>";
                 echo "<td><img src='" . $image1 . "' alt='Image 1' height='50px' width='45px'></td>";
                 echo "<td><img src='" . $image2 . "' alt='Image 2' height='50px' width='45px'></td>";
                 echo "<td>" . $row_app['Appliance_Profit_Percentage'] . "</td>";
@@ -1427,14 +1448,16 @@ if (isset($_POST['assign_courier'])) {
     <div class="purchase-content-inner">
       <div class="purchase-content-inner-top">
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="float: right;">
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="float: right;">
           <a href="Make_Purchase1.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">Make
               Purchase</button></a>
+              <form method='POST'><button class="btn btn-primary me-md-2 add_buttons" type="button" id="downloadtoexcel_purchases">Download Excel</button>
+              <button class="btn btn-primary me-md-2 add_buttons" type="submit" name="download_purchase_report">Download pdf</button>
+          </form>
         </div>
-      </div>
-      <div class="purchase-content-inner-bottom">
+      </div>      <div class="purchase-content-inner-bottom">
         <div class="view_table_wrapper">
-          <table class="table-bordered table-striped view_table">
+          <table class="table-bordered table-striped view_table" id="purchase-table">
             <tr>
               <th>Purchase ID</th>
               <th>Vendor ID</th>
@@ -1656,6 +1679,17 @@ if (isset($_POST['assign_courier'])) {
             <!--assign courier content completed-->
 
   </div>
+  <script>
+  //download purchase report  to excel
+  document.getElementById('downloadtoexcel_purchases').addEventListener('click', function(){
+    //var table2excel = new Table2Excel();
+    var table2excel = new Table2Excel({
+        // Set the filename of the Excel file
+        defaultFileName: 'Purchase Report SMH',
+    });
+  table2excel.export(document.querySelectorAll("#purchase-table"));
+  });
+    </script>
   <script type="text/js" src="js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"

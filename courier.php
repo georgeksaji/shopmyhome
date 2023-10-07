@@ -271,7 +271,9 @@ a
     height: 10vh;
     width:17%;
     background-image:url('picture3.png');
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 .top-navigation-list
 {

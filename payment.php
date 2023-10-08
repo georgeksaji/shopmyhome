@@ -390,7 +390,7 @@ if(isset($_POST['pay']))
             height: 10%;
             color: rgb(256, 256, 256);
             padding-left: 5%;
-            background-color: rgb(6, 28, 100);
+            background-color: #2a55e5;
             border-radius: 10px 10px 0px 0px;
             display: flex;
             align-items: center;

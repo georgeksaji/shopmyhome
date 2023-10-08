@@ -17,10 +17,12 @@ else {
   if($_SESSION['search'] != null)
   {
     $search = $_SESSION['search'];
+
   }
   if($_SESSION['brand_id'] != null)
   {
     $brand_id = $_SESSION['brand_id'];
+
   }
   if($_SESSION['category_id'] != null)
   {
@@ -30,7 +32,6 @@ else {
   {
     $type_id = $_SESSION['type_id'];
   }
-
 //search appliance
 if(isset($_POST['submit']))
 {

@@ -5,9 +5,9 @@ $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 $selectedAppliances = $_SESSION['Selected_Appliances'];
 $count = count($selectedAppliances);
-echo $count;
+//echo $count;
 foreach ($selectedAppliances as $selectedAppliance) {
-  echo $selectedAppliance;
+  //echo $selectedAppliance;
 }
 //find profit percentage of each appliance
 
@@ -17,7 +17,7 @@ for ($i = 0; $i < $count; $i++) {
   $result = mysqli_query($conn, $sql);
   $row = mysqli_fetch_assoc($result);
   $appliance_profit_percentage[$i] = $row['Appliance_Profit_Percentage'];
-  echo $appliance_profit_percentage[$i];
+  //echo $appliance_profit_percentage[$i];
 }
 
 
@@ -280,7 +280,24 @@ if (isset($_POST['submit'])) {
                 $image2 = $row['Appliance_Image2'];
                 echo "<tr>";
                 echo "<td>" . $row['Appliance_ID'] . "</td>";
-                echo "<td>" . $row['Appliance_Name'] . "</td>";
+                $appliance_id = $row['Appliance_ID'];
+                //select type and brand id and find its name from its table
+                $query1 = "SELECT Type_ID, Brand_ID FROM tbl_appliance WHERE Appliance_ID='$appliance_id'";
+                $result1 = mysqli_query($conn, $query1);
+                $row1 = mysqli_fetch_assoc($result1);
+                $appliance_type_id = $row1['Type_ID'];
+                $appliance_brand_id = $row1['Brand_ID'];
+                $query2 = "SELECT Type_Name FROM tbl_type WHERE Type_ID='$appliance_type_id'";
+                $result2 = mysqli_query($conn, $query2);
+                $row2 = mysqli_fetch_assoc($result2);
+                $appliance_type_name = $row2['Type_Name'];
+                //remove last word from type name string
+                $appliance_type_name = substr($appliance_type_name, 0, strrpos($appliance_type_name, " "));
+                $query3 = "SELECT Brand_Name FROM tbl_brand WHERE Brand_ID='$appliance_brand_id'";
+                $result3 = mysqli_query($conn, $query3);
+                $row3 = mysqli_fetch_assoc($result3);
+                $appliance_brand_name = $row3['Brand_Name'];
+                echo "<td>" . $appliance_brand_name . " " . $row['Appliance_Name'] . " " . $appliance_type_name . "</td>";
                 echo "<td><img src='" . $image1 . "' alt='Image 1' height='50px' width='45px'></td>";
                 echo "<td><img src='" . $image2 . "' alt='Image 1' height='50px' width='45px'></td>";
                 //enter quantity

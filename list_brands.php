@@ -13,8 +13,11 @@ else {
 if(isset($_POST['brand']))
 {
   $brand_id = $_POST['brand'];
-  echo $brand_id;
+
   $_SESSION['brand_id'] = $brand_id;
+  $_SESSION['category_id'] = null;
+  $_SESSION['search'] = null;
+  $_SESSION['type_id'] = null;
   header("Location: list_products.php");
 }
 
@@ -24,7 +27,6 @@ if(isset($_POST['submit']))
 {
   $search = $_POST['search'];
   $_SESSION['search'] = $search;
-  echo $search;
   $_SESSION['brand_id'] = null;
   $_SESSION['category_id'] = null;
   $_SESSION['type_id'] = null;

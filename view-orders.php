@@ -45,6 +45,15 @@ if(isset($_POST['view-cards']))
 {
   header("Location: view-cards.php");
 }
+//invoice
+if(isset($_POST['invoice'])) {
+  $cm_id = $_POST['invoice_cart'];
+  echo $cm_id;
+  $_SESSION['Invoice_Number'] = $cm_id;
+  header("Location: Invoice.php");
+  exit(); // Don't forget to exit after a header redirect
+}
+
 
 ?>
 
@@ -229,7 +238,7 @@ a {
   width: 100%;
   height: 10%;
   padding-block:1%;
-  background-color: rgba(0,0,0);
+  background-color:#1047ff;
   color: white; 
 
   display: flex;
@@ -289,31 +298,46 @@ a {
 .invoice-button {
   width: 100%;
   height: 100%;
-  background-color: rgb(6, 28, 100);
+  background-color: rgb(255 0 0);
   border-style: none;
   color: white;
-  font-size: 112%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-weight: 400;
+  
   transition: 0.3s;
 }
 .order-status {
   width: 100%;
-  height: 10vh;
-  
+  height: 4vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-block-end: 3%;
 }
 .order-items {
   width: 100%;
   height: 16vh;
-  
+  margin-block-end: 3%;
   display: flex;
   align-items: center;
+  justify-content: space-evenly;
+}
+.order-item-image{
+  width: 13%;
+  height: 100%;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+.order-item-details-outer {
+  width: 60%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
 }
-
+.order-item-name, .order-item-qty, .order-item-price {
+  height: 100%;
+}
 
 
 
@@ -341,6 +365,7 @@ a {
 
 
 </style>
+
     
   </head>
   <body>
@@ -455,10 +480,38 @@ a {
                   echo "<div class='order-date'>Order Date: $payment_date</div>";
                   echo "<div class='order-total'>Total Cost: ₹$total_amount</div>";
                   echo "<div class='order-id'>Order ID: $cm_id</div>";
-                  echo "<div class='order-reciept'><form method='POST' style='width: 100%;height: 100%;'><button type='submit' name='invoice' class='invoice-button'>Invoice</button><form></div>";
+                  echo "<div class='order-reciept'>";
+
+                  echo '<form method="POST">';
+                  echo '  <input type="hidden" value="' . $cm_id . '" name="invoice_cart">';
+                  echo '  <button type="submit" name="invoice" class="invoice-button">Invoice</button>';
+                  echo '</form>';
+                  echo "</div>";
                   echo "</div>";
                   echo "<div class='order-box-center'>";
-                  echo "<div class='order-status'>$status</div>";
+                  //echo "<div class='order-status'>$status</div>";
+                  //ASSIGNED SHIPPED REASSIGNED DELIVERED
+                  //progress
+                  if($status=='PAID')
+                  {   
+                  echo "<div class='order-status' style='background-color:#4bed4b;color:white'>PAYMENT SUCCESS</div>";
+                      }
+                  if($status=='COURIER ASSIGNED')
+                  {   
+                  echo "<div class='order-status' style='background-color:#4bed4b;color:white'>$status TO DELIVER YOUR CONSIGNMENT</div>";
+                  }
+                  else if($status=='SHIPPED')
+                  {
+                    echo "<div class='order-status' style='background-color:orange;color:white'>$status YOUR ORDER</div>";
+                  }
+                  else if($status=='REASSIGNED')
+                  {
+                    echo "<div class='order-status' style='background-color:yellow;color:black'>$status COURIER PARTNER</div>";
+                  }
+                  else if($status=='DELIVERED')
+                  {
+                    echo "<div class='order-status' style='background-color:#4bed4b;color:white'>$status</div>";
+                  }
                   while($row1 = mysqli_fetch_assoc($result1))
                   {
                     //Appliance_ID 	Quantity 	Price 
@@ -487,7 +540,7 @@ a {
                     $result4 = mysqli_query($conn,$sql4);
                     $row4 = mysqli_fetch_assoc($result4);
                     $brand_name = $row4['Brand_Name'];
-                    echo "<div class='order-items'><img src='$appliance_image1' height='95%'><br>$brand_name $appliance_name $type_name<br>Quantity: $quantity<br>Price: ₹$price</div>";
+                    echo "<div class='order-items'><div class='order-item-image' style='background-image:url($appliance_image1);'></div><div class='order-item-details-outer'><div class='order-item-name'>$brand_name $appliance_name $type_name</div><div class='order-item-qty'> Quantity: $quantity</div><div class='order-item-price'> Price: ₹$price</div></div></div>";
           
 
                   }
@@ -497,7 +550,7 @@ a {
               }
               else if(mysqli_num_rows($result) == 0)
               {
-                echo "<h1>No Orders Yet</h1>";
+                echo "<center><h5>No Orders Yet</h5></center>";
               }
               ?>
 
@@ -511,4 +564,5 @@ a {
               </div>
                    </div>
               </body>
+           
               </html>

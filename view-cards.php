@@ -261,12 +261,11 @@ a {
     border-radius: 10px;
 }
 .card-heading
-{
-    width: 100%;
+{    width: 100%;
     height: 10%;
-    color:rgb(256,256,256);
-    padding-left:5%;
-    background-color: rgb(6, 28, 100);
+    color: rgb(256,256,256);
+    padding-left: 5%;
+    background-color: #2a55e5;
     border-radius: 10px 10px 0px 0px;
     display: flex;
     align-items: center;
@@ -368,17 +367,16 @@ input[type=number]
 }
 .cards-outer th{
   text-align: center;
-  border: 1px solid black;
-  border-collapse: collapse;
-  color:rgb(256,256,256);
-  background-color: rgb(0, 0, 0);
-  font-weight:400;
+  background-color:#ffe45b;
 }
 .cards-outer tbody tr:nth-child(odd) {
   background-color: rgb(0,0,0,0.1); /* Set your desired background color */
 /* Set text color for better contrast */
 }
 .cards-outer td,th{
+  border-style: solid;
+  border-width:1px;
+  border-color:rgb(0,0,0,0.3);
   text-align: center;
   color:rgb(0, 0, 0);
   border-collapse: collapse;
@@ -404,7 +402,7 @@ input[type=number]
 }
 .expired_button,.expired_button:hover,.expired_button:active
 {
-  background-color:rgb(0 0 0 / 50%);
+  background-color:rgb(0 0 0);
   color:rgb(256,256,256);
   border-style: none;
   width: -webkit-fill-available;

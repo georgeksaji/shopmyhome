@@ -50,8 +50,10 @@ if(isset($_POST['submit']))
   <style>
     body {
       background-image: url("background.png");
-      background-size: cover;
+      background-size: contain;
       background-repeat: no-repeat;
+      overflow: hidden;
+
     }
 
     .outercontainer {
@@ -155,15 +157,17 @@ if(isset($_POST['submit']))
 
     option
     {
-      background-color:rgb(0,0,0,0.7);
+      background-color:rgb(256,256,256);
+      color:rgb(0,0,0);
     }
 
 
     .registration-box button {
-    background-color: rgb(83,178,212,0.8);
+    background-color: rgb(255,216,21);
     border-radius: 5px;
     color: white;
     width: 180px;
+    margin-top: 3vh;
     cursor: pointer;
     padding: 8px 5px;
     border: none;
@@ -175,7 +179,6 @@ if(isset($_POST['submit']))
 
 
     .registration-box button:hover {
-      background-color: rgb(83,178,212);
       transition: 0.2s;
       
     }

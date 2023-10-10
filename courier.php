@@ -6,10 +6,11 @@ session_start();
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 //$user_name=//select Cour_ID tbl_courier where Cour_Username='$userId'
-$user_id2="SELECT Cour_ID FROM tbl_courier WHERE Cour_Username='$userId'";
+$user_id2="SELECT Cour_ID,Cour_Status FROM tbl_courier WHERE Cour_Username='$userId'";
 $result=mysqli_query($conn,$user_id2);
 $row=mysqli_fetch_assoc($result);
 $user_number=$row['Cour_ID'];
+
 
 //dashboard box values 
 
@@ -27,7 +28,7 @@ $courier_joined=$row3['Cour_Joining_Date'];
 
 
 //pending_delivery
-$result4=mysqli_query($conn,"SELECT * FROM tbl_courier_assign WHERE Delivery_Status='NOT DELIVERED' AND Courier_ID='$user_number'");	
+$result4=mysqli_query($conn,"SELECT * FROM tbl_courier_assign WHERE (Delivery_Status='ASSIGNED' OR Delivery_Status='SHIPPED') AND Courier_ID='$user_number'");	
 $pending_delivery=mysqli_num_rows($result4);
 
 
@@ -185,22 +186,45 @@ if(isset($_POST['unreachable']))
   
   //$cour_id = $_POST['courier_assign_id'];
   // 	Delivery_Error_Status+1 if and only if <=3
-  $find_status="SELECT Delivery_Error_Status,Max_Delivery_Date FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
+  $find_status="SELECT Delivery_Error_Status,Max_Delivery_Date,CM_ID FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
   $result=mysqli_query($conn,$find_status);
   $row=mysqli_fetch_assoc($result);
   if($row['Delivery_Error_Status']<=2)
   {
-    $delivery_date=$row['Max_Delivery_Date'];
-    $delivery_date = new DateTime($delivery_date);
-    $delivery_date->modify('+3 days');
-    // Format the modified date with time to 'Y-m-d H:i:s' format
-    $new_delivery_date = $delivery_date->format('Y-m-d H:i:s');
-    mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Error_Status=Delivery_Error_Status+1,Max_Delivery_Date='$new_delivery_date' WHERE Courier_Assign_ID='$cour_id'");    
-  echo "<script>alert('Consignment Unreachable')</script>"; 
+      $delivery_date=$row['Max_Delivery_Date'];
+      $current_date=date("Y-m-d H:i:s");
+      if($delivery_date=$current_date)
+      {
+        
+      $delivery_date = new DateTime($delivery_date);
+      $delivery_date->modify('+1 days');
+      // Format the modified date with time to 'Y-m-d H:i:s' format
+      $new_delivery_date = $delivery_date->format('Y-m-d H:i:s');
+      mysqli_query($conn,"UPDATE tbl_courier_assign SET Max_Delivery_Date='$new_delivery_date' WHERE Courier_Assign_ID='$cour_id'");  
+      //select new delivery errror status  
+      }
+      mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Error_Status=Delivery_Error_Status+1 WHERE Courier_Assign_ID='$cour_id'");  
+      //select new delivery errror status
+      $find_status="SELECT Delivery_Error_Status FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
+      $result=mysqli_query($conn,$find_status);
+      $row_new=mysqli_fetch_assoc($result);
+
+    echo "<script>alert('Consignment Unreachable')</script>"; 
+    
+    if($row['Delivery_Error_Status']==2)
+    {
+    echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
+    }
   }
-  else if($row['Delivery_Error_Status']>2)
+  if($row_new['Delivery_Error_Status']==3)
   {
-   echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
+    $cm_id=$row['CM_ID'];
+    //select courierpartner id and save it in reassigned courier id
+    $sql_update_delivery_status = "UPDATE tbl_courier_assign SET Delivery_Status = 'REASSIGNED' WHERE Courier_Assign_ID = '$cour_id'";
+    $result_update_delivery_status = mysqli_query($conn, $sql_update_delivery_status);
+    //set  Cart_Status 	= Reassigned in tbl cart where $cm_id
+    $sql_update_cart_status = "UPDATE tbl_cart_master SET Cart_Status = 'REASSIGNED' WHERE CM_ID = '$cm_id'";
+    $result_update_cart_status = mysqli_query($conn, $sql_update_cart_status);
   }
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
@@ -877,8 +901,8 @@ alert(jsMessage2);
             <div class="vendor-content-inner-top">
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="color:white;">
                 Deliver the Consignments on time and update the status of the delivery. 
-                If you are unable to deliver the consignment, please update the status as "Customer Unreachable" and your deliery time will be extended by 3 days. 
-                If you are unable to deliver the consignment after the third time, the consignment will be reassigned to another courier partner and you will be suspended.
+                If you are unable to deliver the consignment, please update the status as "Customer Unreachable" and your deliery date will be extended by 1 day if it was the last date for delivery . 
+                If you are unable to deliver the consignment for the second time, the consignment will be reassigned from you.
                 </div>
                 </div>
             <div class="vendor-content-inner-bottom">
@@ -922,14 +946,14 @@ alert(jsMessage2);
                           //Customer Unreachable button
                           //Delivery_Error_Status
                           $delivery_error_status=$row_c['Delivery_Error_Status'];
-                          if($delivery_error_status<3)
+                          if($delivery_error_status<=2)
                           {
                           $delivery_error_status=$delivery_error_status+1;
                           echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="unreachable">CUSTOMER UNREACHABLE x'.$delivery_error_status.'</button></form></td>';
                           }
                           else
                           {
-                            echo '<td style="text-align:center;"><form method="POST"><button type="submit" class="btn btn-primary me-md-2" name="unreachable" disabled>CUSTOMER UNREACHABLE</button></form></td>';
+                            echo '<td style="text-align:center;"><form method="POST"><button type="submit" class="btn btn-primary me-md-2" name="unreachable" disabled>RETURNED</button></form></td>';
                           }
                           echo "</tr>";
                       }

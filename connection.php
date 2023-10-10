@@ -24,10 +24,17 @@ else{
             $cm_id = $row_select_max_delivery_date['CM_ID'];
             $cour_id = $row_select_max_delivery_date['Courier_ID'];
             $delivery_error_status = $row_select_max_delivery_date['Delivery_Error_Status'];
+
+
+                
+            //select courierpartner id and save it in reassigned courier id
+
+            
+
             $sql_update_delivery_status = "UPDATE tbl_courier_assign SET Delivery_Status = 'REASSIGNED' WHERE Courier_Assign_ID = '$Courier_Assign_ID'";
             $result_update_delivery_status = mysqli_query($conn, $sql_update_delivery_status);
             //set  Cart_Status 	= Reassigned in tbl cart where $cm_id
-            $sql_update_cart_status = "UPDATE tbl_cart SET Cart_Status = 'REASSIGNED' WHERE CM_ID = '$cm_id'";
+            $sql_update_cart_status = "UPDATE tbl_cart_master SET Cart_Status = 'REASSIGNED' WHERE CM_ID = '$cm_id'";
             $result_update_cart_status = mysqli_query($conn, $sql_update_cart_status);
 
             
@@ -35,9 +42,25 @@ else{
             //$sql_update_courier_assignment_status = "UPDATE tbl_payment SET Courier_Assignment_Status = '0' WHERE CM_ID = '$cm_id'";
             //$result_update_courier_assignment_status = mysqli_query($conn, $sql_update_courier_assignment_status);
             //set Courier_Assignment_Status  in tbl customer to 0 where $cm_id
-            if($delivery_error_status ==3){      
-            $sql_update_status = "UPDATE tbl_courier SET Cour_Status  = '2' WHERE Cour_ID = '$cour_id'";
-            $result_update_status = mysqli_query($conn, $sql_update_status);
+            if($delivery_error_status < 3){   
+                //// Assuming $cour_id is coming from user input or any other sourcE
+
+                $sql_ca_status = "SELECT * FROM tbl_courier_assign WHERE Courier_ID = '$cour_id' AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
+                //$sql_ca_status = "SELECT * FROM tbl_courier_assign WHERE Courier_ID = $cour_id AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
+                $result_ca_status = mysqli_query($conn, $sql_ca_status);
+                $ca_status = mysqli_num_rows($result_ca_status);
+                if ($ca_status > 0) { 
+                    //terminate courier
+                    $sql_update_status = "UPDATE tbl_courier SET Cour_Status  = '2' WHERE Cour_ID = '$cour_id'";
+                   $result_update_status = mysqli_query($conn, $sql_update_status);
+                 
+                } else { 
+                       //in tbl courier set status to 3 courier can log in but no new orders will be assigned
+                       $sql_update_status = "UPDATE tbl_courier SET Cour_Status  = '3' WHERE Cour_ID = '$cour_id'";
+                       $result_update_status = mysqli_query($conn, $sql_update_status);
+                   
+                }   
+          
             }
 
         }

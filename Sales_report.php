@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Check if the element exists
     if (element) {
         html2pdf(element, {
-            margin: 10,
+            margin: 14,
             filename: 'Sales report.pdf',
             image: { type: 'png', quality: 1.0 },
             html2canvas: { scale: 2, useCORS: true },

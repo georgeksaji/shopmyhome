@@ -716,12 +716,14 @@ if (isset($_POST['remove_item'])) {
           <div class="items-top" style="padding-inline-start:2%;">CART ITEMS</div>
           <table class="each-item">
             <?php
+            $price_change_status = 0;
             if ($cm_id != null) {
               $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
               $result = mysqli_query($conn, $sql);
               $count = mysqli_num_rows($result);
               if ($count > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
+                  $cc_id=$row['CC_ID'];
                   $item_id = $row['Appliance_ID'];
                   $quantity = $row['Quantity'];
                   $previous_quantity = $quantity;
@@ -766,7 +768,17 @@ if (isset($_POST['remove_item'])) {
             
                     //$quantity increase and decrease button
                     echo "<td><form method='POST' class='form_button'><input type='hidden' value='$cm_id' name='Cart_Master_ID'><input type='hidden' value='$previous_quantity' name='previous_quantity'><input type='number' name='quantity' value='$quantity' min='1' max='$available_quantity'><button type='submit' name='update_quantity' value='$item_id'>Update</button></td>";
-                    echo "<td>₹ $price</td>";
+                    $new_price=$row_quantity['Selling_Price'];
+                    $price2=$quantity*$new_price;
+                    if($price2!=$price){
+                      $sql = "UPDATE tbl_cart_child SET Price = '$price2' WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
+                      mysqli_query($conn, $sql);
+                      echo "<td>₹ $price2</td>";
+                      $price_change_status = 1;
+                    }
+                    else{
+                      echo "<td>₹ $price</td>";
+                    }
                     echo "<td><button name='remove_item' value='$item_id' style='background-color:transparent;border-style:none'><img src='remove.png' height='30px'></button></td>";
                     echo "</form></tr>";
                   } else if (mysqli_num_rows($result_quantity) == 0) {
@@ -919,5 +931,12 @@ if (isset($_POST['remove_item'])) {
 <?php
 $quantity_update_status = null;
 ?>
+</script>
+<script>
+  var price_change_status = <?php echo json_encode($price_change_status); ?>;
+  var jsMessage1 = "Price of one or more items in your cart has changed.";
+  if (price_change_status !== 0 && price_change_status == 1) {
+    alert(jsMessage1);
+  }
 
 </html>

@@ -98,7 +98,15 @@ if (isset($_POST['activate_cour_status_button'])) {
 
 if (isset($_POST['deactivate_cour_status_button'])) {
   $cour_id = $_POST['cour_id'];
-  mysqli_query($conn, "UPDATE tbl_courier SET Cour_Status=0 WHERE Cour_ID='$cour_id'");
+  $sql_ca_status = "SELECT * FROM tbl_courier_assign WHERE Courier_ID = '$cour_id' AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
+  $result_ca_status = mysqli_query($conn, $sql_ca_status);
+  $ca_status = mysqli_num_rows($result_ca_status);
+  if ($ca_status > 0) {
+    echo "<script>alert('Courier cannot be deactivated as it has one or more pending deliveries.');</script>";
+  } else {
+    mysqli_query($conn, "UPDATE tbl_courier SET Cour_Status=0 WHERE Cour_ID='$cour_id'");
+  }
+  //mysqli_query($conn, "UPDATE tbl_courier SET Cour_Status=0 WHERE Cour_ID='$cour_id'");
 }
 
 //cust status button
@@ -1200,9 +1208,13 @@ alert(jsMessage2);
                 echo "<td>" . $row_c['Cour_Joining_Date'] . "</td>";
                 if ($row_c['Cour_Status'] == 1) {
                   echo "<td>Active</td>";
-                } else if ($row_c['Cour_Status'] == 2) {
+                } else if ($row_c['Cour_Status'] == 3) {
                   echo "<td>Terminated</td>";
-                } else if ($row_c['Cour_Status'] == 0) {
+                }
+                else if ($row_c['Cour_Status'] == 2) {
+                  echo "<td>Awaiting Termination</td>";
+                }
+                 else if ($row_c['Cour_Status'] == 0) {
                   echo "<td>Inactive</td>";
                 }
 
@@ -1214,8 +1226,10 @@ alert(jsMessage2);
                 if ($row_c['Cour_Status'] == 0) {
                   echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='" . $row_c['Cour_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cour_status_button'>ACTIVATE</button></form></td>";
                 }
-
                 if ($row_c['Cour_Status'] == 2) {
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><button type='submit' class='btn btn-primary me-md-2 terminated_button' disabled>ACTIVE</button></form></td>";
+                }
+                if ($row_c['Cour_Status'] == 3) {
                   echo "<td style='display: flex;align-items: center;justify-content: center;'><button type='submit' class='btn btn-primary me-md-2 terminated_button' disabled>TERMINATED</button></form></td>";
                 }
                 //edit cour button
@@ -1609,6 +1623,7 @@ alert(jsMessage2);
           //Unassigned table
           echo '<table class="table-bordered table-striped view_table" id="unassigned-table">';
           echo '<tr>';
+          echo '<th>Cart Master ID</th>';
           echo '<th>Payment ID</th>';
           echo '<th>Customer ID</th>';
           echo '<th>Purchase Date</th>';
@@ -1645,11 +1660,12 @@ alert(jsMessage2);
               $customer_address = $row_customer_address['Cust_Hname'] . ", " . $row_customer_address['Cust_Street'] . ", " . $row_customer_address['Cust_Dist'] . ", " . $row_customer_address['State_Ut'] . ", " . $row_customer_address['Cust_Pin'];
 
               echo "<tr>";
+              echo "<td>" . $cart_master_id . "</td>";
               echo "<td>" . $payment_id . "</td>";
               echo "<td>" . $customer_id . "</td>";
               echo "<td>" . $date . "</td>";
               echo "<td>" . $customer_address . "</td>";
-              echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='" . $payment_id . "'><select name='courier_assign_id' id='courier_id' style='width: 100%;'><option value=''>Select Delivery Partner</option>";
+              echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='" . $payment_id . "'><select name='courier_assign_id' id='courier_id' style='width: 100%;' required><option value=''>Select Delivery Partner</option>";
               foreach ($delivery_partners as $delivery_partner) {
                 echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
               }
@@ -1701,7 +1717,7 @@ alert(jsMessage2);
               $row_customer_address = $result_customer_address->fetch_assoc();
               $customer_address = $row_customer_address['Cust_Hname'] . ", " . $row_customer_address['Cust_Street'] . ", " . $row_customer_address['Cust_Dist'] . ", " . $row_customer_address['State_Ut'] . ", " . $row_customer_address['Cust_Pin'];
               //delivery partner
-              $sql_delivery_partner = "SELECT Courier_ID,Courier_Assign_Date,Max_Delivery_Date,Delivery_Status FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND Delivery_Status != 'REASSIGNED'";
+              $sql_delivery_partner = "SELECT * FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
               $result_delivery_partner = $conn->query($sql_delivery_partner);
               $row_delivery_partner = $result_delivery_partner->fetch_assoc();
               $delivery_partner_id = $row_delivery_partner['Courier_ID'];

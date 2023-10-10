@@ -64,10 +64,10 @@ else if ($user_type == 'CR') {
     if ($status == '0') {
       echo "<script>alert('Your account has been suspended. Please contact the administrator.');</script>";
     } 
-    else if ($status == '2') {
+    else if ($status == '3') {
       echo "<script>alert('Your service has been terminated permanently. Please contact the administrator.');</script>";
     }
-    else if ($status == '1') {
+    else if ($status == '1' || $status == '2') {
     $_SESSION['User_ID'] = $user_id;
     $_SESSION['User_Type'] = 'CR';
     header('location: index.php');

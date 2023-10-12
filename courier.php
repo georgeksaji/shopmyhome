@@ -177,52 +177,107 @@ if(isset($_POST['ship_courier']))
 }*/
 
 //unreachable consignment button
+// if(isset($_POST['unreachable']))
+// {
+//   $cour_id = $_POST['courier_assign_id'];
+  
+//   //Accept_CA_Status
+//   //mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='UNREACHABLE' WHERE Courier_Assign_ID='$cour_id'");
+  
+//   //$cour_id = $_POST['courier_assign_id'];
+//   // 	Delivery_Error_Status+1 if and only if <=3
+//   $find_status="SELECT Delivery_Error_Status,Max_Delivery_Date,CM_ID FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
+//   $result=mysqli_query($conn,$find_status);
+//   $row=mysqli_fetch_assoc($result);
+//   if ($row['Delivery_Error_Status'] <= 2) {
+//     $delivery_date = $row['Max_Delivery_Date'];
+//     $current_date = date("Y-m-d H:i:s");
+
+//     if ($delivery_date == $current_date) {
+//         $delivery_date = new DateTime($delivery_date);
+//         $delivery_date->modify('+1 days');
+//         // Format the modified date with time to 'Y-m-d H:i:s' format
+//         $new_delivery_date = $delivery_date->format('Y-m-d H:i:s');
+
+//         // Update the Max_Delivery_Date in the tbl_courier_assign table
+//         $update_query = "UPDATE tbl_courier_assign SET Max_Delivery_Date='$new_delivery_date' WHERE Courier_Assign_ID='$cour_id'";
+//         mysqli_query($conn, $update_query);
+//     }
+
+//       mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Error_Status=Delivery_Error_Status+1 WHERE Courier_Assign_ID='$cour_id'");  
+//       //select new delivery errror status
+//       $find_status="SELECT Delivery_Error_Status FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
+//       $result=mysqli_query($conn,$find_status);
+//       $row_new=mysqli_fetch_assoc($result);
+
+//     echo "<script>alert('Consignment Unreachable')</script>"; 
+    
+//     if($row['Delivery_Error_Status']==2)
+//     {
+//     echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
+//     }
+//   }
+//   if($row_new['Delivery_Error_Status']==3)
+//   {
+//     $cm_id=$row['CM_ID'];
+
+
+
+    
+//     //select courierpartner id and save it in reassigned courier id
+
+
+
+
+//     $sql_update_delivery_status = "UPDATE tbl_courier_assign SET Delivery_Status = 'REASSIGNED' WHERE Courier_Assign_ID = '$cour_id'";
+//     $result_update_delivery_status = mysqli_query($conn, $sql_update_delivery_status);
+//     //set  Cart_Status 	= Reassigned in tbl cart where $cm_id
+//     $sql_update_cart_status = "UPDATE tbl_cart_master SET Cart_Status = 'REASSIGNED' WHERE CM_ID = '$cm_id'";
+//     $result_update_cart_status = mysqli_query($conn, $sql_update_cart_status);
+//   }
+//   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
+//   exit();
+// }
+
+
 if(isset($_POST['unreachable']))
 {
   $cour_id = $_POST['courier_assign_id'];
-  
-  //Accept_CA_Status
-  //mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='UNREACHABLE' WHERE Courier_Assign_ID='$cour_id'");
-  
-  //$cour_id = $_POST['courier_assign_id'];
-  // 	Delivery_Error_Status+1 if and only if <=3
+
   $find_status="SELECT Delivery_Error_Status,Max_Delivery_Date,CM_ID FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
   $result=mysqli_query($conn,$find_status);
   $row=mysqli_fetch_assoc($result);
-  if($row['Delivery_Error_Status']<=2)
-  {
-      $delivery_date=$row['Max_Delivery_Date'];
-      $current_date=date("Y-m-d H:i:s");
-      if($delivery_date=$current_date)
-      {
-        
-      $delivery_date = new DateTime($delivery_date);
-      $delivery_date->modify('+1 days');
-      // Format the modified date with time to 'Y-m-d H:i:s' format
-      $new_delivery_date = $delivery_date->format('Y-m-d H:i:s');
-      mysqli_query($conn,"UPDATE tbl_courier_assign SET Max_Delivery_Date='$new_delivery_date' WHERE Courier_Assign_ID='$cour_id'");  
-      //select new delivery errror status  
-      }
-      mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Error_Status=Delivery_Error_Status+1 WHERE Courier_Assign_ID='$cour_id'");  
-      //select new delivery errror status
-      $find_status="SELECT Delivery_Error_Status FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
-      $result=mysqli_query($conn,$find_status);
-      $row_new=mysqli_fetch_assoc($result);
+  if ($row['Delivery_Error_Status'] <= 2) {
+    // $delivery_date = $row['Max_Delivery_Date'];
+    // $current_date = date("Y-m-d H:i:s");
+
+    // if ($delivery_date == $current_date) {
+    //     $delivery_date = new DateTime($delivery_date);
+    //     $delivery_date->modify('+1 days');
+    //     $new_delivery_date = $delivery_date->format('Y-m-d H:i:s');
+
+    //     $update_query = "UPDATE tbl_courier_assign SET Max_Delivery_Date='$new_delivery_date' WHERE Courier_Assign_ID='$cour_id'";
+    //     mysqli_query($conn, $update_query);
+    // }
+
+    mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Error_Status=Delivery_Error_Status+1 WHERE Courier_Assign_ID='$cour_id'");  
+    $find_status="SELECT Delivery_Error_Status FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
+    $result=mysqli_query($conn,$find_status);
+    $row_new=mysqli_fetch_assoc($result);
 
     echo "<script>alert('Consignment Unreachable')</script>"; 
-    
+
     if($row['Delivery_Error_Status']==2)
     {
-    echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
+      echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
     }
   }
   if($row_new['Delivery_Error_Status']==3)
   {
     $cm_id=$row['CM_ID'];
-    //select courierpartner id and save it in reassigned courier id
+
     $sql_update_delivery_status = "UPDATE tbl_courier_assign SET Delivery_Status = 'REASSIGNED' WHERE Courier_Assign_ID = '$cour_id'";
     $result_update_delivery_status = mysqli_query($conn, $sql_update_delivery_status);
-    //set  Cart_Status 	= Reassigned in tbl cart where $cm_id
     $sql_update_cart_status = "UPDATE tbl_cart_master SET Cart_Status = 'REASSIGNED' WHERE CM_ID = '$cm_id'";
     $result_update_cart_status = mysqli_query($conn, $sql_update_cart_status);
   }
@@ -1528,4 +1583,5 @@ alert(jsMessage2);
 <script type="text/js" src="js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>   
 </body>
+
 </html>

@@ -94,6 +94,7 @@ if (isset($_POST['update_cour'])) {
 if (isset($_POST['activate_cour_status_button'])) {
   $cour_id = $_POST['cour_id'];
   mysqli_query($conn, "UPDATE tbl_courier SET Cour_Status=1 WHERE Cour_ID='$cour_id'");
+  header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
 }
 
 if (isset($_POST['deactivate_cour_status_button'])) {
@@ -105,6 +106,7 @@ if (isset($_POST['deactivate_cour_status_button'])) {
     echo "<script>alert('Courier cannot be deactivated as it has one or more pending deliveries.');</script>";
   } else {
     mysqli_query($conn, "UPDATE tbl_courier SET Cour_Status=0 WHERE Cour_ID='$cour_id'");
+    header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   }
   //mysqli_query($conn, "UPDATE tbl_courier SET Cour_Status=0 WHERE Cour_ID='$cour_id'");
 }
@@ -1667,7 +1669,22 @@ alert(jsMessage2);
               echo "<td>" . $customer_address . "</td>";
               echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='" . $payment_id . "'><select name='courier_assign_id' id='courier_id' style='width: 100%;' required><option value=''>Select Delivery Partner</option>";
               foreach ($delivery_partners as $delivery_partner) {
+                //select Courier_ID from tbl_courier_assign where CM_ID='$cart_master_id' and Delivery_Status='REASSIGNED'
+                $sql_check_reassigned = "SELECT Courier_ID FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND Delivery_Status='REASSIGNED'";
+                $result_check_reassigned = $conn->query($sql_check_reassigned);
+                $row_check_reassigned = $result_check_reassigned->fetch_assoc();
+                //if rows are not empty
+                if(mysqli_num_rows($result_check_reassigned)>0)
+                {
+                if ($row_check_reassigned['Courier_ID'] == $delivery_partner['Cour_ID']) {
+                  continue;
+                }
                 echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
+                }
+                else if(mysqli_num_rows($result_check_reassigned)==0)
+                {
+                  echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
+                }
               }
               echo "</select></td><input type='hidden' name='master_cart_id' value='" . $cart_master_id . "'><input type='hidden' name='date' value='" . $date . "'><input type='hidden' name='Customer_Id' value='" . $customer_id . "'>";
               echo "<td><button type='submit' class='btn btn-primary me-md-2' name='assign_courier'>ASSIGN</button></form></td>";

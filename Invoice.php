@@ -28,9 +28,14 @@ if (isset($_POST['home'])) {
 <head>
     <title>Invoice</title>
     <link rel="icon" type="image/x-icon" href="favicon.png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script> -->
+
+    
+    <script src="html2canvas.min.js"></script>
+    <script src="jspdf.umd.min.js"></script>
+    <script src="html2pdf.bundle.js"></script>
 
 
 
@@ -228,7 +233,7 @@ if (isset($_POST['home'])) {
         }
 
         .logo {
-            background-image: url(Picture3.png);
+            background-image: url(Picture4.png);
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -318,6 +323,7 @@ if (isset($_POST['home'])) {
                     echo '<tr rowspan="3">';
                     echo '<td colspan="2" style="text-align: center;">';
                     echo "<div class='logo'></div>";
+                    //echo "<br>Crafting Homes, Crafting Memories.<br>";
                     echo '</td>';
                     echo '<td colspan="3" style="text-align: center;">';
                     echo '<h6>Tax Invoice / Bill of Supply / Cash Memo</h6>';

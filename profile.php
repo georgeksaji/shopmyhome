@@ -34,6 +34,10 @@ if(isset($_POST['password-edit']))
 {
   header("Location: password-edit.php");
 }
+if(isset($_POST['profile-edit']))
+{
+  header("Location: profile-edit.php");
+}
 //view orders button
 if(isset($_POST['view-orders']))
 {
@@ -289,6 +293,11 @@ background-image: url('orders.png');
 
   background-image: url('card.png');
 }
+.card-inner-left4
+{
+
+  background-image: url('profile-update.png');
+}
 
 </style>
     
@@ -373,8 +382,9 @@ background-image: url('orders.png');
                   <div class="cards-outer">
                   <form method="POST" style="height:100%;width:100%;display:flex;justify-content:center;align-items:center">
                   <button class="card-button" name="password-edit"><div class="card"><div class="card-inner-left2"></div><div class="card-inner-right">LOGIN & SECURITY</div></div></button>
-                  <?php
+                   <?php
                   if($usertype == 'CU') {
+                  echo  '<button class="card-button" name="profile-edit"><div class="card"><div class="card-inner-left4"></div><div class="card-inner-right">UPDATE PROFILE</div></div></button>';
                   echo '<button class="card-button" name="view-orders"><div class="card"><div class="card-inner-left1"></div><div class="card-inner-right">ORDERS</div></div></button>';
                   echo '<button class="card-button" name="view-cards"><div class="card"><div class="card-inner-left3"></div><div class="card-inner-right">CARDS</div></div></button>';
                   }

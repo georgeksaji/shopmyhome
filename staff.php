@@ -155,12 +155,12 @@ if (isset($_POST['assign_courier'])) {
   $customer_id = $_POST['Customer_Id'];
   $cm_id = $_POST['master_cart_id'];
   $date_of_assign = $_POST['date'];
-  $assignDateTime = new DateTime($date_of_assign);
-  $assignDateTime->modify('+10 days');
-
+  $currentDateTime = new DateTime();
+  // Add 10 days to the current date
+  $currentDateTime->modify('+10 days');
+  
   // Format the modified delivery date with both date and time components
-  $expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
-  //echo $expectedDeliveryDate;
+  $expectedDeliveryDate = $currentDateTime->format('Y-m-d H:i:s');
 
   // Now $expectedDeliveryDate contains the updated date and time
 
@@ -170,10 +170,11 @@ if (isset($_POST['assign_courier'])) {
   mysqli_query($conn, "INSERT INTO tbl_courier_assign(Courier_Assign_ID,Courier_ID,CM_ID,Max_Delivery_Date,Customer_ID) VALUES(generate_courier_assignment_id(),'$assigned_delivery_partner','$cm_id','$expectedDeliveryDate','$customer_id')");
 
   //update Courier_Assignment_Status=1 in tbl_payment
-  //mysqli_query($conn, "UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
+  //mysqli_query($conn,"UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
   //echo "<script>alert('Courier Assigned Successfully');</script>";
-  //update Cart_Status='COURIER ASSIGNED' in tbl_cart_master
-  mysqli_query($conn,"UPDATE tbl_cart_master SET Cart_Status='COURIER ASSIGNED' WHERE CM_ID='$cm_id'");
+  // 	Cart_Status 	="COURIER ASSIGNED"
+  mysqli_query($conn, "UPDATE tbl_cart_master SET Cart_Status='COURIER ASSIGNED' WHERE CM_ID='$cm_id'");
+
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
 }
@@ -1535,9 +1536,10 @@ if(isset($_POST['download_purchase_report']))
         </table>
         <div class="view_table_wrapper">
           <?php
-          //Unassigned table
+          //Unassigned table          //Unassigned table
           echo '<table class="table-bordered table-striped view_table" id="unassigned-table">';
           echo '<tr>';
+          echo '<th>Cart Master ID</th>';
           echo '<th>Payment ID</th>';
           echo '<th>Customer ID</th>';
           echo '<th>Purchase Date</th>';
@@ -1546,12 +1548,12 @@ if(isset($_POST['download_purchase_report']))
           echo '</tr>';
 
           //delivery partner
-          $sql_list_all_delivery_partner = "SELECT Cour_ID,Cour_Name FROM tbl_courier WHERE Cour_Status=1";
+          /*$sql_list_all_delivery_partner = "SELECT Cour_ID,Cour_Name FROM tbl_courier WHERE Cour_Status=1";
           $result_list_all_delivery_partner = $conn->query($sql_list_all_delivery_partner);
-          $delivery_partners = [];
+          $delivery_partners = array();
           while ($row_list_all_delivery_partner = $result_list_all_delivery_partner->fetch_assoc()) {
             $delivery_partners[] = $row_list_all_delivery_partner;
-          }
+          }*/
           //select * from tbl_cart_master where  Cart_Status 	=PAID
           $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='PAID' OR Cart_Status='REASSIGNED')";
           // Replace with your actual query
@@ -1574,32 +1576,60 @@ if(isset($_POST['download_purchase_report']))
               $customer_address = $row_customer_address['Cust_Hname'] . ", " . $row_customer_address['Cust_Street'] . ", " . $row_customer_address['Cust_Dist'] . ", " . $row_customer_address['State_Ut'] . ", " . $row_customer_address['Cust_Pin'];
 
               echo "<tr>";
+              echo "<td>" . $cart_master_id . "</td>"; 
               echo "<td>" . $payment_id . "</td>";
               echo "<td>" . $customer_id . "</td>";
               echo "<td>" . $date . "</td>";
               echo "<td>" . $customer_address . "</td>";
               echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='" . $payment_id . "'><select name='courier_assign_id' id='courier_id' style='width: 100%;' required><option value=''>Select Delivery Partner</option>";
-              // foreach ($delivery_partners as $delivery_partner) {
-              //   echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
-              // }
-              foreach ($delivery_partners as $delivery_partner) {
-                //select Courier_ID from tbl_courier_assign where CM_ID='$cart_master_id' and Delivery_Status='REASSIGNED'
-                $sql_check_reassigned = "SELECT Courier_ID FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND Delivery_Status='REASSIGNED'";
-                $result_check_reassigned = $conn->query($sql_check_reassigned);
-                $row_check_reassigned = $result_check_reassigned->fetch_assoc();
-                //if rows are not empty
-                if(mysqli_num_rows($result_check_reassigned)>0)
-                {
-                if ($row_check_reassigned['Courier_ID'] == $delivery_partner['Cour_ID']) {
-                  continue;
-                }
-                echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
-                }
-                else if(mysqli_num_rows($result_check_reassigned)==0)
-                {
-                  echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
-                }
+              //select all courier partners from tabl courier with status 1
+              //select * from tbl_courier where Cour_Status=1 and Cour_ID not in (select Courier_ID from tbl_courier_assign where CM_ID='$cart_master_id' and Delivery_Status='REASSIGNED')
+              $sql_list_all_delivery_partner = "SELECT Cour_ID,Cour_Name FROM tbl_courier WHERE Cour_Status=1 AND Cour_ID NOT IN (SELECT Courier_ID FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND Delivery_Status='REASSIGNED');";
+              $result_list_all_delivery_partner = $conn->query($sql_list_all_delivery_partner);
+              $delivery_partners = array();
+              while ($row_list_all_delivery_partner = $result_list_all_delivery_partner->fetch_assoc()) {
+                $delivery_partners[] = $row_list_all_delivery_partner;
               }
+              //option all in array
+              foreach ($delivery_partners as $delivery_partner) {
+                echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
+              }
+              
+              
+              
+              
+              
+              // $sql_list_all_delivery_partner = "SELECT Cour_ID,Cour_Name FROM tbl_courier WHERE Cour_Status=1";
+              // $result_list_all_delivery_partner = $conn->query($sql_list_all_delivery_partner);
+              // $delivery_partners = array();
+              // while ($row_list_all_delivery_partner = $result_list_all_delivery_partner->fetch_assoc()) {
+              //   $delivery_partners[] = $row_list_all_delivery_partner;
+              // }
+              
+              // foreach ($delivery_partners as $delivery_partner) 
+              // {
+              //   //select Courier_ID from tbl_courier_assign where CM_ID='$cart_master_id' and Delivery_Status='REASSIGNED'
+              //   $sql_check_reassigned = "SELECT DISTINCT (Courier_ID) FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND Delivery_Status='REASSIGNED';";
+              //   $result_check_reassigned = $conn->query($sql_check_reassigned);
+              //   $row_check_reassigned = $result_check_reassigned->fetch_assoc();
+
+                
+              //   if(mysqli_num_rows($result_check_reassigned)>0)
+              //   {
+              //   if ($row_check_reassigned['Courier_ID'] == $delivery_partner['Cour_ID'])
+              //   {
+              //     continue;
+              //   }
+              //   else
+              //   {
+              //   echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
+              //   }
+              //   }
+              //   else if(mysqli_num_rows($result_check_reassigned)==0)
+              //   {
+              //     echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
+              //   }
+              // }
               echo "</select></td><input type='hidden' name='master_cart_id' value='" . $cart_master_id . "'><input type='hidden' name='date' value='" . $date . "'><input type='hidden' name='Customer_Id' value='" . $customer_id . "'>";
               echo "<td><button type='submit' class='btn btn-primary me-md-2' name='assign_courier'>ASSIGN</button></form></td>";
               echo "</tr>";
@@ -1613,7 +1643,6 @@ if(isset($_POST['download_purchase_report']))
 
 
           echo '</table>';
-
 
 
           //Assigned table

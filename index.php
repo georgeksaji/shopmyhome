@@ -736,7 +736,7 @@ alert(jsMessage2);
           Explore our wide range of top-quality appliances and tech solutions
           designed to make everyday living more convenient and enjoyable.
           Discover the perfect balance of innovation and functionality with us.</p>
-        <img src="picture3.png" alt="" height="50" style="margin-top:2%">
+        <img src="picture4.png" alt="" height="100" style="margin-top:2%">
 
       </div>
     </div>

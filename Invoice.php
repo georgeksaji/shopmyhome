@@ -319,7 +319,14 @@ if (isset($_POST['home'])) {
         <div id="report" class="content-section">
             <!--<div class="invoice-outer-section">-->
                 <?php if ($usertype == 'CU') {
+                    $page_no=1;
+                    $i=0;
                     echo '<table class="report-table">';
+                    echo '<tr>';
+                    echo '<td colspan="5" style="text-align: left;">';
+                    echo "<h6>Page Number: $page_no</h6>";
+                    echo '</td>';
+                    echo '<tr>';
                     echo '<tr rowspan="3">';
                     echo '<td colspan="2" style="text-align: center;">';
                     echo "<div class='logo'></div>";
@@ -328,8 +335,14 @@ if (isset($_POST['home'])) {
                     echo '<td colspan="3" style="text-align: center;">';
                     echo '<h6>Tax Invoice / Bill of Supply / Cash Memo</h6>';
                     //echo current date
-                    $date = date("d/m/Y");
-                    echo "<br><h6>Invoice Date: $date</h6>";
+                    date_default_timezone_set('Asia/Kolkata'); // Set the timezone to Indian Standard Time (IST)
+                    $date = date("d/m/Y h:i A"); // This format includes both date and time
+                    echo "<br><h6>Invoice Date and Time: $date</h6>";
+
+
+
+                    // $date = date("d/m/Y h:i A"); // This format includes both date and time
+                    // echo "<br><h6>Invoice Date and Time: $date</h6>";
                     echo '</tr>';
                     //seller and buyer details
                     echo '<tr>';

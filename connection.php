@@ -14,7 +14,8 @@ else{
 }
 
     //reassigning courier
-    $sql_select_max_delivery_date="SELECT * FROM tbl_courier_assign WHERE Max_Delivery_Date < CURDATE() AND Delivery_Status != 'REASSIGNED' AND Delivery_Status != 'DELIVERED'";
+    // -->upto 10/20/23/ final ppt--> $sql_select_max_delivery_date="SELECT * FROM tbl_courier_assign WHERE Max_Delivery_Date < CURDATE() AND Delivery_Status != 'REASSIGNED' AND Delivery_Status != 'DELIVERED'";
+    $sql_select_max_delivery_date="SELECT * FROM tbl_courier_assign WHERE Max_Delivery_Date < CURDATE() AND Delivery_Status != 'DELIVERED'";
     $result_select_max_delivery_date = mysqli_query($conn, $sql_select_max_delivery_date);
     $count_select_max_delivery_date = mysqli_num_rows($result_select_max_delivery_date);
     //set delivery status to reassigned 
@@ -22,9 +23,17 @@ else{
         while($row_select_max_delivery_date = mysqli_fetch_assoc($result_select_max_delivery_date)){
             $Courier_Assign_ID = $row_select_max_delivery_date['Courier_Assign_ID'];
             $cm_id = $row_select_max_delivery_date['CM_ID'];
+        
+            //select * from tbl courier assign where delivery status = $delivered
+            $checkifdelivered = "SELECT * FROM tbl_courier_assign WHERE CM_ID = '$cm_id' AND Delivery_Status = 'DELIVERED'";
+            $result_checkifdelivered = mysqli_query($conn, $checkifdelivered);
+            $count_checkifdelivered = mysqli_num_rows($result_checkifdelivered);
+            if($count_checkifdelivered==0)
+         {
             $cour_id = $row_select_max_delivery_date['Courier_ID'];
             $delivery_error_status = $row_select_max_delivery_date['Delivery_Error_Status'];
 
+        
 
                 
             //select courierpartner id and save it in reassigned courier id
@@ -62,6 +71,7 @@ else{
                 }   
           
             }
+        }
 
         }
     }

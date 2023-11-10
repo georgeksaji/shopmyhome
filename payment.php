@@ -157,6 +157,8 @@ if(isset($_POST['pay']))
                     $sql = "INSERT INTO tbl_payment(Payment_ID,CM_ID,Card_ID) VALUES (generate_payment_id(),'$cm_id','$card_id')";
                     $result = mysqli_query($conn, $sql);
                     echo '<script>alert("Payment Successfull");</script>'; 
+                    //sleep(2);
+                    header("Location: view-orders.php");
                 }
 
                 else if($quantity_update_status == 1 && $price_update_status == 0)

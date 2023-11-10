@@ -64,6 +64,10 @@ if(isset($_POST['logout']))
   header("Location: index.php");
 }
 
+//profile button
+if (isset($_POST['profile'])) {
+  header("Location: profile.php");
+}
 //cart button
 if(isset($_POST['cart']))
 {
@@ -440,10 +444,10 @@ justify-content: flex-start;
                   echo '</form>';//    
                 }
                 //if usertype=CU
-                if($usertype == 'CU') {
+                if ($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);
@@ -498,6 +502,7 @@ if($search != null)
     //$sql2="SELECT * FROM tbl_appliance WHERE Appliance_Name LIKE '%$search%' UNION SELECT * FROM tbl_appliance WHERE Appliance_Description LIKE '%$search%'";
 
     
+    $search = mysqli_real_escape_string($conn, $search);
     $sql2="SELECT * FROM tbl_appliance WHERE Appliance_ID IN (SELECT Appliance_ID FROM tbl_appliance WHERE Appliance_Name LIKE '%$search%' UNION SELECT Appliance_ID FROM tbl_appliance WHERE Brand_ID IN (SELECT Brand_ID FROM tbl_brand WHERE Brand_Name LIKE '%$search%') UNION SELECT Appliance_ID FROM tbl_appliance WHERE Type_ID IN (SELECT Type_ID FROM tbl_type WHERE Type_Name LIKE '%$search%' UNION SELECT Type_ID FROM tbl_type WHERE Cat_ID IN (SELECT Cat_ID FROM tbl_category WHERE Cat_Name LIKE '%$search%')))";
     $result2 = mysqli_query($conn,$sql2);
     while($row2 = mysqli_fetch_assoc($result2))

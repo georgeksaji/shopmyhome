@@ -21,15 +21,18 @@ if (isset($_POST['logout'])) {
 <html lang="en">
 
 <head>
-    <title>shopmyhome</title>
+<title>shopmyhome</title>
     <link rel="icon" type="image/x-icon" href="favicon.png">
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script> -->
 
+  
     <script src="html2canvas.min.js"></script>
     <script src="jspdf.umd.min.js"></script>
     <script src="html2pdf.bundle.js"></script>
+    <script src="html2pdf.bundle.min.js"></script>
+   <!-- <script src="paged.js"></script>-->
 
 
 
@@ -76,11 +79,11 @@ if (isset($_POST['logout'])) {
         .navbar {
             width: 49%;
         }
-
+        
         .container-fluid,
         .d-flex {
             width: 100%;
-
+            
         }
 
         .form-control {
@@ -96,7 +99,7 @@ if (isset($_POST['logout'])) {
         .form-control::-webkit-search-cancel-button {
             display: none;
         }
-
+        
 
         .form-control:hover,
         .form-control:focus {
@@ -134,7 +137,7 @@ if (isset($_POST['logout'])) {
         .action table td {
             display: inline-block;
         }
-
+        
         .login-box,
         .signup-box,
         .admin-box,
@@ -153,7 +156,7 @@ if (isset($_POST['logout'])) {
             min-width: 91px;
             height: 40px;
         }
-
+        
         .login-box:hover,
         .signup-box:hover,
         .admin-box:hover {
@@ -169,9 +172,9 @@ if (isset($_POST['logout'])) {
         .action table .btn-primary,
         .action table .btn {
             border-style: none;
-            background-color: rgb(6, 28, 100);
+            background-color: rgb(6, 28, 100); 
         }
-
+        
         .action table .btn:hover {
             background-color: rgb(256, 256, 256);
         }
@@ -217,7 +220,7 @@ if (isset($_POST['logout'])) {
             border-color: rgb(0, 0, 0);
             padding: 1%;
             text-align: center;
-        }
+            }
 
         .report-table th {
             background-color: rgb(42, 85, 229);
@@ -251,7 +254,7 @@ if (isset($_POST['logout'])) {
             transition: 0.3s;
             cursor: pointer;
             text-align: center;
-            margin:auto
+margin:auto
 
             width: 8%;
             height: 61%;
@@ -262,7 +265,7 @@ if (isset($_POST['logout'])) {
 </head>
 
 <body>
-    <div class="home-outer">
+<div class="home-outer">
 
         <div class="top-navigation">
             <a href="index.php">
@@ -281,9 +284,9 @@ if (isset($_POST['logout'])) {
                     }
                     ?>
                 </table>
-            </div>
-        </div>
-        <div id="report" class="content-section">
+    </div>
+    </div>
+<div id="report" class="content-section">
             <!--<div class="invoice-outer-section">-->
                 <?php if ($usertype == 'AD') {
                     echo '<table class="report-table">';
@@ -314,33 +317,33 @@ if (isset($_POST['logout'])) {
                     echo '<th>Order Amount</th>';
                     echo '<th>Order Status</th>';
                     echo '</tr>';
-                    $total_sales_amount = 0;
+$total_sales_amount = 0;
                     $query_d = "SELECT * FROM tbl_payment"; // Replace with your actual query
                     $delivery_num2 = $conn->query($query_d);
-                    if (mysqli_num_rows($delivery_num2) > 0) {
-                      while ($row_d = $delivery_num2->fetch_assoc()) {
-                        $payment_id = $row_d['Payment_ID'];
-                        $delivered_cart_id = $row_d['CM_ID'];
-                        $order_date = $row_d['Payment_Date'];
-                        //cart master details
-                        $sql_cart_master_details = "SELECT Customer_ID,Total_Amount,Cart_Status FROM tbl_cart_master WHERE CM_ID='$delivered_cart_id'";
-                        $result_cart_master_details = $conn->query($sql_cart_master_details);
-                        $row_cart_master_details = $result_cart_master_details->fetch_assoc();
-                        // 	CM_ID 	Customer_ID 	Total_Amount 	Cart_Status 	
-                        $customer_id = $row_cart_master_details['Customer_ID'];
-                        $total_amount = $row_cart_master_details['Total_Amount'];
-                        $cart_status = $row_cart_master_details['Cart_Status'];
-                        echo '<tr>';
-                        echo '<td>' . $payment_id . '</td>';
-                        echo '<td>' . $delivered_cart_id . '</td>';
-                        echo '<td>' . $customer_id . '</td>';
-                        echo '<td>' . $order_date . '</td>';
-                        echo '<td>' . $total_amount . '</td>';
-                        $total_sales_amount = $total_sales_amount + $total_amount;
-                        echo '<td>' . $cart_status . '</td>';
-                       echo '</tr>';
-                      }
-                      echo '<tr>';
+    if (mysqli_num_rows($delivery_num2) > 0) {
+        while ($row_d = $delivery_num2->fetch_assoc()) {
+          $payment_id = $row_d['Payment_ID'];
+          $delivered_cart_id = $row_d['CM_ID'];
+          $order_date = $row_d['Payment_Date'];
+          //cart master details
+          $sql_cart_master_details = "SELECT Customer_ID,Total_Amount,Cart_Status FROM tbl_cart_master WHERE CM_ID='$delivered_cart_id'";
+          $result_cart_master_details = $conn->query($sql_cart_master_details);
+          $row_cart_master_details = $result_cart_master_details->fetch_assoc();
+          // 	CM_ID 	Customer_ID 	Total_Amount 	Cart_Status 	
+          $customer_id = $row_cart_master_details['Customer_ID'];
+          $total_amount = $row_cart_master_details['Total_Amount'];
+          $cart_status = $row_cart_master_details['Cart_Status'];
+          echo '<tr>';
+          echo '<td>' . $payment_id . '</td>';
+          echo '<td>' . $delivered_cart_id . '</td>';
+          echo '<td>' . $customer_id . '</td>';
+          echo '<td>' . $order_date . '</td>';
+          echo '<td>' . $total_amount . '</td>';
+$total_sales_amount = $total_sales_amount + $total_amount;
+          echo '<td>' . $cart_status . '</td>';
+         echo '</tr>';
+        }
+        echo '<tr>';
                       echo '<td colspan="6" style="text-align:center">Total Sales : ₹ '.$total_sales_amount.'</td>';
                       echo '</tr>';
                     } else {
@@ -365,6 +368,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Check if the element exists
     if (element) {
+        // Wait for the content to be rendered before generating PDF
+        html2pdf(element, {
+            margin: 14,
+            filename: 'Sales report.pdf',
+            image: { type: 'png', quality: 1.0 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'] },
+            jsPDFContext: {
+                putOnlyUsedFonts: true,
+                putOnlyUsedImages: true,
+            },
+            afterRender: function (pdf) {
+                var pageCount = pdf.internal.getNumberOfPages();
+                for (var i = 1; i <= pageCount; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(14);
+                    pdf.setTextColor(10, 50, 0);
+                    pdf.text('Page ' + i + ' of ' + pageCount, 280, 10); // Adjust the position as needed
+                }
+            }
+        });
+    } else {
+        console.error('Element not found.');
+    }
+});
+</script>
+
+
+
+
+
+<!-- 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var element = document.getElementById('report'); // Replace 'report' with the actual ID of your table or container
+
+    // Check if the element exists
+    if (element) {
         html2pdf(element, {
             margin: 14,
             filename: 'Sales report.pdf',
@@ -376,5 +418,5 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('Element not found.');
     }
 });
-</script>
+</script> -->
 </html>

@@ -1536,7 +1536,7 @@ if(isset($_POST['download_purchase_report']))
         </table>
         <div class="view_table_wrapper">
           <?php
-          //Unassigned table          //Unassigned table
+          //Unassigned table
           echo '<table class="table-bordered table-striped view_table" id="unassigned-table">';
           echo '<tr>';
           echo '<th>Cart Master ID</th>';
@@ -1555,7 +1555,11 @@ if(isset($_POST['download_purchase_report']))
             $delivery_partners[] = $row_list_all_delivery_partner;
           }*/
           //select * from tbl_cart_master where  Cart_Status 	=PAID
-          $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='PAID' OR Cart_Status='REASSIGNED')";
+         // $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='PAID' OR Cart_Status='REASSIGNED' )";
+       
+
+          $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE (Cart_Status='PAID' OR Cart_Status='REASSIGNED'))";
+
           // Replace with your actual query
           $payment_num2 = $conn->query($query);
           //if ($payment_num2) 
@@ -1645,11 +1649,13 @@ if(isset($_POST['download_purchase_report']))
           echo '</table>';
 
 
+
           //Assigned table
           echo '<table class="table-bordered table-striped view_table" id="assigned-table">';
           echo '<tr>';
-          echo '<th>Payment ID</th>';
           echo '<th>Customer ID</th>';
+          echo '<th>Cart Master ID</th>';
+          echo '<th>Payment ID</th>';
           echo '<th>Delivery Partner</th>';
           echo '<th>Purchase Date</th>';
           //courier assign date
@@ -1658,26 +1664,31 @@ if(isset($_POST['download_purchase_report']))
           echo '<th>Status</th>';
           echo '</tr>';
           //$query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=1";
-          $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='COURIER ASSIGNED' OR Cart_Status='SHIPPED')";
-          $payment_num2 = $conn->query($query);
+          //$query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='COURIER ASSIGNED' OR Cart_Status='SHIPPED')";
+          //select * from tbl_cart master where cart sttaus is courier assigned or shipped
+          // Replace with your actual query
+          $query = "SELECT * FROM tbl_cart_master WHERE Cart_Status='COURIER ASSIGNED' OR Cart_Status='SHIPPED'";
+          $unassigned_num2 = $conn->query($query);
           //if ($payment_num2)
-          if ($payment_num2->num_rows > 0) {
-            while ($row_pay = $payment_num2->fetch_assoc()) {
-              $payment_id = $row_pay['Payment_ID'];
-              $cart_master_id = $row_pay['CM_ID'];
-              $date = $row_pay['Payment_Date'];
+          if ($unassigned_num2->num_rows > 0) {
+            while ($row_unassign = $unassigned_num2->fetch_assoc()) {
+              $ca_master_id = $row_unassign['CM_ID'];
+              $customer_id = $row_unassign['Customer_ID'];
               //customer details
-              $sql_customer_details = "SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='$cart_master_id'";
-              $result_customer_details = $conn->query($sql_customer_details);
-              $row_customer_details = $result_customer_details->fetch_assoc();
-              $customer_id = $row_customer_details['Customer_ID'];
+              $sql_payment_details = "SELECT Payment_ID,Payment_Date FROM tbl_payment WHERE CM_ID='$ca_master_id'";
+              $result_pay_details = $conn->query($sql_payment_details);
+              $row_pay_details = $result_pay_details->fetch_assoc();
+              $payment_id = $row_pay_details['Payment_ID'];
+              //payment date
+              $date = $row_pay_details['Payment_Date'];
+
               //customer address
               $sql_customer_address = "SELECT Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin FROM tbl_customer WHERE Cust_ID='$customer_id'";
               $result_customer_address = $conn->query($sql_customer_address);
               $row_customer_address = $result_customer_address->fetch_assoc();
               $customer_address = $row_customer_address['Cust_Hname'] . ", " . $row_customer_address['Cust_Street'] . ", " . $row_customer_address['Cust_Dist'] . ", " . $row_customer_address['State_Ut'] . ", " . $row_customer_address['Cust_Pin'];
               //delivery partner
-              $sql_delivery_partner = "SELECT * FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
+              $sql_delivery_partner = "SELECT * FROM tbl_courier_assign WHERE CM_ID='$ca_master_id' AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
               $result_delivery_partner = $conn->query($sql_delivery_partner);
               $row_delivery_partner = $result_delivery_partner->fetch_assoc();
               $delivery_partner_id = $row_delivery_partner['Courier_ID'];
@@ -1695,8 +1706,10 @@ if(isset($_POST['download_purchase_report']))
               //$expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
           
               echo "<tr>";
-              echo "<td>" . $payment_id . "</td>";
+              
               echo "<td>" . $customer_id . "</td>";
+              echo "<td>" . $ca_master_id . "</td>";
+              echo "<td>" . $payment_id . "</td>";
               echo "<td>" . $delivery_partner_name . "</td>";
               echo "<td>" . $date . "</td>";
               echo "<td>" . $delivery_partner_assign_date . "</td>";
@@ -1712,7 +1725,7 @@ if(isset($_POST['download_purchase_report']))
 
           } else {
             echo '<tr>';
-            echo '<td colspan="6" style="text-align:center">No Assigned Orders pending for delivery</td>';
+            echo '<td colspan="8" style="text-align:center">No Assigned Orders pending for delivery</td>';
             echo '</tr>';
 
           }
@@ -1732,6 +1745,7 @@ if(isset($_POST['download_purchase_report']))
     </div>
   </div>
   <!--assign courier content completed-->
+
 
   </div>
   <script>

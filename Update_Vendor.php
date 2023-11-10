@@ -4,7 +4,7 @@ session_start();
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 $updateid = $_SESSION['Update_ID'];
-echo $updateid;
+//echo $updateid;
 
 if(isset($_POST['submit']))
 {
@@ -26,7 +26,7 @@ if(isset($_POST['submit']))
     mysqli_query($conn, $update1);
     //update table login
    echo "<script>alert('Vendor details updated successfully!');</script>";
-    header('Location: view-vendors.php');
+    header('Location: admin.php');
 
 }
 

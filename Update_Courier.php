@@ -4,7 +4,7 @@ session_start();
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 $updateid = $_SESSION['Update_ID'];
-echo $updateid;
+//echo $updateid;
 
 if(isset($_POST['submit']))
 {
@@ -13,11 +13,15 @@ if(isset($_POST['submit']))
   $buildingName = $_POST['buildingName'];
   $pincode = $_POST['pincode'];
   $state = $_POST['state'];
-  $email = $_POST['email'];
   $street = $_POST['street'];
   $district = $_POST['district'];
   $passwordright = $_POST['passwordright'];
   $passwordleft = $_POST['passwordleft'];
+  //select Cour_Username from tbl courier with Cour_ID = $updateid
+  $sql = "SELECT Cour_Username FROM tbl_courier WHERE Cour_ID = '$updateid'";
+  $result = mysqli_query($conn, $sql);
+  $row = mysqli_fetch_assoc($result);
+  $email = $row['Cour_Username'];
 
 
   if($passwordleft == $passwordright)

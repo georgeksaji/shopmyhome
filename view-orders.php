@@ -458,7 +458,9 @@ a {
                   </div>
               </div>-->
               <?php
-              $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status!= 'ASSIGNED'";
+              //$sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status!= 'ASSIGNED'";
+              $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status != 'ASSIGNED' ORDER BY CM_ID DESC";
+
               $result = mysqli_query($conn,$sql);
               if(mysqli_num_rows($result) > 0)
               {
@@ -498,19 +500,19 @@ a {
                       }
                   if($status=='COURIER ASSIGNED')
                   {   
-                  echo "<div class='order-status' style='background-color:#4bed4b;color:white'>$status TO DELIVER YOUR CONSIGNMENT</div>";
+                  echo "<div class='order-status' style='background-color:red;color:white'>$status TO DELIVER YOUR CONSIGNMENT</div>";
                   }
                   else if($status=='SHIPPED')
                   {
-                    echo "<div class='order-status' style='background-color:orange;color:white'>$status YOUR ORDER</div>";
+                    echo "<div class='order-status' style='background-color:#dc30f196;color:white'>$status YOUR ORDER</div>";
                   }
                   else if($status=='REASSIGNED')
                   {
-                    echo "<div class='order-status' style='background-color:yellow;color:black'>$status COURIER PARTNER</div>";
+                    echo "<div class='order-status' style='background-color:red;color:black'>$status COURIER PARTNER</div>";
                   }
                   else if($status=='DELIVERED')
                   {
-                    echo "<div class='order-status' style='background-color:#4bed4b;color:white'>$status</div>";
+                    echo "<div class='order-status' style='background-color:#f1e947;color:white'>$status</div>";
                   }
                   while($row1 = mysqli_fetch_assoc($result1))
                   {

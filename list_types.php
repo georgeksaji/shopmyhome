@@ -24,6 +24,10 @@ if(isset($_POST['submit']))
   header("Location: list_products.php"); 
 }
 
+//profile button
+if (isset($_POST['profile'])) {
+  header("Location: profile.php");
+}
 //cart button
 if(isset($_POST['cart']))
 {
@@ -412,10 +416,10 @@ a {
                   echo '</form>';//    
                 }
                 //if usertype=CU
-                if($usertype == 'CU') {
+                if ($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);

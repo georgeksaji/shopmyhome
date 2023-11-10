@@ -4,7 +4,7 @@ session_start();
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 $updateid = $_SESSION['Update_ID'];
-echo $updateid;
+// echo $updateid;
 
 if(isset($_POST['submit']))
 {

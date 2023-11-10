@@ -40,6 +40,17 @@ $sales_num = mysqli_num_rows($result10);
 $result11 = mysqli_query($conn, "SELECT * FROM tbl_payment");
 $payment_num = mysqli_num_rows($result11);
 
+//total profit
+// Purchase_Child_ID 	Purchase_Master_ID 	Appliance_ID 	Quantity 	Balance_Stock 	Cost_Per_Piece 	Selling_Price 	Total_Cost_Price 	
+$result12 = mysqli_query($conn, "SELECT * FROM tbl_purchase_child WHERE Quantity > Balance_Stock");
+$total_profit = 0;
+while ($row12 = mysqli_fetch_array($result12)) {
+  $number_of_pieces = $row12['Quantity'] - $row12['Balance_Stock'];
+  $thisprofit=$number_of_pieces*($row12['Selling_Price'] - $row12['Cost_Per_Piece']);
+  $total_profit = $total_profit + $thisprofit;
+}
+
+
 
 
 
@@ -973,6 +984,16 @@ alert(jsMessage2);
             </p>
           </div>
         </div>
+        <div class="card-n-outer">
+          <div class="card-n-image" style="background-image: url('./dashboard_icons/profit.gif');"></div>
+          <div class="card-n-inner">
+            <p class="card-text-heading">Profits Earned</p>
+            <p class="card-text-content">
+            <?php echo "₹" . $total_profit; ?>
+            </p>
+          </div>
+        </div>
+
 
         <!--<div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/sales.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Sales</p><p class="card-text-content"><?php echo $sales_num ?></p></div></div>
       -->
@@ -992,14 +1013,15 @@ alert(jsMessage2);
 
       <div class="staff-content-inner-top">
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-          <a href="Register_Staff.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">Add
-              Staff</button></a>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end"><form method='POST'>
+       <button class="btn btn-primary me-md-2 add_buttons" type="button" id="downloadtoexcel_staff">Download Excel</button>
+          <a href="Register_Staff.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">Add Staff</button></a>
+  </form>
         </div>
       </div>
       <div class="staff-content-inner-bottom">
         <div class="view_table_wrapper">
-          <table class="table-bordered table-striped view_table">
+          <table class='table-bordered table-striped view_table'>
             <tr>
               <th>ID</th>
               <th>Username</th>
@@ -1067,6 +1089,61 @@ alert(jsMessage2);
 
 
           </table>
+
+          <table class='table-bordered table-striped view_table' id='staff-table' style="display:none;">
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Full&nbspName</th>
+              <th>Designation</th>
+              <th>Salary</th>
+              <th>Phone</th>
+              <th>House</th>
+              <th>Street</th>
+              <th>District</th>
+              <th>State</th>
+              <th>Pincode</th>
+              <th>Gender</th>
+              <th>Joining Date</th>
+              <th>Status</th>
+            </tr>
+            <?php
+            // Assuming you have an SQL query stored in the $result2 variable
+            
+            $query = "SELECT * FROM tbl_staff"; // Replace with your actual query
+            $staff_num2 = $conn->query($query);
+
+            if ($staff_num2) {
+              while ($row_s = $staff_num2->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>" . $row_s['Staff_ID'] . "</td>";
+                echo "<td>" . $row_s['Staff_Username'] . "</td>";
+                echo "<td>" . $row_s['Staff_Fname'] . " " . $row_s['Staff_Lname'] . "</td>";
+                echo "<td>" . $row_s['Staff_Designation'] . "</td>";
+                echo "<td>" . $row_s['Staff_Salary'] . "</td>";
+                echo "<td>" . $row_s['Staff_Phone'] . "</td>";
+                echo "<td>" . $row_s['Staff_Hname'] . "</td>";
+                echo "<td>" . $row_s['Staff_Street'] . "</td>";
+                echo "<td>" . $row_s['Staff_Dist'] . "</td>";
+                echo "<td>" . $row_s['State_Ut'] . "</td>";
+                echo "<td>" . $row_s['Staff_Pin'] . "</td>";
+                echo "<td>" . $row_s['Staff_Gender'] . "</td>";
+                echo "<td>" . $row_s['Sjoining_Date'] . "</td>";
+                if ($row_s['Staff_Status'] == 1) {
+                  echo "<td>Active</td>";
+                } else {
+                  echo "<td>Inactive</td>";
+                }
+              }
+            } else {
+              echo "No data available.";
+            }
+
+            // Close the database connection
+            $staff_num2->close();
+            ?>
+          </table>
+
         </div>
       </div>
     </div>
@@ -1079,13 +1156,15 @@ alert(jsMessage2);
 
       <div class="vendor-content-inner-top">
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+          
+       <button class="btn btn-primary me-md-2 add_buttons" type="button" id="downloadtoexcel_vendor">Download Excel</button>
           <a href="Register_Vendor.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">Add
               Vendors</button></a>
         </div>
       </div>
       <div class="vendor-content-inner-bottom">
         <div class="view_table_wrapper">
-          <table class="table-bordered table-striped view_table">
+          <table class="table-bordered table-striped view_table" id="vendor-table">
             <tr>
               <th>ID</th>
               <th>Username</th>
@@ -1166,13 +1245,15 @@ alert(jsMessage2);
 
       <div class="courier-content-inner-top">
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+          
+       <button class="btn btn-primary me-md-2 add_buttons" type="button" id="downloadtoexcel_cour">Download Excel</button>
           <a href="Register_Courier.php"><button class="btn btn-primary me-md-2 add_buttons" type="button">Add Courier
               Partners</button></a>
         </div>
       </div>
       <div class="courier-content-inner-bottom">
         <div class="view_table_wrapper">
-          <table class="table-bordered table-striped view_table">
+          <table class="table-bordered table-striped view_table" id="cour-table">
             <tr>
               <th>ID</th>
               <th>Username</th>
@@ -1263,11 +1344,13 @@ alert(jsMessage2);
 
       <div class="customer-content-inner-top">
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+          
+       <button class="btn btn-primary me-md-2 add_buttons" type="button" id="downloadtoexcel_cust">Download Excel</button>
         </div>
       </div>
       <div class="customer-content-inner-bottom">
         <div class="view_table_wrapper">
-          <table class="table-bordered table-striped view_table">
+          <table class="table-bordered table-striped view_table" id="cust-table">
             <tr>
               <th>ID</th>
               <th>Username</th>
@@ -1642,7 +1725,11 @@ alert(jsMessage2);
             $delivery_partners[] = $row_list_all_delivery_partner;
           }*/
           //select * from tbl_cart_master where  Cart_Status 	=PAID
-          $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='PAID' OR Cart_Status='REASSIGNED')";
+         // $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='PAID' OR Cart_Status='REASSIGNED' )";
+       
+
+          $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE (Cart_Status='PAID' OR Cart_Status='REASSIGNED'))";
+
           // Replace with your actual query
           $payment_num2 = $conn->query($query);
           //if ($payment_num2) 
@@ -1736,8 +1823,9 @@ alert(jsMessage2);
           //Assigned table
           echo '<table class="table-bordered table-striped view_table" id="assigned-table">';
           echo '<tr>';
-          echo '<th>Payment ID</th>';
           echo '<th>Customer ID</th>';
+          echo '<th>Cart Master ID</th>';
+          echo '<th>Payment ID</th>';
           echo '<th>Delivery Partner</th>';
           echo '<th>Purchase Date</th>';
           //courier assign date
@@ -1746,26 +1834,31 @@ alert(jsMessage2);
           echo '<th>Status</th>';
           echo '</tr>';
           //$query = "SELECT * FROM tbl_payment WHERE Courier_Assignment_Status=1";
-          $query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='COURIER ASSIGNED' OR Cart_Status='SHIPPED')";
-          $payment_num2 = $conn->query($query);
+          //$query = "SELECT * FROM tbl_payment WHERE CM_ID IN (SELECT CM_ID FROM tbl_cart_master WHERE Cart_Status='COURIER ASSIGNED' OR Cart_Status='SHIPPED')";
+          //select * from tbl_cart master where cart sttaus is courier assigned or shipped
+          // Replace with your actual query
+          $query = "SELECT * FROM tbl_cart_master WHERE Cart_Status='COURIER ASSIGNED' OR Cart_Status='SHIPPED'";
+          $unassigned_num2 = $conn->query($query);
           //if ($payment_num2)
-          if ($payment_num2->num_rows > 0) {
-            while ($row_pay = $payment_num2->fetch_assoc()) {
-              $payment_id = $row_pay['Payment_ID'];
-              $cart_master_id = $row_pay['CM_ID'];
-              $date = $row_pay['Payment_Date'];
+          if ($unassigned_num2->num_rows > 0) {
+            while ($row_unassign = $unassigned_num2->fetch_assoc()) {
+              $ca_master_id = $row_unassign['CM_ID'];
+              $customer_id = $row_unassign['Customer_ID'];
               //customer details
-              $sql_customer_details = "SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='$cart_master_id'";
-              $result_customer_details = $conn->query($sql_customer_details);
-              $row_customer_details = $result_customer_details->fetch_assoc();
-              $customer_id = $row_customer_details['Customer_ID'];
+              $sql_payment_details = "SELECT Payment_ID,Payment_Date FROM tbl_payment WHERE CM_ID='$ca_master_id'";
+              $result_pay_details = $conn->query($sql_payment_details);
+              $row_pay_details = $result_pay_details->fetch_assoc();
+              $payment_id = $row_pay_details['Payment_ID'];
+              //payment date
+              $date = $row_pay_details['Payment_Date'];
+
               //customer address
               $sql_customer_address = "SELECT Cust_Hname,Cust_Street,Cust_Dist,State_Ut,Cust_Pin FROM tbl_customer WHERE Cust_ID='$customer_id'";
               $result_customer_address = $conn->query($sql_customer_address);
               $row_customer_address = $result_customer_address->fetch_assoc();
               $customer_address = $row_customer_address['Cust_Hname'] . ", " . $row_customer_address['Cust_Street'] . ", " . $row_customer_address['Cust_Dist'] . ", " . $row_customer_address['State_Ut'] . ", " . $row_customer_address['Cust_Pin'];
               //delivery partner
-              $sql_delivery_partner = "SELECT * FROM tbl_courier_assign WHERE CM_ID='$cart_master_id' AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
+              $sql_delivery_partner = "SELECT * FROM tbl_courier_assign WHERE CM_ID='$ca_master_id' AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
               $result_delivery_partner = $conn->query($sql_delivery_partner);
               $row_delivery_partner = $result_delivery_partner->fetch_assoc();
               $delivery_partner_id = $row_delivery_partner['Courier_ID'];
@@ -1783,8 +1876,10 @@ alert(jsMessage2);
               //$expectedDeliveryDate = $assignDateTime->format('Y-m-d H:i:s');
           
               echo "<tr>";
-              echo "<td>" . $payment_id . "</td>";
+              
               echo "<td>" . $customer_id . "</td>";
+              echo "<td>" . $ca_master_id . "</td>";
+              echo "<td>" . $payment_id . "</td>";
               echo "<td>" . $delivery_partner_name . "</td>";
               echo "<td>" . $date . "</td>";
               echo "<td>" . $delivery_partner_assign_date . "</td>";
@@ -1800,7 +1895,7 @@ alert(jsMessage2);
 
           } else {
             echo '<tr>';
-            echo '<td colspan="6" style="text-align:center">No Assigned Orders pending for delivery</td>';
+            echo '<td colspan="8" style="text-align:center">No Assigned Orders pending for delivery</td>';
             echo '</tr>';
 
           }
@@ -1826,11 +1921,17 @@ alert(jsMessage2);
     <div class="purchase-content-inner">
       <div class="purchase-content-inner-top">
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="float: right;">
-          <form method='POST'>
+      <!-- <form id="sales-filter-form" style="width: fit-content;float: left;">
+    <label for="from">From</label>
+    <input type="date" id="from" name="from" value="<?php echo date('Y-m-d'); ?>">
+    <label for="to">To</label>
+    <input type="date" id="to" name="to" value="<?php echo date('Y-m-d'); ?>">
+    <button type="submit" class="btn btn-primary" name="sales_report">Generate Report</button>
+</form> -->
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="float: right;"> 
+        <form method='POST'>
             <button class="btn btn-primary me-md-2 add_buttons" type="button" id="downloadtoexcel_sales">Download Excel</button>
             <button class="btn btn-primary me-md-2 add_buttons" type="submit" name="download_sales_report">Download pdf</button>
-          
           </form>
 
         </div>
@@ -1838,6 +1939,7 @@ alert(jsMessage2);
       <div class="purchase-content-inner-bottom">
         <div class="view_table_wrapper">
           <table class="table-bordered table-striped view_table" id="sales-report-table">
+            <thead>
             <tr>
               <th>Payment ID</th>
               <th>Cart Master ID</th>
@@ -1847,6 +1949,7 @@ alert(jsMessage2);
               <th>Order Status</th>
 
             </tr>
+        </thead>
             <?php
             $query_d = "SELECT * FROM tbl_payment"; // Replace with your actual query
             $delivery_num2 = $conn->query($query_d);
@@ -1863,6 +1966,7 @@ alert(jsMessage2);
                 $customer_id = $row_cart_master_details['Customer_ID'];
                 $total_amount = $row_cart_master_details['Total_Amount'];
                 $cart_status = $row_cart_master_details['Cart_Status'];
+
                 echo '<tr>';
                 echo '<td>' . $payment_id . '</td>';
                 echo '<td>' . $delivered_cart_id . '</td>';
@@ -1927,6 +2031,7 @@ alert(jsMessage2);
     });
   table2excel.export(document.querySelectorAll("#sales-report-table"));
   });
+
   //download purchase report  to excel
   document.getElementById('downloadtoexcel_purchases').addEventListener('click', function(){
     //var table2excel = new Table2Excel();
@@ -1936,6 +2041,70 @@ alert(jsMessage2);
     });
   table2excel.export(document.querySelectorAll("#purchase-table"));
   });
+
+  //download courier report  to excel
+  document.getElementById('downloadtoexcel_cour').addEventListener('click', function(){
+    //var table2excel = new Table2Excel();
+    var table2excel = new Table2Excel({
+        // Set the filename of the Excel file
+        defaultFileName: 'Courier Report SMH',
+    });
+  table2excel.export(document.querySelectorAll("#cour-table"));
+  });
+  //download customer report  to excel
+  document.getElementById('downloadtoexcel_cust').addEventListener('click', function(){
+    //var table2excel = new Table2Excel();
+    var table2excel = new Table2Excel({
+        // Set the filename of the Excel file
+        defaultFileName: 'Customer Report SMH',
+    });
+  table2excel.export(document.querySelectorAll("#cust-table"));
+  });
+  //download customer report  to excel
+  document.getElementById('downloadtoexcel_vendor').addEventListener('click', function(){
+    //var table2excel = new Table2Excel();
+    var table2excel = new Table2Excel({
+        // Set the filename of the Excel file
+        defaultFileName: 'Vendor Report SMH',
+    });
+  table2excel.export(document.querySelectorAll("#vendor-table"));
+  });
+  //download staff report  to excel
+  document.getElementById('downloadtoexcel_staff').addEventListener('click', function(){
+    var table2excel = new Table2Excel({
+   // Set the filename of the Excel file
+ defaultFileName: 'Staff Report SMH', });
+    table2excel.export(document.querySelectorAll("#staff-table"));
+}); // Missing closing brace for addEventListener function
+
+
+
+// document.getElementById('sales-filter-form').addEventListener('submit', function(event) {
+//     event.preventDefault();
+
+//     var fromDate = document.getElementById('from').value;
+//     var toDate = document.getElementById('to').value;
+
+//     fetch('your_php_script.php', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/x-www-form-urlencoded',
+//         },
+//         body: 'from=' + fromDate + '&to=' + toDate,
+//     })
+//     .then(function(response) {
+//         return response.text();
+//     })
+//     .then(function(data) {
+//         // Clear old rows from the table
+//         document.getElementById('sales-report-table-body').innerHTML = '';
+
+//         // Add new rows to the table
+//         document.getElementById('sales-report-table-body').innerHTML = data;
+//     });
+// });
+
+
 </script>
 </body>
 

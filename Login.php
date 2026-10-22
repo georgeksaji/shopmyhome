@@ -3,96 +3,96 @@ include ("connection.php");
     
 
 session_start();
+csrf_verify();
+
+$login_error = '';
 
 if (isset($_POST['loginbutton'])) {
-  $email = $_POST['email'];
-  $password = $_POST['password'];
+  $email = trim((string) ($_POST['email'] ?? ''));
+  $password = (string) ($_POST['password'] ?? '');
 
-  $sql = "SELECT * FROM tbl_login WHERE Username = '$email' AND Password = '$password'";
-  $result = mysqli_query($conn, $sql);
-  $num = mysqli_num_rows($result);
+  $login = db_one("SELECT Username, Password, User_Type FROM tbl_login WHERE Username = ?", [$email]);
+  $authenticated = false;
 
-  if ($num == 1) {
-    $row = mysqli_fetch_assoc($result);
-    $user_type = $row['User_Type'];
-
-   if ($user_type == 'CU') {
-  $sql1 = "SELECT Cust_ID,Cust_Status FROM tbl_customer WHERE C_Username = '$email'";
-  $result1 = mysqli_query($conn, $sql1);
-
-  if ($result1) {
-    $row1 = mysqli_fetch_assoc($result1);
-    $user_id = $row1['Cust_ID'];
-    $status = $row1['Cust_Status'];
-    if ($status == '0') {
-      echo "<script>alert('Your account has been suspended.');</script>";
-    } else if ($status == '1') {
-    $_SESSION['User_ID'] = $user_id;
-    $_SESSION['User_Type'] = 'CU';
-    header('location:index.php');
-    echo "<script>alert('Login successful!');</script>";
+  if ($login !== null) {
+    if (password_verify($password, (string) $login['Password'])) {
+      $authenticated = true;
+    } elseif (hash_equals((string) $login['Password'], $password)) {
+      // Upgrade a legacy plaintext password on the first successful login.
+      db_exec(
+        "UPDATE tbl_login SET Password = ? WHERE Username = ?",
+        [password_hash($password, PASSWORD_DEFAULT), $email]
+      );
+      $authenticated = true;
     }
   }
-} 
 
-else if ($user_type == 'ST') {
-  $sql1 = "SELECT Staff_ID,Staff_Status FROM tbl_staff WHERE Staff_Username = '$email'";
-  $result1 = mysqli_query($conn, $sql1);
-
-  if ($result1) {
-    $row1 = mysqli_fetch_assoc($result1);
-    $user_id = $row1['Staff_ID'];
-    $status = $row1['Staff_Status'];
-    if ($status == '0') {
-      echo "<script>alert('Your account has been suspended. Please contact the administrator.');</script>";
-    } else if ($status == '1') {
-    $_SESSION['User_ID'] = $user_id;
-    $_SESSION['User_Type'] = 'ST';
-    header('location:index.php');
-    echo "<script>alert('Login successful!');</script>";
-    }
-  }
-} 
-else if ($user_type == 'CR') {
-  $sql1 = "SELECT Cour_Username,Cour_Status FROM tbl_courier WHERE Cour_Username = '$email'";
-  $result1 = mysqli_query($conn, $sql1);
-  
-  if ($result1) {
-    $row1 = mysqli_fetch_assoc($result1);
-    $user_id = $row1['Cour_Username']; 
-    $status = $row1['Cour_Status'];
-    if ($status == '0') {
-      echo "<script>alert('Your account has been suspended. Please contact the administrator.');</script>";
-    } 
-    else if ($status == '3') {
-      echo "<script>alert('Your service has been terminated permanently. Please contact the administrator.');</script>";
-    }
-    else if ($status == '1' || $status == '2') {
-    $_SESSION['User_ID'] = $user_id;
-    $_SESSION['User_Type'] = 'CR';
-    header('location: index.php');
-    echo "<script>alert('Login successful!');</script>";
-    }
-  }
-}
-
-else if ($user_type == 'AD') {
-  $sql1 = "SELECT Staff_ID FROM tbl_staff WHERE Staff_Username = '$email'";
-  $result1 = mysqli_query($conn, $sql1);
-  if($result1){
-    $row1 = mysqli_fetch_assoc($result1);
-    $user_id = $row1["Staff_ID"];
-    if($user_id == 'ST00001'){
-      $_SESSION['User_ID'] = $user_id;
-      $_SESSION['User_Type'] ='AD';
-      header('location: index.php');
-      echo "<script>alert('Admin Login successful!');</script>";
-    }} else {
-      echo "No matching record found.";
-    }
-  }
+  if (!$authenticated) {
+    $login_error = 'Invalid credentials!';
   } else {
-    echo "<script>alert('Invalid Credentials!');</script>";
+    $user_type = $login['User_Type'];
+    $user_id = null;
+    $status = null;
+
+    if ($user_type === 'CU') {
+      $row1 = db_one("SELECT Cust_ID, Cust_Status FROM tbl_customer WHERE C_Username = ?", [$email]);
+      if ($row1 !== null) {
+        $user_id = $row1['Cust_ID'];
+        $status = (string) $row1['Cust_Status'];
+      }
+      if ($user_id === null) {
+        $login_error = 'No customer profile found for this account.';
+      } elseif ($status === '0') {
+        $login_error = 'Your account has been suspended.';
+      }
+    } elseif ($user_type === 'ST') {
+      $row1 = db_one("SELECT Staff_ID, Staff_Status FROM tbl_staff WHERE Staff_Username = ?", [$email]);
+      if ($row1 !== null) {
+        $user_id = $row1['Staff_ID'];
+        $status = (string) $row1['Staff_Status'];
+      }
+      if ($user_id === null) {
+        $login_error = 'No staff profile found for this account.';
+      } elseif ($status === '0') {
+        $login_error = 'Your account has been suspended. Please contact the administrator.';
+      }
+    } elseif ($user_type === 'CR') {
+      $row1 = db_one("SELECT Cour_ID, Cour_Status FROM tbl_courier WHERE Cour_Username = ?", [$email]);
+      if ($row1 !== null) {
+        $user_id = $row1['Cour_ID'];
+        $status = (string) $row1['Cour_Status'];
+      }
+      if ($user_id === null) {
+        $login_error = 'No courier profile found for this account.';
+      } elseif ($status === '0') {
+        $login_error = 'Your account has been suspended. Please contact the administrator.';
+      } elseif ($status === '3') {
+        $login_error = 'Your service has been terminated permanently. Please contact the administrator.';
+      } elseif ($status !== '1' && $status !== '2') {
+        $login_error = 'Your account is not active. Please contact the administrator.';
+      }
+    } elseif ($user_type === 'AD') {
+      $row1 = db_one("SELECT Staff_ID FROM tbl_staff WHERE Staff_Username = ?", [$email]);
+      if ($row1 !== null && $row1['Staff_ID'] === 'ST00001') {
+        $user_id = 'ST00001';
+      } else {
+        $login_error = 'This account is not an administrator.';
+      }
+    } else {
+      $login_error = 'Unknown account type.';
+    }
+
+    if ($login_error === '' && $user_id !== null) {
+      session_regenerate_id(true);
+      $_SESSION['User_ID'] = $user_id;
+      $_SESSION['User_Type'] = $user_type;
+      header('Location: index.php');
+      exit;
+    }
+  }
+
+  if ($login_error !== '') {
+    echo '<script>alert(' . json_encode($login_error) . ');</script>';
   }
 }
 
@@ -101,11 +101,11 @@ else if ($user_type == 'AD') {
 <html>
 <head>
   
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Customer Login</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center;
@@ -134,7 +134,7 @@ else if ($user_type == 'AD') {
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -254,13 +254,6 @@ else if ($user_type == 'AD') {
   </style>
   </head>
 <body>
-<script>
-var jsMessage = <?php echo json_encode($value); ?>; // Embedding PHP variable in JavaScript
-
-// Display the PHP variable value as an alert in JavaScript
-alert(jsMessage);
-</script>
-
   <div class="outercontainer">
     <div class="registration-box">
       <div class="registration-box-logo"></div>
@@ -273,7 +266,7 @@ alert(jsMessage);
             <input type="email" id="email" name="email" placeholder="Email" required>
               
             <label for="passwordright">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters.">
+            <input type="password" id="password" name="password" placeholder="Enter password" minlength="8" maxlength="72" required title="Minimum 8 and maximum 72 characters required.">
         </div>
         <button class="login-button" type="submit" name="loginbutton">Login</button>
         </form>

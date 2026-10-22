@@ -2,38 +2,59 @@
 include ("connection.php");
 
 session_start();
+csrf_verify();
+require_login();
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
+$accountUsername = null;
+if ($usertype === 'CU') {
+    $accountUsername = db_val("SELECT C_Username FROM tbl_customer WHERE Cust_ID = ?", [$userId]);
+} elseif ($usertype === 'ST' || $usertype === 'AD') {
+    $accountUsername = db_val("SELECT Staff_Username FROM tbl_staff WHERE Staff_ID = ?", [$userId]);
+} elseif ($usertype === 'CR') {
+    $accountUsername = db_val("SELECT Cour_Username FROM tbl_courier WHERE Cour_ID = ?", [$userId]);
+}
+
+if ($accountUsername === null) {
+    http_response_code(403);
+    exit('Account not found.');
+}
 
 if (isset($_POST['submit'])) 
 {
-    $db_data1 = $_POST['submit'];
-    $password1 = $_POST['password1'];
-    $password2 = $_POST['password2'];
-      if($password1 == $password2) 
-      {
-      $updatepas = "UPDATE tbl_login SET Password='$password1' WHERE Username='$db_data1'";
-      mysqli_query($conn, $updatepas);
-      
-      echo "<script>alert('Password updated successfully!');</script>";
-      header('Location: profile.php');
-      }
-      else 
-      {
-      echo "<script>alert('Error! Passwords not same.');</script>";
-      }
-  }
+    $currentPassword = (string)($_POST['current_password'] ?? '');
+    $password1 = (string)($_POST['password1'] ?? '');
+    $password2 = (string)($_POST['password2'] ?? '');
+
+    $storedHash = db_val("SELECT Password FROM tbl_login WHERE Username = ?", [$accountUsername]);
+
+    if ($storedHash === null || !password_verify($currentPassword, (string) $storedHash)) {
+        echo "<script>alert('Current password is incorrect.');</script>";
+    } elseif ($password1 !== $password2) {
+        echo "<script>alert('New passwords do not match.');</script>";
+    } elseif (strlen($password1) < 8 || strlen($password1) > 72) {
+        echo "<script>alert('Password must be between 8 and 72 characters.');</script>";
+    } else {
+        db_exec(
+            "UPDATE tbl_login SET Password = ? WHERE Username = ?",
+            [password_hash($password1, PASSWORD_DEFAULT), $accountUsername]
+        );
+        $redirect = $usertype === 'CR' ? 'courier.php' : ($usertype === 'CU' ? 'profile.php' : 'profile_staff.php');
+        header('Location: ' . $redirect);
+        exit;
+    }
+}
 
 ?>
 <html>
 <head>
   
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Login & Security</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position:center;
@@ -63,7 +84,7 @@ if (isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -189,54 +210,16 @@ if (isset($_POST['submit']))
       <form action="" method="POST">
         <div class="registration-form">
           <div class="registration-form-left">
-            <?php
-            if($usertype=='CU')
-            {
-                //select details from tbl_customer
-                $updatequery = mysqli_query($conn, "SELECT * FROM tbl_customer WHERE Cust_ID = '$userId'");
-                $db_data = mysqli_fetch_array($updatequery);
-                $db_data1 = $db_data['C_Username'];
-                //$db_phone = $db_data['Cust_Phone'];
-                $passwordquery = mysqli_query($conn, "SELECT Password FROM tbl_login WHERE Username = '$db_data1'");
-                $passwordData = mysqli_fetch_assoc($passwordquery);
-                $db_password = $passwordData['Password'];
-            }
-            else if($usertype=='ST')
-            {
-                //select details from tbl_staff
-                $updatequery = mysqli_query($conn, "SELECT * FROM tbl_staff WHERE Staff_ID = '$userId'");
-                $db_data = mysqli_fetch_array($updatequery);
-                $db_data1 = $db_data['Staff_Username'];
-                //$db_phone = $db_data['Staff_Phone'];
-                $passwordquery = mysqli_query($conn, "SELECT Password FROM tbl_login WHERE Username = '$db_data1'");
-                $passwordData = mysqli_fetch_assoc($passwordquery);
-                $db_password = $passwordData['Password'];
-            }
-            else if($usertype=='CR')
-            {
-                //select details from tbl_courier
-                $updatequery = mysqli_query($conn, "SELECT * FROM tbl_courier WHERE Courier_ID = '$userId'");
-                $db_data = mysqli_fetch_array($updatequery);
-                $db_data1 = $db_data['Cour_Username'];
-                //$db_phone = $db_data['Cour_Phone'];
-                $passwordquery = mysqli_query($conn, "SELECT Password FROM tbl_login WHERE Username = '$db_data1'");
-                $passwordData = mysqli_fetch_assoc($passwordquery);
-                $db_password = $passwordData['Password'];
-                
-            }
+            <label for="current_password">Current Password</label>
+            <input type="password" id="current_password" name="current_password" placeholder="Enter your current password" minlength="8" maxlength="72" required autocomplete="current-password">
 
-?>
-               <label for="password">Current Password</label>
-              <input type="text"  value="<?php echo $db_password ?>" >
+            <label for="password">New Password</label>
+            <input type="password" id="password" name="password1" placeholder="Enter a new password" minlength="8" maxlength="72" required autocomplete="new-password" title="Minimum 8 and maximum 72 characters.">
 
+            <label for="password2">Confirm Password</label>
+            <input type="password" id="password2" name="password2" placeholder="Confirm new password" minlength="8" maxlength="72" required autocomplete="new-password" title="Minimum 8 and maximum 72 characters.">
 
-              <label for="password">New Password</label>
-              <input type="password" id="password" name="password1" placeholder="Enter a new Password" value="<?php echo $db_password ?>" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 9 characters.">
-
-              <label for="password">Confirm Password</label>
-              <input type="password" id="password" name="password2" placeholder="Confirm Password" value="<?php echo $db_password ?>" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 9 characters.">
-
-              <button type="submit"  value="<?php echo $db_data1 ?>"  name="submit">Update</button>
+            <button type="submit" name="submit">Update</button>
           
             </div>
         </div>

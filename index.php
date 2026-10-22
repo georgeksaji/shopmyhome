@@ -1,6 +1,7 @@
 <?php
 include("connection.php");
 session_start();
+csrf_verify();
 $_SESSION['search'] = null;
 $_SESSION['brand_id'] = null;
 $_SESSION['category_id'] = null;
@@ -58,7 +59,7 @@ if (isset($_POST['logout'])) {
 }
 //brand button
 if (isset($_POST['brand'])) {
-  $brand_id = $_POST['brand'];
+  $brand_id = is_valid_id($_POST['brand'] ?? null) ? $_POST['brand'] : null;
   $_SESSION['brand_id'] = $brand_id;
   $_SESSION['search'] = null;
   $_SESSION['category_id'] = null;
@@ -72,13 +73,13 @@ if (isset($_POST['all_brands'])) {
 }
 //search appliance
 if (isset($_POST['submit'])) {
-  $search = $_POST['search'];
+  $search = trim((string) ($_POST['search'] ?? ''));
   $_SESSION['search'] = $search;
-  echo $search;
   $_SESSION['brand_id'] = null;
   $_SESSION['category_id'] = null;
   $_SESSION['type_id'] = null;
   header("Location: list_products.php");
+  exit;
 }
 //cart button
 if (isset($_POST['cart'])) {
@@ -87,7 +88,7 @@ if (isset($_POST['cart'])) {
 }
 //category button
 if (isset($_POST['category'])) {
-  $category_id = $_POST['category'];
+  $category_id = is_valid_id($_POST['category'] ?? null) ? $_POST['category'] : null;
   $_SESSION['category_id'] = $category_id;
   $_SESSION['search'] = null;
   $_SESSION['brand_id'] = null;
@@ -103,7 +104,7 @@ if (isset($_POST['category'])) {
 
 <head>
   <title>shopmyhome</title>
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -148,7 +149,7 @@ alert(jsMessage2);
     }
 
     .navigation-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       background-size: cover;
       margin-inline-start: 2vh;
       height: 100%;
@@ -528,7 +529,7 @@ alert(jsMessage2);
             echo '<form action="" method="POST">';
             //profile page
           
-            echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
+            echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></td>';
             echo '<td><button class="admin-box" name="staff">Staff Dashboard</button></td>';
             echo '<td><button class="logout-box" name="logout">Logout</button></td>';
             echo '</tr>';
@@ -539,7 +540,7 @@ alert(jsMessage2);
           if ($usertype == 'CR') {
             //profile page, logout
             echo '<form action="" method="POST">';
-            echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
+            echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></td>';
             //courier dashboard
             echo '<td><button class="admin-box" name="courier">Courier Dashboard</button></td>';
             echo '<td><button class="logout-box" name="logout">Logout</button></td>';
@@ -557,7 +558,7 @@ alert(jsMessage2);
           if ($usertype == 'CU') {
             //profile page, logout
             echo '<form action="" method="POST">';
-            echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
+            echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></td>';
             //cart button
             $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
             $result = mysqli_query($conn, $sql);
@@ -567,9 +568,9 @@ alert(jsMessage2);
               $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
               $result = mysqli_query($conn, $sql);
               $count = mysqli_num_rows($result);
-              echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+              echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
             } else if (mysqli_num_rows($result) == 0) {
-              echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
+              echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
 
             }
             echo '<td><button class="logout-box" name="logout">Logout</button></td>';
@@ -594,7 +595,7 @@ alert(jsMessage2);
         while ($row = mysqli_fetch_assoc($result)) {
           $categoryname = $row['Cat_Name'];
           $categoryid = $row['Cat_ID'];
-          echo "<button class='category-name' name='category' value='$categoryid' style='display: inline-block;'>$categoryname</button>";
+          echo "<button class='category-name' name='category' value='" . e((string) $categoryid) . "' style='display: inline-block;'>" . e((string) $categoryname) . "</button>";
         }
         ?>
       </form>
@@ -614,19 +615,19 @@ alert(jsMessage2);
       </div>
       <div class="carousel-inner">
         <div class="carousel-item active" data-bs-interval="5000">
-          <img src="Picture1.jpg" class="d-block w-100">
+          <img src="assets/images/banners/Picture1.jpg" class="d-block w-100">
         </div>
         <div class="carousel-item" data-bs-interval="5000">
-          <img src="Picture2.jpg" class="d-block w-100">
+          <img src="assets/images/banners/Picture2.jpg" class="d-block w-100">
         </div>
         <div class="carousel-item" data-bs-interval="5000">
-          <img src="Picture3.jpg" class="d-block w-100">
+          <img src="assets/images/banners/Picture3.jpg" class="d-block w-100">
         </div>
         <div class="carousel-item" data-bs-interval="5000">
-          <img src="Picture4.jpg" class="d-block w-100">
+          <img src="assets/images/banners/Picture4.jpg" class="d-block w-100">
         </div>
         <div class="carousel-item" data-bs-interval="5000">
-          <img src="Picture5.jpg" class="d-block w-100">
+          <img src="assets/images/banners/Picture5.jpg" class="d-block w-100">
         </div>
       </div>
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleInterval"
@@ -642,8 +643,8 @@ alert(jsMessage2);
       <div class="brands-for-you-text">Brands for you</div>
       <div class="brand-image-box-outer">
         <?php
-        //<div class="brand-images-boxes" style="background-image:url(brand_images/whirlpool.png);background-size:cover;"></div>
-        //select any 10 brands from tbl_brand as random. then set background image as brand_images/brandname.png
+        //<div class="brand-images-boxes" style="background-image:url(assets/uploads/brand_images/whirlpool.png);background-size:cover;"></div>
+        //select any 10 brands from tbl_brand as random. then set background image as assets/uploads/brand_images/brandname.png
         $sql = "SELECT * FROM tbl_brand ORDER BY RAND() LIMIT 8";
         $result = mysqli_query($conn, $sql);
         while ($row = mysqli_fetch_assoc($result)) {
@@ -652,11 +653,11 @@ alert(jsMessage2);
           $brand_logo = $row['Brand_Logo'];
           //click on any brand logo to go to brand page where all products of that brand are displayed
           echo "<form action='' method='POST'>";
-          echo "<button class='brand-images-boxes' name='brand' value='$brand_id' style=\"background-image:url('$brand_logo');\"></button>";
+          echo "<button class='brand-images-boxes' name='brand' value='" . e((string) $brand_id) . "' style=\"background-image:url('" . e((string) $brand_logo) . "');\"></button>";
           echo "</form>";
         }
         echo '<form action="" method="POST">';
-        echo "<button class='brand-images-boxes' name='all_brands' style=\"background-image:url('more1.png');\"></button>";
+        echo "<button class='brand-images-boxes' name='all_brands' style=\"background-image:url('assets/images/icons/more1.png');\"></button>";
         echo "</form>";
         ?>
       </div>
@@ -664,25 +665,25 @@ alert(jsMessage2);
     <div class="info-cards">
       <div class="cards-outer">
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('home_delivery.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/features/home_delivery.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">FAST HOME DELIVERY</p>
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('fast_and_reliable.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/features/fast_and_reliable.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">FAST & RELIABLE</p>
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('secure_payment.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/features/secure_payment.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">SECURED PAYMENT</p>
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('lowest_guarantee.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/features/lowest_guarantee.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">LOWEST PRICE GUARANTEED</p>
           </div>
@@ -701,19 +702,19 @@ alert(jsMessage2);
               </td>
             </tr>
             <tr>
-              <th><a href="https://www.instagram.com/georgeksaji/"><img src="instagram.png" height="40px"
+              <th><a href="https://www.instagram.com/georgeksaji/"><img src="assets/images/social/instagram.png" height="40px"
                     width="40px"></a></th>
-              <th><a href="https://twitter.com/georgeksaji"><img src="twitter-x.png" height="40px" width="40px"></a>
+              <th><a href="https://twitter.com/georgeksaji"><img src="assets/images/social/twitter-x.png" height="40px" width="40px"></a>
               </th>
-              <th><a href="https://www.facebook.com/george.ksaji.39"><img src="facebook.png" height="40px"
+              <th><a href="https://www.facebook.com/george.ksaji.39"><img src="assets/images/social/facebook.png" height="40px"
                     width="40px"></a></th>
-              <th><a href="https://www.threads.net/@georgeksaji"><img src="threads.png" height="40px" width="40px"></a>
+              <th><a href="https://www.threads.net/@georgeksaji"><img src="assets/images/social/threads.png" height="40px" width="40px"></a>
               </th>
-              <th><a href="mailto:georgeksaji14@gmail.com"><img src="gmail.png" height="40px" width="40px"></a></th>
+              <th><a href="mailto:georgeksaji14@gmail.com"><img src="assets/images/social/gmail.png" height="40px" width="40px"></a></th>
             </tr>
             <tr style="border-width: 24px;border-color:transparent;">
               <td colspan="5" style="text-align: center;font-family: fangsong;font-size: 106%;"><a
-                  href="tel:9495224376"><img src="phone.png" alt="Phone" height="40px" width="40px"></a></td>
+                  href="tel:9495224376"><img src="assets/images/icons/phone.png" alt="Phone" height="40px" width="40px"></a></td>
             </tr>
             <tr rowspan="3">
               <td colspan="5"><iframe
@@ -736,7 +737,7 @@ alert(jsMessage2);
           Explore our wide range of top-quality appliances and tech solutions
           designed to make everyday living more convenient and enjoyable.
           Discover the perfect balance of innovation and functionality with us.</p>
-        <img src="picture4.png" alt="" height="100" style="margin-top:2%">
+        <img src="assets/images/banners/Picture4.png" alt="" height="100" style="margin-top:2%">
 
       </div>
     </div>

@@ -3,10 +3,12 @@
 include('connection.php');
 
 session_start();
+csrf_verify();
+require_role(['CR']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 //$user_name=//select Cour_ID tbl_courier where Cour_Username='$userId'
-$user_id2="SELECT Cour_ID,Cour_Status FROM tbl_courier WHERE Cour_Username='$userId'";
+$user_id2="SELECT Cour_ID,Cour_Status FROM tbl_courier WHERE Cour_ID='$userId'";
 $result=mysqli_query($conn,$user_id2);
 $row=mysqli_fetch_assoc($result);
 $user_number=$row['Cour_ID'];
@@ -52,121 +54,123 @@ if(isset($_POST['destroy']))
 
 if(isset($_POST['update_staff']))
 {
-  $updateid = $_POST['staff_updateid'];
+  $updateid = post_id('staff_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Staff.php');
 }
 if(isset($_POST['activate_staff_status_button']))
 {
-    $staff_id = $_POST['staff_id'];
+    $staff_id = post_id('staff_id');
     mysqli_query($conn,"UPDATE tbl_staff SET Staff_Status=1 WHERE Staff_ID='$staff_id'");
 }
 
 if(isset($_POST['deactivate_staff_status_button']))
 {
-    $staff_id = $_POST['staff_id'];
+    $staff_id = post_id('staff_id');
     mysqli_query($conn,"UPDATE tbl_staff SET Staff_Status=0 WHERE Staff_ID='$staff_id'");
 }
 //vednor status button
 if(isset($_POST['update_vendor']))
 {
-  $updateid = $_POST['vendor_updateid'];
+  $updateid = post_id('vendor_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Vendor.php');
 }
 if(isset($_POST['activate_vendor_status_button']))
 {
-    $vendor_id = $_POST['vendor_id'];
+    $vendor_id = post_id('vendor_id');
     mysqli_query($conn,"UPDATE tbl_vendor SET Vendor_Status=1 WHERE Vendor_ID='$vendor_id'");
 }
 
 if(isset($_POST['deactivate_vendor_status_button']))
 {
-    $vendor_id = $_POST['vendor_id'];
+    $vendor_id = post_id('vendor_id');
     mysqli_query($conn,"UPDATE tbl_vendor SET Vendor_Status=0 WHERE Vendor_ID='$vendor_id'");
 }
 
 //courier status button
 if(isset($_POST['update_cour']))
 {
-  $updateid = $_POST['cour_updateid'];
+  $updateid = post_id('cour_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Courier.php');
 }
 if(isset($_POST['activate_cour_status_button']))
 {
-    $cour_id = $_POST['cour_id'];
+    $cour_id = post_id('cour_id');
     mysqli_query($conn,"UPDATE tbl_courier SET Cour_Status=1 WHERE Cour_ID='$cour_id'");
 }
 
 if(isset($_POST['deactivate_cour_status_button']))
 {
-    $cour_id = $_POST['cour_id'];
+    $cour_id = post_id('cour_id');
     mysqli_query($conn,"UPDATE tbl_courier SET Cour_Status=0 WHERE Cour_ID='$cour_id'");
 }
 
 //cust status button
 if(isset($_POST['activate_cust_status_button']))
 {
-    $cust_id = $_POST['cust_id'];
+    $cust_id = post_id('cust_id');
     mysqli_query($conn,"UPDATE tbl_customer SET Cust_Status=1 WHERE Cust_ID='$cust_id'");
 }
 
 if(isset($_POST['deactivate_cust_status_button']))
 {
-    $cust_id = $_POST['cust_id'];
+    $cust_id = post_id('cust_id');
     mysqli_query($conn,"UPDATE tbl_customer SET Cust_Status=0 WHERE Cust_ID='$cust_id'");
 }
 //appliance status button
 if(isset($_POST['update_app']))
 {
-  $updateid = $_POST['app_updateid'];
+  $updateid = post_id('app_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_appliance.php');
 }
 //purchase button
 if(isset($_POST['purchase_app']))
 {
-  $updateid = $_POST['app_id'];
+  $updateid = post_id('app_id');
   $_SESSION['Update_ID'] = $updateid;
-  header('location:Make_purchase.php');
+  header('location:Make_purchase1.php');
 }
 //category status button
 if(isset($_POST['update_cat']))
 {
-  $updateid = $_POST['cat_updateid'];
+  $updateid = post_id('cat_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Category.php');
 }
 //type status button
 if(isset($_POST['update_type']))
 {
-  $updateid = $_POST['type_updateid'];
+  $updateid = post_id('type_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Type.php');
 }
 //brand status button
 if(isset($_POST['update_brand']))
 {
-  $updateid = $_POST['brand_updateid'];
+  $updateid = post_id('brand_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Brand.php');
 }
 //accept courier button
 if(isset($_POST['ship_courier']))
 {
-  $cour_id = $_POST['courier_assign_id'];
-  //Accept_CA_Status
-  $this__cour_id = $cour_id;
-  
-  mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='SHIPPED' WHERE Courier_Assign_ID='$cour_id'");
+  $cour_id = post_id('courier_assign_id');
+  $assignment = $cour_id === null ? null : db_one(
+    "SELECT * FROM tbl_courier_assign WHERE Courier_Assign_ID = ? AND Courier_ID = ?",
+    [$cour_id, $user_number]
+  );
 
-  mysqli_query($conn,"UPDATE tbl_cart_master SET Cart_Status='SHIPPED' WHERE CM_ID IN(SELECT CM_ID FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id')");
-
+  if ($assignment !== null) {
+    db_exec("UPDATE tbl_courier_assign SET Delivery_Status = 'SHIPPED' WHERE Courier_Assign_ID = ?", [$cour_id]);
+    db_exec("UPDATE tbl_cart_master SET Cart_Status = 'SHIPPED' WHERE CM_ID = ?", [$assignment['CM_ID']]);
+  }
 
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
-  }
+}
 //delivered consignment button
 /*if(isset($_POST['accept_courier']))
 {
@@ -242,45 +246,32 @@ if(isset($_POST['ship_courier']))
 
 if(isset($_POST['unreachable']))
 {
-  $cour_id = $_POST['courier_assign_id'];
+  $cour_id = post_id('courier_assign_id');
+  $assignment = $cour_id === null ? null : db_one(
+    "SELECT * FROM tbl_courier_assign WHERE Courier_Assign_ID = ? AND Courier_ID = ?",
+    [$cour_id, $user_number]
+  );
 
-  $find_status="SELECT Delivery_Error_Status,Max_Delivery_Date,CM_ID FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
-  $result=mysqli_query($conn,$find_status);
-  $row=mysqli_fetch_assoc($result);
-  if ($row['Delivery_Error_Status'] <= 2) {
-    // $delivery_date = $row['Max_Delivery_Date'];
-    // $current_date = date("Y-m-d H:i:s");
+  if ($assignment !== null && (int) $assignment['Delivery_Error_Status'] <= 2) {
+    db_exec(
+      "UPDATE tbl_courier_assign SET Delivery_Error_Status = Delivery_Error_Status + 1 WHERE Courier_Assign_ID = ?",
+      [$cour_id]
+    );
 
-    // if ($delivery_date == $current_date) {
-    //     $delivery_date = new DateTime($delivery_date);
-    //     $delivery_date->modify('+1 days');
-    //     $new_delivery_date = $delivery_date->format('Y-m-d H:i:s');
+    $newStatus = (int) db_val(
+      "SELECT Delivery_Error_Status FROM tbl_courier_assign WHERE Courier_Assign_ID = ?",
+      [$cour_id]
+    );
 
-    //     $update_query = "UPDATE tbl_courier_assign SET Max_Delivery_Date='$new_delivery_date' WHERE Courier_Assign_ID='$cour_id'";
-    //     mysqli_query($conn, $update_query);
-    // }
+    echo "<script>alert('Consignment Unreachable')</script>";
 
-    mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Error_Status=Delivery_Error_Status+1 WHERE Courier_Assign_ID='$cour_id'");  
-    $find_status="SELECT Delivery_Error_Status FROM tbl_courier_assign WHERE Courier_Assign_ID='$cour_id'";
-    $result=mysqli_query($conn,$find_status);
-    $row_new=mysqli_fetch_assoc($result);
-
-    echo "<script>alert('Consignment Unreachable')</script>"; 
-
-    if($row['Delivery_Error_Status']==2)
-    {
-      echo "<script>alert('Maximum Limit Reached. You cannot extend delivery date any further.')</script>";
+    if ($newStatus === 3) {
+      db_exec("UPDATE tbl_courier_assign SET Delivery_Status = 'REASSIGNED' WHERE Courier_Assign_ID = ?", [$cour_id]);
+      db_exec("UPDATE tbl_cart_master SET Cart_Status = 'REASSIGNED' WHERE CM_ID = ?", [$assignment['CM_ID']]);
+      db_exec("UPDATE tbl_payment SET Courier_Assignment_Status = 0 WHERE CM_ID = ?", [$assignment['CM_ID']]);
     }
   }
-  if($row_new['Delivery_Error_Status']==3)
-  {
-    $cm_id=$row['CM_ID'];
 
-    $sql_update_delivery_status = "UPDATE tbl_courier_assign SET Delivery_Status = 'REASSIGNED' WHERE Courier_Assign_ID = '$cour_id'";
-    $result_update_delivery_status = mysqli_query($conn, $sql_update_delivery_status);
-    $sql_update_cart_status = "UPDATE tbl_cart_master SET Cart_Status = 'REASSIGNED' WHERE CM_ID = '$cm_id'";
-    $result_update_cart_status = mysqli_query($conn, $sql_update_cart_status);
-  }
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
 }
@@ -288,16 +279,24 @@ if(isset($_POST['unreachable']))
 //delivered consignment button
 if(isset($_POST['delivered']))
 {
-  $cour_id = $_POST['courier_assign_id'];
-  //cart_m_id
-  $delivered_cart_id = $_POST['cart_m_id'];
-  mysqli_query($conn,"UPDATE tbl_courier_assign SET Delivery_Status='DELIVERED' WHERE Courier_Assign_ID='$cour_id'");
-  // 	Delivery_ID 	Courier_Assign_ID 	CM_ID 	Delivery_Date 
-  $insert_delivery_details="INSERT INTO tbl_delivery(Delivery_ID,Courier_Assign_ID,CM_ID) VALUES(generate_delivery_id(),'$cour_id','$delivered_cart_id')";
-  mysqli_query($conn,$insert_delivery_details);
-  //update Cart_Status 	in tbl_cart_master to DELIVERED
-  mysqli_query($conn,"UPDATE tbl_cart_master SET Cart_Status='DELIVERED' WHERE CM_ID='$delivered_cart_id'");
-  echo "<script>alert('Consignment Delivered')</script>";
+  $cour_id = post_id('courier_assign_id');
+  $delivered_cart_id = post_id('cart_m_id');
+
+  $assignment = $cour_id === null ? null : db_one(
+    "SELECT * FROM tbl_courier_assign WHERE Courier_Assign_ID = ? AND Courier_ID = ?",
+    [$cour_id, $user_number]
+  );
+
+  if ($assignment !== null && $delivered_cart_id !== null && $assignment['CM_ID'] === $delivered_cart_id) {
+    db_exec("UPDATE tbl_courier_assign SET Delivery_Status = 'DELIVERED' WHERE Courier_Assign_ID = ?", [$cour_id]);
+    db_exec(
+      "INSERT INTO tbl_delivery (Delivery_ID, Courier_Assign_ID, CM_ID) VALUES (generate_delivery_id(), ?, ?)",
+      [$cour_id, $delivered_cart_id]
+    );
+    db_exec("UPDATE tbl_cart_master SET Cart_Status = 'DELIVERED' WHERE CM_ID = ?", [$delivered_cart_id]);
+    echo "<script>alert('Consignment Delivered')</script>";
+  }
+
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
 }
@@ -310,10 +309,10 @@ if(isset($_POST['delivered']))
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Courier Dashboard</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
     <!--google fonts_--> 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -349,7 +348,7 @@ a
 {
     height: 10vh;
     width:17%;
-    background-image:url('picture3.png');
+    background-image:url('assets/images/banners/Picture3.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -926,26 +925,11 @@ alert(jsMessage2);
         <!--dashboard content goes here-->
           <div class="dashboard-content section">
           <div class="cards-outer">
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/delivered.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Delivered</p><p class="card-text-content"><?php echo $courier_delivered ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/calender.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Joined On</p><p class="card-text-content"><?php echo $courier_joined ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/courier.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Delivery Pending</p><p class="card-text-content"><?php echo $pending_delivery ?></p></div></div>
-          <!--<div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/staff.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Staffs</p><p class="card-text-content"><?php echo $staff_num ?></p></div></div>
-          </div><div class="cards-outer" style="margin-block-start: 3%;">
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/category.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Categories</p><p class="card-text-content"><?php echo $category_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/type.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Types</p><p class="card-text-content"><?php echo $type_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/brand.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Brands</p><p class="card-text-content"><?php echo $brand_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/appliance.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Appliances</p><p class="card-text-content"><?php echo $appliances_num ?></p></div></div>
-          </div><div class="cards-outer" style="margin-block-start: 3%;">
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/purchase.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Purchases</p><p class="card-text-content"><?php echo $purchase_num ?></p></div></div>
-          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/sales.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Sales</p><p class="card-text-content"><?php echo $sales_num ?></p></div></div>
-      -->
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('assets/images/dashboard/delivered.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Delivered</p><p class="card-text-content"><?php echo $courier_delivered ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('assets/images/dashboard/calender.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Joined On</p><p class="card-text-content"><?php echo $courier_joined ?></p></div></div>
+          <div class="card-n-outer"><div class="card-n-image" style="background-image: url('assets/images/dashboard/courier.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Delivery Pending</p><p class="card-text-content"><?php echo $pending_delivery ?></p></div></div>
         </div>
-          
-          
-          <!--<div class="card2"><p class="card-text-heading">TOTAL COURIER PARTNERS</p><p class="card-text-content"><?php echo $courier_num ?></p></div>
-          <div class="card3"><p class="card-text-heading">Total Vendors</p><p class="card-text-content"><?php echo $vendor_num ?></p></div>
-          <div class="card4"><p class="card-text-heading">Total Customers</p><p class="card-text-content"><?php echo $customer_num ?></p></div>
-      --></div>
+          </div>
           </div><!--dashboard content completed-->
 
            
@@ -980,8 +964,8 @@ alert(jsMessage2);
                     {
                       while ($row_c = $courier_num2->fetch_assoc()) {
                           echo "<tr>";
-                          echo "<td>" . $row_c['Courier_Assign_ID'] . "</td>";
-                          echo "<td>" . $row_c['CM_ID'] . "</td>";
+                          echo "<td>" . e((string) $row_c['Courier_Assign_ID']) . "</td>";
+                          echo "<td>" . e((string) $row_c['CM_ID']) . "</td>";
                           //$master_c_id=$row_c['CM_ID'];
                           //select customer details from tbl_customer where cust_id = $row_c['Customer_ID']
                           // 	Cust_Fname 	Cust_Lname 	Cust_Phone 	Cust_Gender 	Cust_Hname 	Cust_Street 	Cust_Dist 	State_Ut 	Cust_Pin
@@ -992,19 +976,19 @@ alert(jsMessage2);
                           //if(mysqli_num_rows($row_cust)=1)
                           if($row_cust)
                           {
-                            echo "<td>" . $row_cust['Cust_Fname'] . " " . $row_cust['Cust_Lname'] . "<br>" . $row_cust['Cust_Phone'] . "<br>" . $row_cust['Cust_Hname'] . ", " . $row_cust['Cust_Street'] . "<br>" . $row_cust['Cust_Dist'] . ", " . $row_cust['State_Ut'] . ", " . $row_cust['Cust_Pin'] . "</td>";
+                            echo "<td>" . e((string) $row_cust['Cust_Fname']) . " " . e((string) $row_cust['Cust_Lname']) . "<br>" . e((string) $row_cust['Cust_Phone']) . "<br>" . e((string) $row_cust['Cust_Hname']) . ", " . e((string) $row_cust['Cust_Street']) . "<br>" . e((string) $row_cust['Cust_Dist']) . ", " . e((string) $row_cust['State_Ut']) . ", " . e((string) $row_cust['Cust_Pin']) . "</td>";
                           }
-                          //echo "<td>" . $row_c['Delivery_Details'] . "</td>";
-                          echo "<td>" . $row_c['Courier_Assign_Date'] . "</td>";
-                          echo "<td>" . $row_c['Max_Delivery_Date'] . "</td>";
-                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="cart_m_id" value="'. $row_c['CM_ID'] .'"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="delivered">DELIVERED</button></form></td>';
+                          //echo "<td>" . e((string) $row_c['Delivery_Details']) . "</td>";
+                          echo "<td>" . e((string) $row_c['Courier_Assign_Date']) . "</td>";
+                          echo "<td>" . e((string) $row_c['Max_Delivery_Date']) . "</td>";
+                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="cart_m_id" value="'. e((string) $row_c['CM_ID']) .'"><input type="hidden" name="courier_assign_id" value="'. e((string) $row_c['Courier_Assign_ID']) .'"><button type="submit" class="btn btn-primary me-md-2" name="delivered">DELIVERED</button></form></td>';
                           //Customer Unreachable button
                           //Delivery_Error_Status
                           $delivery_error_status=$row_c['Delivery_Error_Status'];
                           if($delivery_error_status<=2)
                           {
                           $delivery_error_status=$delivery_error_status+1;
-                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="unreachable">CUSTOMER UNREACHABLE x'.$delivery_error_status.'</button></form></td>';
+                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. e((string) $row_c['Courier_Assign_ID']) .'"><button type="submit" class="btn btn-primary me-md-2" name="unreachable">CUSTOMER UNREACHABLE x'.$delivery_error_status.'</button></form></td>';
                           }
                           else
                           {
@@ -1057,8 +1041,8 @@ alert(jsMessage2);
                     //if ($courier_num2) {
                       while ($row_c = $courier_num2->fetch_assoc()) {
                           echo "<tr>";
-                          echo "<td>" . $row_c['Courier_Assign_ID'] . "</td>";
-                          echo "<td>" . $row_c['CM_ID'] . "</td>";
+                          echo "<td>" . e((string) $row_c['Courier_Assign_ID']) . "</td>";
+                          echo "<td>" . e((string) $row_c['CM_ID']) . "</td>";
                           //select customer details from tbl_customer where cust_id = $row_c['Customer_ID']
                           // 	Cust_Fname 	Cust_Lname 	Cust_Phone 	Cust_Gender 	Cust_Hname 	Cust_Street 	Cust_Dist 	State_Ut 	Cust_Pin
                           $customer_id=$row_c['Customer_ID'];
@@ -1068,12 +1052,12 @@ alert(jsMessage2);
                           //if(mysqli_num_rows($row_cust)=1)
                           if($row_cust)
                           {
-                            echo "<td>" . $row_cust['Cust_Fname'] . " " . $row_cust['Cust_Lname'] . "<br>" . $row_cust['Cust_Phone'] . "<br>" . $row_cust['Cust_Hname'] . ", " . $row_cust['Cust_Street'] . "<br>" . $row_cust['Cust_Dist'] . ", " . $row_cust['State_Ut'] . ", " . $row_cust['Cust_Pin'] . "</td>";
+                            echo "<td>" . e((string) $row_cust['Cust_Fname']) . " " . e((string) $row_cust['Cust_Lname']) . "<br>" . e((string) $row_cust['Cust_Phone']) . "<br>" . e((string) $row_cust['Cust_Hname']) . ", " . e((string) $row_cust['Cust_Street']) . "<br>" . e((string) $row_cust['Cust_Dist']) . ", " . e((string) $row_cust['State_Ut']) . ", " . e((string) $row_cust['Cust_Pin']) . "</td>";
                           }
-                          //echo "<td>" . $row_c['Delivery_Details'] . "</td>";
-                          echo "<td>" . $row_c['Courier_Assign_Date'] . "</td>";
-                          echo "<td>" . $row_c['Max_Delivery_Date'] . "</td>";
-                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. $row_c['Courier_Assign_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="ship_courier">SHIP CONSIGNMENT</button></form></td>';
+                          //echo "<td>" . e((string) $row_c['Delivery_Details']) . "</td>";
+                          echo "<td>" . e((string) $row_c['Courier_Assign_Date']) . "</td>";
+                          echo "<td>" . e((string) $row_c['Max_Delivery_Date']) . "</td>";
+                          echo '<td style="text-align:center;"><form method="POST"><input type="hidden" name="courier_assign_id" value="'. e((string) $row_c['Courier_Assign_ID']) .'"><button type="submit" class="btn btn-primary me-md-2" name="ship_courier">SHIP CONSIGNMENT</button></form></td>';
                           echo "</tr>";
                       }
                     }
@@ -1120,16 +1104,16 @@ alert(jsMessage2);
                     {
                       //Delivery_ID 	Courier_Assign_ID 	CM_ID 	Delivery_Date 	
                       echo "<tr>";
-                      echo "<td>" . $row_del['Delivery_ID'] . "</td>";
-                      echo "<td>" . $row_del['CM_ID'] . "</td>";
-                      echo "<td>" . $row_del['Courier_Assign_ID'] . "</td>";
+                      echo "<td>" . e((string) $row_del['Delivery_ID']) . "</td>";
+                      echo "<td>" . e((string) $row_del['CM_ID']) . "</td>";
+                      echo "<td>" . e((string) $row_del['Courier_Assign_ID']) . "</td>";
                       //select Customer_ID from tbl_cart_master where CM_ID=$row_del['CM_ID']
                       $select_customer_id = "SELECT Customer_ID FROM tbl_cart_master WHERE CM_ID='" . $row_del['CM_ID'] . "'";
                       $customer_id_app=mysqli_query($conn,$select_customer_id);
                       $row_customer_id=mysqli_fetch_array($customer_id_app);
                       $ordered_cust_id=$row_customer_id['Customer_ID'];
                       echo "<td>" . $ordered_cust_id . "</td>";
-                      echo "<td>" . $row_del['Delivery_Date'] . "</td>";
+                      echo "<td>" . e((string) $row_del['Delivery_Date']) . "</td>";
                       echo "</tr>";
                     }
                   }
@@ -1174,9 +1158,9 @@ alert(jsMessage2);
                       if ($category_num2) {
                           while ($row_cat = $category_num2->fetch_assoc()) {
                               echo "<tr>";
-                              echo "<td>" . $row_cat['Cat_ID'] . "</td>";
-                              echo "<td>" . $row_cat['Cat_Name'] . "</td>";
-                              echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="cat_updateid" value="'. $row_cat['Cat_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="update_cat">UPDATE</button></form></td>';
+                              echo "<td>" . e((string) $row_cat['Cat_ID']) . "</td>";
+                              echo "<td>" . e((string) $row_cat['Cat_Name']) . "</td>";
+                              echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="cat_updateid" value="'. e((string) $row_cat['Cat_ID']) .'"><button type="submit" class="btn btn-primary me-md-2" name="update_cat">UPDATE</button></form></td>';
                               echo "</tr>";
                              }}
                        else {
@@ -1220,10 +1204,10 @@ alert(jsMessage2);
                 while ($row_typ = $type_num2->fetch_assoc()) {
     
                         echo "<tr>";
-                        echo "<td>" . $row_typ['Type_ID'] . "</td>";
-                        echo "<td>" . $row_typ['Cat_ID'] . "</td>";
-                        echo "<td>" . $row_typ['Type_Name'] . "</td>";
-                        echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="type_updateid" value="'. $row_typ['Type_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="update_type">UPDATE</button></form></td>';
+                        echo "<td>" . e((string) $row_typ['Type_ID']) . "</td>";
+                        echo "<td>" . e((string) $row_typ['Cat_ID']) . "</td>";
+                        echo "<td>" . e((string) $row_typ['Type_Name']) . "</td>";
+                        echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="type_updateid" value="'. e((string) $row_typ['Type_ID']) .'"><button type="submit" class="btn btn-primary me-md-2" name="update_type">UPDATE</button></form></td>';
                         echo "</tr>";
                     }
               }
@@ -1261,10 +1245,10 @@ alert(jsMessage2);
                   $brand_image=$row_br['Brand_Logo'];
     
                         echo "<tr>";
-                        echo "<td>" . $row_br['Brand_ID'] . "</td>";
-                        echo "<td>" . $row_br['Brand_Name'] . "</td>";
-                        echo "<td><img src='" . $brand_image . "' alt='Brand Logo' height='60px' width='60px'></td>";
-                        echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="brand_updateid" value="'. $row_br['Brand_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="update_brand">UPDATE</button></form></td>';
+                        echo "<td>" . e((string) $row_br['Brand_ID']) . "</td>";
+                        echo "<td>" . e((string) $row_br['Brand_Name']) . "</td>";
+                        echo "<td><img src='" . e((string) $brand_image) . "' alt='Brand Logo' height='60px' width='60px'></td>";
+                        echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="brand_updateid" value="'. e((string) $row_br['Brand_ID']) .'"><button type="submit" class="btn btn-primary me-md-2" name="update_brand">UPDATE</button></form></td>';
                         echo "</tr>";
                     }
               }
@@ -1310,18 +1294,18 @@ alert(jsMessage2);
                         $image1 = $row_app['Appliance_Image1'];
                         $image2 = $row_app['Appliance_Image2'];
                         echo "<tr>";
-                        echo "<td>" . $row_app['Appliance_ID'] . "</td>";
-                        echo "<td>" . $row_app['Appliance_Name'] . "</td>";
-                        echo "<td>" . $row_app['Type_ID'] . "</td>";
-                        echo "<td>" . $row_app['Brand_ID'] . "</td>";
-                        echo "<td><img src='" . $image1 . "' alt='Image 1' height='50px' width='45px'></td>";
-                        echo "<td><img src='" . $image2 . "' alt='Image 2' height='50px' width='45px'></td>";
-                        echo "<td>" . $row_app['Appliance_Profit_Percentage'] . "</td>";
-                        echo "<td>" . $row_app['Appliance_Description'] . "</td>";
+                        echo "<td>" . e((string) $row_app['Appliance_ID']) . "</td>";
+                        echo "<td>" . e((string) $row_app['Appliance_Name']) . "</td>";
+                        echo "<td>" . e((string) $row_app['Type_ID']) . "</td>";
+                        echo "<td>" . e((string) $row_app['Brand_ID']) . "</td>";
+                        echo "<td><img src='" . e((string) $image1) . "' alt='Image 1' height='50px' width='45px'></td>";
+                        echo "<td><img src='" . e((string) $image2) . "' alt='Image 2' height='50px' width='45px'></td>";
+                        echo "<td>" . e((string) $row_app['Appliance_Profit_Percentage']) . "</td>";
+                        echo "<td>" . e((string) $row_app['Appliance_Description']) . "</td>";
 
                         
                         //edit staff button
-                        echo '<td><form action="admin.php" method="POST"><input type="hidden" name="app_updateid" value="'. $row_app['Appliance_ID'] .'"><button type="submit" class="btn btn-primary me-md-2" name="update_app">UPDATE</button></form></td>';
+                        echo '<td><form action="admin.php" method="POST"><input type="hidden" name="app_updateid" value="'. e((string) $row_app['Appliance_ID']) .'"><button type="submit" class="btn btn-primary me-md-2" name="update_app">UPDATE</button></form></td>';
                         echo "</tr>";
                     }
                 } 
@@ -1373,11 +1357,11 @@ alert(jsMessage2);
                 if ($purchase_num2) {
                     while ($row_pur = $purchase_num2->fetch_assoc()) {
                         echo "<tr>";	
-                        echo "<td>" . $row_pur['Purchase_Master_ID'] . "</td>";
-                        echo "<td>" . $row_pur['Vendor_ID'] . "</td>";
-                        echo "<td>" . $row_pur['Staff_ID'] . "</td>";
-                        echo "<td>" . $row_pur['Total_Amt'] . "</td>";
-                        echo "<td>" . $row_pur['Purchase_Date'] . "</td>";
+                        echo "<td>" . e((string) $row_pur['Purchase_Master_ID']) . "</td>";
+                        echo "<td>" . e((string) $row_pur['Vendor_ID']) . "</td>";
+                        echo "<td>" . e((string) $row_pur['Staff_ID']) . "</td>";
+                        echo "<td>" . e((string) $row_pur['Total_Amt']) . "</td>";
+                        echo "<td>" . e((string) $row_pur['Purchase_Date']) . "</td>";
                         echo "</tr>";
                      }
                  } 
@@ -1461,10 +1445,10 @@ alert(jsMessage2);
                         echo "<td>" . $payment_id . "</td>";
                         echo "<td>" . $customer_id . "</td>";
                         echo "<td>" . $date . "</td>";
-                        echo "<td>" . $customer_address . "</td>";
+                        echo "<td>" . e((string) $customer_address) . "</td>";
                         echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='". $payment_id ."'><select name='courier_assign_id' id='courier_id' style='width: 100%;'><option value=''>Select Delivery Partner</option>";
                         foreach ($delivery_partners as $delivery_partner) {
-                        echo "<option value='".$delivery_partner['Cour_ID']."'>".$delivery_partner['Cour_Name']."</option>";
+                        echo "<option value='".e((string) $delivery_partner['Cour_ID'])."'>".e((string) $delivery_partner['Cour_Name'])."</option>";
                         }
                         echo "</select></td><input type='hidden' name='master_cart_id' value='". $cart_master_id ."'><input type='hidden' name='Customer_Id' value='". $customer_id ."'>";
                         echo "<td><button type='submit' class='btn btn-primary me-md-2' name='assign_courier'>ASSIGN</button></form></td>";
@@ -1534,7 +1518,7 @@ alert(jsMessage2);
                         echo "<tr>";
                         echo "<td>" . $payment_id . "</td>";
                         echo "<td>" . $customer_id . "</td>";
-                        echo "<td>" . $delivery_partner_name . "</td>";
+                        echo "<td>" . e((string) $delivery_partner_name) . "</td>";
                         echo "<td>" . $date . "</td>";
                         echo "<td>" . $delivery_partner_assign_date . "</td>";
                         echo "<td>" . $expectedDeliveryDate . "</td>";
@@ -1580,7 +1564,7 @@ alert(jsMessage2);
             
             </div>*/
             ?>-->
-<script type="text/js" src="js/bootstrap.min.js"></script>
+<script type="text/js" src="assets/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>   
 </body>
 

@@ -2,43 +2,54 @@
 include ("connection.php");
 
 session_start();
+csrf_verify();
+require_role(['CU']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
-echo $userId;
-echo $usertype;
 
-$updatequery = mysqli_query($conn, "SELECT * FROM tbl_customer WHERE Cust_ID = '$userId'");
-$db_data = mysqli_fetch_array($updatequery);
+$db_data = db_one("SELECT * FROM tbl_customer WHERE Cust_ID = ?", [$userId]);
+if ($db_data === null) {
+    http_response_code(404);
+    exit('Customer not found.');
+}
 
 if (isset($_POST['submit'])) 
 {
-    $firstName = $_POST['firstName'];
-    $lastName = $_POST['lastName'];
-    $gender = $_POST['gender'];
-    $phoneNumber = $_POST['phoneNumber'];
-    $houseName = $_POST['houseName'];
-    $street = $_POST['street'];
-    $district = $_POST['district'];
-    $state = $_POST['state'];
-    $pincode = $_POST['pincode'];
-    
-      //$update1 = "UPDATE tbl_customer SET Cust_Fname='$firstName',Cust_Lname='$lastName' Cust_Phone='$phoneNumber',Cust_Gender='$gender',Cust_Hname='$houseName',Cust_Street='$street',Cust_Dist='$district',Cust_Ut='$state',Cust_Pin='$pincode' WHERE Cust_ID='$userId'";
-      $update1 = "UPDATE tbl_customer SET Cust_Fname='$firstName', Cust_Lname='$lastName', Cust_Phone='$phoneNumber', Cust_Gender='$gender', Cust_Hname='$houseName', Cust_Street='$street', Cust_Dist='$district', State_Ut='$state', Cust_Pin='$pincode' WHERE Cust_ID='$userId';";
-      mysqli_query($conn, $update1);
+    $firstName = trim((string)($_POST['firstName'] ?? ''));
+    $lastName = trim((string)($_POST['lastName'] ?? ''));
+    $gender = (string)($_POST['gender'] ?? '');
+    $phoneNumber = trim((string)($_POST['phoneNumber'] ?? ''));
+    $houseName = trim((string)($_POST['houseName'] ?? ''));
+    $street = trim((string)($_POST['street'] ?? ''));
+    $district = trim((string)($_POST['district'] ?? ''));
+    $state = trim((string)($_POST['state'] ?? ''));
+    $pincode = trim((string)($_POST['pincode'] ?? ''));
 
-      echo "<script>alert('Customer details updated successfully!');</script>";
-      header('Location: view-orders.php');
-  }
+    if ($firstName === '') {
+        echo "<script>alert('Please enter your first name.');</script>";
+    } else {
+        db_exec(
+            "UPDATE tbl_customer
+             SET Cust_Fname = ?, Cust_Lname = ?, Cust_Phone = ?, Cust_Gender = ?,
+                 Cust_Hname = ?, Cust_Street = ?, Cust_Dist = ?, State_Ut = ?, Cust_Pin = ?
+             WHERE Cust_ID = ?",
+            [$firstName, $lastName, $phoneNumber, $gender, $houseName, $street, $district, $state, $pincode, $userId]
+        );
+
+        header('Location: view-orders.php');
+        exit;
+    }
+}
 ?>
 
 
 <html>
 <head>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Update Customer</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position:center;
@@ -68,7 +79,7 @@ if (isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -195,7 +206,7 @@ if (isset($_POST['submit']))
         <div class="registration-form">
           <div class="registration-form-left">
               <label for="firstName">Customer Name</label>
-              <input type="text" id="firstName" name="firstName" placeholder="First name" value="<?php echo $db_data['Cust_Fname']; ?>" required>
+              <input type="text" id="firstName" name="firstName" placeholder="First name" value="<?php echo e((string) $db_data['Cust_Fname']); ?>" required>
 
               <label for="gender">Gender</label>
               <select id="gender" name="gender" required>
@@ -206,13 +217,13 @@ if (isset($_POST['submit']))
               </select>
 
               <label for="address">Street</label>
-              <input type="text" id="address" name="street" placeholder="Street" value="<?php echo $db_data['Cust_Street']; ?>" required>
+              <input type="text" id="address" name="street" placeholder="Street" value="<?php echo e((string) $db_data['Cust_Street']); ?>" required>
 
               <label for="pincode">Pincode</label>
-              <input type="number" id="pincode" name="pincode" value="<?php echo $db_data['Cust_Pin']; ?>" placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
+              <input type="number" id="pincode" name="pincode" value="<?php echo e((string) $db_data['Cust_Pin']); ?>" placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
               
               <label for="state">State/UT</label>
-            <input type="text" id="state" name="state" value="<?php echo $db_data['State_Ut']; ?>" placeholder="State / Union Territory" required>
+            <input type="text" id="state" name="state" value="<?php echo e((string) $db_data['State_Ut']); ?>" placeholder="State / Union Territory" required>
  
             
               </div>
@@ -220,16 +231,16 @@ if (isset($_POST['submit']))
           <div class="registration-form-right">
 
             <label for="lastName"><!--Enter your name:--><br></label>
-            <input type="text" id="lastName" name="lastName" value="<?php echo $db_data['Cust_Lname']; ?>" placeholder="Last name">
+            <input type="text" id="lastName" name="lastName" value="<?php echo e((string) $db_data['Cust_Lname']); ?>" placeholder="Last name">
   
             <label for="phoneNumber">Phone number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" value="<?php echo $db_data['Cust_Phone']; ?>" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
+            <input type="tel" id="phoneNumber" name="phoneNumber" value="<?php echo e((string) $db_data['Cust_Phone']); ?>" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
 
             <label for="houseName">House name</label>
-            <input type="text" id="houseName" name="houseName" value="<?php echo $db_data['Cust_Hname']; ?>" placeholder="House, apartment, suit, etc." required>
+            <input type="text" id="houseName" name="houseName" value="<?php echo e((string) $db_data['Cust_Hname']); ?>" placeholder="House, apartment, suit, etc." required>
           
             <label for="district">District</label>
-            <input type="text" id="district" name="district" value="<?php echo $db_data['Cust_Dist']; ?>" placeholder="District" required>
+            <input type="text" id="district" name="district" value="<?php echo e((string) $db_data['Cust_Dist']); ?>" placeholder="District" required>
 
            
     

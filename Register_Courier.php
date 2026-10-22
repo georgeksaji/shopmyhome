@@ -1,52 +1,67 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
 if(isset($_POST['submit']))
 {
-  $name = $_POST['name'];
-  $phoneNumber = $_POST['phoneNumber'];
-  $buildingName = $_POST['buildingName'];
-  $pincode = $_POST['pincode'];
-  $state = $_POST['state'];
-  $email = $_POST['email'];
-  $street = $_POST['street'];
-  $district = $_POST['district'];
-  $passwordright = $_POST['passwordright'];
-  $passwordleft = $_POST['passwordleft'];
+  $name = trim((string)($_POST['name'] ?? ''));
+  $phoneNumber = trim((string)($_POST['phoneNumber'] ?? ''));
+  $buildingName = trim((string)($_POST['buildingName'] ?? ''));
+  $pincode = trim((string)($_POST['pincode'] ?? ''));
+  $state = trim((string)($_POST['state'] ?? ''));
+  $email = trim((string)($_POST['email'] ?? ''));
+  $street = trim((string)($_POST['street'] ?? ''));
+  $district = trim((string)($_POST['district'] ?? ''));
+  $passwordright = (string)($_POST['passwordright'] ?? '');
+  $passwordleft = (string)($_POST['passwordleft'] ?? '');
 
-
-  if($passwordleft == $passwordright)
+  if($passwordleft !== $passwordright)
   {
-    $sql = "SELECT * FROM tbl_login WHERE Username = '$email'";
-    $result = mysqli_query($conn, $sql);
-    $num = mysqli_num_rows($result);
-    if($num > 0) 
-    {
-      echo "<script>alert('Username already exists!');</script>";
-    } 
-    else
-    {
-      $insert1= "INSERT INTO tbl_login(Username,Password,User_Type)VALUES('$email','$passwordleft','CR')";
-      mysqli_query($conn,$insert1);
-      $insert1= "INSERT INTO tbl_courier(Cour_ID,Cour_Username,Staff_ID,Cour_Name,Cour_Phone,Cour_Building_name,Cour_Street,Cour_Dist,Cour_Pin,Cour_State_ut)VALUES(generate_cour_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$pincode','$state')";
-      mysqli_query($conn,$insert1);
-      echo "<script>alert('Courier registered successfully!');</script>";
-      if($usertype == "AD" && $userId == "ST00001")
-      {
-        header("location: admin.php");
-      }
-      else if($usertype == "ST")
-      {
-        header("location: staff.php");
-      }
-    }
+    echo "<script>alert('Passwords do not match!');</script>";
+  }
+  else if(strlen($passwordleft) < 8 || strlen($passwordleft) > 72)
+  {
+    echo "<script>alert('Password must be between 8 and 72 characters.');</script>";
   }
   else
   {
-  echo "<script>alert('Passwords do not match!');</script>";
+    $exists = (int) db_val("SELECT COUNT(*) FROM tbl_login WHERE Username = ?", [$email]);
+    if($exists > 0)
+    {
+      echo "<script>alert('Username already exists!');</script>";
+    }
+    else
+    {
+      $conn->begin_transaction();
+      try {
+        db_exec(
+          "INSERT INTO tbl_login (Username, Password, User_Type) VALUES (?, ?, 'CR')",
+          [$email, password_hash($passwordleft, PASSWORD_DEFAULT)]
+        );
+        db_exec(
+          "INSERT INTO tbl_courier
+             (Cour_ID, Cour_Username, Staff_ID, Cour_Name, Cour_Phone, Cour_Building_name,
+              Cour_Street, Cour_Dist, Cour_Pin, Cour_State_ut)
+           VALUES (generate_cour_id(), ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [$email, $userId, $name, $phoneNumber, $buildingName, $street, $district, $pincode, $state]
+        );
+        $conn->commit();
+        echo "<script>alert('Courier registered successfully!');</script>";
+        if($usertype == 'AD' && $userId == 'ST00001') {
+          header("location: admin.php");
+        } else if($usertype == 'ST') {
+          header("location: staff.php");
+        }
+        exit;
+      } catch (Throwable $e) {
+        $conn->rollback();
+        throw $e;
+      }
+    }
   }
 }
 ?>
@@ -54,10 +69,10 @@ if(isset($_POST['submit']))
 <head>
   <title>Register Courier</title>
   
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -85,7 +100,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -239,7 +254,7 @@ alert(jsMessage2);
             <input type="text" id="district" name="district" placeholder="District" required>
 
             <label for="passwordright">Create password</label>
-              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters .">
+              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="8" maxlength="72" required title="Minimum 8 and maximum 72 characters required.">
 
 
           
@@ -260,7 +275,7 @@ alert(jsMessage2);
             <input type="text" id="state" name="state" placeholder="State" required>
 
             <label for="passwordleft">Confirm password</label>
-              <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="4" maxlength="9" required title="Minimum 4 and Maximum 7 characters required.">
+              <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="8" maxlength="72" required title="Minimum 8 and maximum 72 characters required.">
 
 
 

@@ -2,6 +2,8 @@
 include('connection.php');
 
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
@@ -52,49 +54,49 @@ if (isset($_POST['destroy'])) {
 //staff status update
 
 if (isset($_POST['update_staff'])) {
-  $updateid = $_POST['staff_updateid'];
+  $updateid = post_id('staff_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Staff.php');
 }
 if (isset($_POST['activate_staff_status_button'])) {
-  $staff_id = $_POST['staff_id'];
+  $staff_id = post_id('staff_id');
   mysqli_query($conn, "UPDATE tbl_staff SET Staff_Status=1 WHERE Staff_ID='$staff_id'");
 }
 
 if (isset($_POST['deactivate_staff_status_button'])) {
-  $staff_id = $_POST['staff_id'];
+  $staff_id = post_id('staff_id');
   mysqli_query($conn, "UPDATE tbl_staff SET Staff_Status=0 WHERE Staff_ID='$staff_id'");
 }
 //vednor status button
 if (isset($_POST['update_vendor'])) {
-  $updateid = $_POST['vendor_updateid'];
+  $updateid = post_id('vendor_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Vendor.php');
 }
 if (isset($_POST['activate_vendor_status_button'])) {
-  $vendor_id = $_POST['vendor_id'];
+  $vendor_id = post_id('vendor_id');
   mysqli_query($conn, "UPDATE tbl_vendor SET Vendor_Status=1 WHERE Vendor_ID='$vendor_id'");
 }
 
 if (isset($_POST['deactivate_vendor_status_button'])) {
-  $vendor_id = $_POST['vendor_id'];
+  $vendor_id = post_id('vendor_id');
   mysqli_query($conn, "UPDATE tbl_vendor SET Vendor_Status=0 WHERE Vendor_ID='$vendor_id'");
 }
 
 //courier status button
 if (isset($_POST['update_cour'])) {
-  $updateid = $_POST['cour_updateid'];
+  $updateid = post_id('cour_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Courier.php');
 }
 if (isset($_POST['activate_cour_status_button'])) {
-  $cour_id = $_POST['cour_id'];
+  $cour_id = post_id('cour_id');
   mysqli_query($conn, "UPDATE tbl_courier SET Cour_Status=1 WHERE Cour_ID='$cour_id'");
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
 }
 
 if (isset($_POST['deactivate_cour_status_button'])) {
-  $cour_id = $_POST['cour_id'];
+  $cour_id = post_id('cour_id');
   $sql_ca_status = "SELECT * FROM tbl_courier_assign WHERE Courier_ID = '$cour_id' AND (Delivery_Status = 'ASSIGNED' OR Delivery_Status = 'SHIPPED')";
   $result_ca_status = mysqli_query($conn, $sql_ca_status);
   $ca_status = mysqli_num_rows($result_ca_status);
@@ -109,71 +111,97 @@ if (isset($_POST['deactivate_cour_status_button'])) {
 
 //cust status button
 if (isset($_POST['activate_cust_status_button'])) {
-  $cust_id = $_POST['cust_id'];
+  $cust_id = post_id('cust_id');
   mysqli_query($conn, "UPDATE tbl_customer SET Cust_Status=1 WHERE Cust_ID='$cust_id'");
 }
 
 if (isset($_POST['deactivate_cust_status_button'])) {
-  $cust_id = $_POST['cust_id'];
+  $cust_id = post_id('cust_id');
   mysqli_query($conn, "UPDATE tbl_customer SET Cust_Status=0 WHERE Cust_ID='$cust_id'");
 }
 //appliance status button
 if (isset($_POST['update_app'])) {
-  $updateid = $_POST['app_updateid'];
+  $updateid = post_id('app_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_appliance.php');
 }
 //purchase button
 if (isset($_POST['purchase_app'])) {
-  $updateid = $_POST['app_id'];
+  $updateid = post_id('app_id');
   $_SESSION['Update_ID'] = $updateid;
-  header('location:Make_purchase.php');
+  header('location:Make_purchase1.php');
 }
 //category status button
 if (isset($_POST['update_cat'])) {
-  $updateid = $_POST['cat_updateid'];
+  $updateid = post_id('cat_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Category.php');
 }
 //type status button
 if (isset($_POST['update_type'])) {
-  $updateid = $_POST['type_updateid'];
+  $updateid = post_id('type_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Type.php');
 }
 //brand status button
 if (isset($_POST['update_brand'])) {
-  $updateid = $_POST['brand_updateid'];
+  $updateid = post_id('brand_updateid');
   $_SESSION['Update_ID'] = $updateid;
   header('location:Update_Brand.php');
 }
 
 //assign courier button
 if (isset($_POST['assign_courier'])) {
-  $pay_id = $_POST['payment_id'];
-  $assigned_delivery_partner = $_POST['courier_assign_id'];
-  $customer_id = $_POST['Customer_Id'];
-  $cm_id = $_POST['master_cart_id'];
-  $date_of_assign = $_POST['date'];
-  $currentDateTime = new DateTime();
-  // Add 10 days to the current date
-  $currentDateTime->modify('+10 days');
-  
-  // Format the modified delivery date with both date and time components
-  $expectedDeliveryDate = $currentDateTime->format('Y-m-d H:i:s');
+  $pay_id = post_id('payment_id');
+  $assigned_delivery_partner = post_id('courier_assign_id');
+  $customer_id = post_id('Customer_Id');
+  $cm_id = post_id('master_cart_id');
 
-  // Now $expectedDeliveryDate contains the updated date and time
+  $valid = $pay_id !== null && $assigned_delivery_partner !== null && $customer_id !== null && $cm_id !== null;
 
-  //generate_courier_assignment_id()
-  //insert into tbl_courier_assign
-  // 	Courier_Assign_ID 	Courier_ID 	CM_ID 	Customer_ID 	Courier_Assign_Date 
-  mysqli_query($conn, "INSERT INTO tbl_courier_assign(Courier_Assign_ID,Courier_ID,CM_ID,Max_Delivery_Date,Customer_ID) VALUES(generate_courier_assignment_id(),'$assigned_delivery_partner','$cm_id','$expectedDeliveryDate','$customer_id')");
+  if ($valid) {
+    $payment = db_one(
+      "SELECT * FROM tbl_payment WHERE Payment_ID = ? AND CM_ID = ? AND Courier_Assignment_Status = 0",
+      [$pay_id, $cm_id]
+    );
+    $cart = db_one(
+      "SELECT * FROM tbl_cart_master WHERE CM_ID = ? AND Customer_ID = ? AND Cart_Status = 'PAID'",
+      [$cm_id, $customer_id]
+    );
+    $courier = db_one(
+      "SELECT * FROM tbl_courier WHERE Cour_ID = ? AND Cour_Status = 1",
+      [$assigned_delivery_partner]
+    );
 
-  //update Courier_Assignment_Status=1 in tbl_payment
-  //mysqli_query($conn,"UPDATE tbl_payment SET Courier_Assignment_Status=1 WHERE Payment_ID='$pay_id'");
-  //echo "<script>alert('Courier Assigned Successfully');</script>";
-  // 	Cart_Status 	="COURIER ASSIGNED"
-  mysqli_query($conn, "UPDATE tbl_cart_master SET Cart_Status='COURIER ASSIGNED' WHERE CM_ID='$cm_id'");
+    if ($payment === null || $cart === null || $courier === null) {
+      http_response_code(400);
+      exit('Unable to assign this courier.');
+    }
+
+    $expectedDeliveryDate = (new DateTime())->modify('+10 days')->format('Y-m-d H:i:s');
+
+    $conn->begin_transaction();
+    try {
+      db_exec(
+        "INSERT INTO tbl_courier_assign
+           (Courier_Assign_ID, Courier_ID, CM_ID, Max_Delivery_Date, Customer_ID)
+         VALUES (generate_courier_assignment_id(), ?, ?, ?, ?)",
+        [$assigned_delivery_partner, $cm_id, $expectedDeliveryDate, $customer_id]
+      );
+      db_exec(
+        "UPDATE tbl_payment SET Courier_Assignment_Status = 1 WHERE Payment_ID = ?",
+        [$pay_id]
+      );
+      db_exec(
+        "UPDATE tbl_cart_master SET Cart_Status = 'COURIER ASSIGNED' WHERE CM_ID = ?",
+        [$cm_id]
+      );
+      $conn->commit();
+    } catch (Throwable $e) {
+      $conn->rollback();
+      throw $e;
+    }
+  }
 
   header("Location: success_page.php?return_url=" . urlencode($_SERVER['PHP_SELF']));
   exit();
@@ -192,18 +220,18 @@ if(isset($_POST['download_purchase_report']))
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin Dashboard</title>
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
     integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
   <!--google fonts_-->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script src="table2excel.js"></script>
+  <script src="assets/js/table2excel.js"></script>
   <style>
     body {
       background-color: rgb(255, 255, 255);
@@ -232,7 +260,7 @@ if(isset($_POST['download_purchase_report']))
     .logo {
       height: 10vh;
       width: 17%;
-      background-image: url('picture3.png');
+      background-image: url('assets/images/banners/Picture3.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -883,7 +911,7 @@ if(isset($_POST['download_purchase_report']))
     <div class="dashboard-content section">
       <div class="cards-outer">
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/courier.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/courier.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Courier Partners</p>
             <p class="card-text-content">
@@ -892,7 +920,7 @@ if(isset($_POST['download_purchase_report']))
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/vendor.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/vendor.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Vendors</p>
             <p class="card-text-content">
@@ -901,7 +929,7 @@ if(isset($_POST['download_purchase_report']))
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/customer.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/customer.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Customers</p>
             <p class="card-text-content">
@@ -910,7 +938,7 @@ if(isset($_POST['download_purchase_report']))
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/staff.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/staff.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Staffs</p>
             <p class="card-text-content">
@@ -921,7 +949,7 @@ if(isset($_POST['download_purchase_report']))
       </div>
       <div class="cards-outer" style="margin-block-start: 3%;">
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/category.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/category.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Categories</p>
             <p class="card-text-content">
@@ -930,7 +958,7 @@ if(isset($_POST['download_purchase_report']))
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/type.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/type.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Types</p>
             <p class="card-text-content">
@@ -939,7 +967,7 @@ if(isset($_POST['download_purchase_report']))
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/brand.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/brand.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Brands</p>
             <p class="card-text-content">
@@ -948,7 +976,7 @@ if(isset($_POST['download_purchase_report']))
           </div>
         </div>
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/appliance.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/appliance.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Appliances</p>
             <p class="card-text-content">
@@ -959,7 +987,7 @@ if(isset($_POST['download_purchase_report']))
       </div>
       <div class="cards-outer" style="margin-block-start: 3%;">
         <div class="card-n-outer">
-          <div class="card-n-image" style="background-image: url('./dashboard_icons/purchase.gif');"></div>
+          <div class="card-n-image" style="background-image: url('assets/images/dashboard/purchase.gif');"></div>
           <div class="card-n-inner">
             <p class="card-text-heading">Total Purchases</p>
             <p class="card-text-content">
@@ -967,15 +995,7 @@ if(isset($_POST['download_purchase_report']))
             </p>
           </div>
         </div>
-        <!--<div class="card-n-outer"><div class="card-n-image" style="background-image: url('./dashboard_icons/sales.gif');"></div><div class="card-n-inner"><p class="card-text-heading">Total Sales</p><p class="card-text-content"><?php echo $sales_num ?></p></div></div>
-      -->
       </div>
-
-
-      <!--<div class="card2"><p class="card-text-heading">TOTAL COURIER PARTNERS</p><p class="card-text-content"><?php echo $courier_num ?></p></div>
-          <div class="card3"><p class="card-text-heading">Total Vendors</p><p class="card-text-content"><?php echo $vendor_num ?></p></div>
-          <div class="card4"><p class="card-text-heading">Total Customers</p><p class="card-text-content"><?php echo $customer_num ?></p></div>
-      -->
     </div>
   </div><!--dashboard content completed-->
 
@@ -1017,17 +1037,17 @@ if(isset($_POST['download_purchase_report']))
             if ($vendor_num2) {
               while ($row_v = $vendor_num2->fetch_assoc()) {
                 echo "<tr>";
-                echo "<td>" . $row_v['Vendor_ID'] . "</td>";
-                echo "<td>" . $row_v['Vendor_Email'] . "</td>";
-                echo "<td>" . $row_v['Vendor_Name'] . "</td>";
-                echo "<td>" . $row_v['Staff_Id'] . "</td>";
-                echo "<td>" . $row_v['Vendor_Phno'] . "</td>";
-                echo "<td>" . $row_v['Vendor_Hname'] . "</td>";
-                echo "<td>" . $row_v['Vendor_Street'] . "</td>";
-                echo "<td>" . $row_v['Vendor_Dist'] . "</td>";
-                echo "<td>" . $row_v['State_Ut'] . "</td>";
-                echo "<td>" . $row_v['Vendor_Pin'] . "</td>";
-                echo "<td>" . $row_v['Vjoining_Date'] . "</td>";
+                echo "<td>" . e((string) $row_v['Vendor_ID']) . "</td>";
+                echo "<td>" . e((string) $row_v['Vendor_Email']) . "</td>";
+                echo "<td>" . e((string) $row_v['Vendor_Name']) . "</td>";
+                echo "<td>" . e((string) $row_v['Staff_Id']) . "</td>";
+                echo "<td>" . e((string) $row_v['Vendor_Phno']) . "</td>";
+                echo "<td>" . e((string) $row_v['Vendor_Hname']) . "</td>";
+                echo "<td>" . e((string) $row_v['Vendor_Street']) . "</td>";
+                echo "<td>" . e((string) $row_v['Vendor_Dist']) . "</td>";
+                echo "<td>" . e((string) $row_v['State_Ut']) . "</td>";
+                echo "<td>" . e((string) $row_v['Vendor_Pin']) . "</td>";
+                echo "<td>" . e((string) $row_v['Vjoining_Date']) . "</td>";
                 if ($row_v['Vendor_Status'] == 1) {
                   echo "<td>Active</td>";
                 } else {
@@ -1037,13 +1057,13 @@ if(isset($_POST['download_purchase_report']))
                 //update status button
             
                 if ($row_v['Vendor_Status'] == 1) {
-                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='vendor_id' value='" . $row_v['Vendor_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_vendor_status_button'>DEACTIVATE</button></form></td>";
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='vendor_id' value='" . e((string) $row_v['Vendor_ID']) . "'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_vendor_status_button'>DEACTIVATE</button></form></td>";
                 }
                 if ($row_v['Vendor_Status'] == 0) {
-                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='vendor_id' value='" . $row_v['Vendor_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_vendor_status_button'>ACTIVATE</button></form></td>";
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='vendor_id' value='" . e((string) $row_v['Vendor_ID']) . "'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_vendor_status_button'>ACTIVATE</button></form></td>";
                 }
                 //edit vendor button
-                echo '<td><form action="admin.php" method="POST"><input type="hidden" name="vendor_updateid" value="' . $row_v['Vendor_ID'] . '"><button type="submit" class="btn btn-primary me-md-2" name="update_vendor">UPDATE</button></form></td>';
+                echo '<td><form action="admin.php" method="POST"><input type="hidden" name="vendor_updateid" value="' . e((string) $row_v['Vendor_ID']) . '"><button type="submit" class="btn btn-primary me-md-2" name="update_vendor">UPDATE</button></form></td>';
                 echo "</tr>";
 
 
@@ -1104,17 +1124,17 @@ if(isset($_POST['download_purchase_report']))
             if ($courier_num2) {
               while ($row_c = $courier_num2->fetch_assoc()) {
                 echo "<tr>";
-                echo "<td>" . $row_c['Cour_ID'] . "</td>";
-                echo "<td>" . $row_c['Cour_Username'] . "</td>";
-                echo "<td>" . $row_c['Cour_Name'] . "</td>";
-                echo "<td>" . $row_c['Staff_ID'] . "</td>";
-                echo "<td>" . $row_c['Cour_Phone'] . "</td>";
-                echo "<td>" . $row_c['Cour_Building_name'] . "</td>";
-                echo "<td>" . $row_c['Cour_Street'] . "</td>";
-                echo "<td>" . $row_c['Cour_Dist'] . "</td>";
-                echo "<td>" . $row_c['Cour_State_ut'] . "</td>";
-                echo "<td>" . $row_c['Cour_Pin'] . "</td>";
-                echo "<td>" . $row_c['Cour_Joining_Date'] . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_ID']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_Username']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_Name']) . "</td>";
+                echo "<td>" . e((string) $row_c['Staff_ID']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_Phone']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_Building_name']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_Street']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_Dist']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_State_ut']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_Pin']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cour_Joining_Date']) . "</td>";
                 if ($row_c['Cour_Status'] == 1) {
                   echo "<td>Active</td>";
                 } else if ($row_c['Cour_Status'] == 3) {
@@ -1130,10 +1150,10 @@ if(isset($_POST['download_purchase_report']))
                 //update status button
             
                 if ($row_c['Cour_Status'] == 1) {
-                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='" . $row_c['Cour_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_cour_status_button'>DEACTIVATE</button></form></td>";
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='" . e((string) $row_c['Cour_ID']) . "'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_cour_status_button'>DEACTIVATE</button></form></td>";
                 }
                 if ($row_c['Cour_Status'] == 0) {
-                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='" . $row_c['Cour_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cour_status_button'>ACTIVATE</button></form></td>";
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cour_id' value='" . e((string) $row_c['Cour_ID']) . "'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cour_status_button'>ACTIVATE</button></form></td>";
                 }
                 if ($row_c['Cour_Status'] == 2) {
                   echo "<td style='display: flex;align-items: center;justify-content: center;'><button type='submit' class='btn btn-primary me-md-2 terminated_button' disabled>ACTIVE</button></form></td>";
@@ -1142,7 +1162,7 @@ if(isset($_POST['download_purchase_report']))
                   echo "<td style='display: flex;align-items: center;justify-content: center;'><button type='submit' class='btn btn-primary me-md-2 terminated_button' disabled>TERMINATED</button></form></td>";
                 }
                 //edit cour button
-                echo '<td><form action="admin.php" method="POST"><input type="hidden" name="cour_updateid" value="' . $row_c['Cour_ID'] . '"><button type="submit" class="btn btn-primary me-md-2" name="update_cour">UPDATE</button></form></td>';
+                echo '<td><form action="admin.php" method="POST"><input type="hidden" name="cour_updateid" value="' . e((string) $row_c['Cour_ID']) . '"><button type="submit" class="btn btn-primary me-md-2" name="update_cour">UPDATE</button></form></td>';
                 echo "</tr>";
 
 
@@ -1201,19 +1221,19 @@ if(isset($_POST['download_purchase_report']))
             if ($customer_num2) {
               while ($row_c = $customer_num2->fetch_assoc()) {
                 echo "<tr>";
-                echo "<td>" . $row_c['Cust_ID'] . "</td>";
-                echo "<td>" . $row_c['C_Username'] . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_ID']) . "</td>";
+                echo "<td>" . e((string) $row_c['C_Username']) . "</td>";
                 //combine fname and lname
-                echo "<td>" . $row_c['Cust_Fname'] . " " . $row_c['Cust_Lname'] . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_Fname']) . " " . e((string) $row_c['Cust_Lname']) . "</td>";
                 
-                echo "<td>" . $row_c['Cust_Phone'] . "</td>";
-                echo "<td>" . $row_c['Cust_Hname'] . "</td>";
-                echo "<td>" . $row_c['Cust_Street'] . "</td>";
-                echo "<td>" . $row_c['Cust_Dist'] . "</td>";
-                echo "<td>" . $row_c['State_Ut'] . "</td>";
-                echo "<td>" . $row_c['Cust_Pin'] . "</td>";
-                echo "<td>" . $row_c['Cust_Gender'] . "</td>";
-                echo "<td>" . $row_c['Cust_Date'] . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_Phone']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_Hname']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_Street']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_Dist']) . "</td>";
+                echo "<td>" . e((string) $row_c['State_Ut']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_Pin']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_Gender']) . "</td>";
+                echo "<td>" . e((string) $row_c['Cust_Date']) . "</td>";
 
                 if ($row_c['Cust_Status'] == 1) {
                   echo "<td>Active</td>";
@@ -1223,10 +1243,10 @@ if(isset($_POST['download_purchase_report']))
                 //update status button
             
                 if ($row_c['Cust_Status'] == 1) {
-                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cust_id' value='" . $row_c['Cust_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_cust_status_button'>DEACTIVATE</button></form></td>";
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cust_id' value='" . e((string) $row_c['Cust_ID']) . "'><button type='submit' class='btn btn-primary me-md-2 deactivate_button' name='deactivate_cust_status_button'>DEACTIVATE</button></form></td>";
                 }
                 if ($row_c['Cust_Status'] == 0) {
-                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cust_id' value='" . $row_c['Cust_ID'] . "'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cust_status_button'>ACTIVATE</button></form></td>";
+                  echo "<td style='display: flex;align-items: center;justify-content: center;'><form action='admin.php' method='POST'><input type='hidden' name='cust_id' value='" . e((string) $row_c['Cust_ID']) . "'><button type='submit' class='btn btn-primary me-md-2 activate_button' name='activate_cust_status_button'>ACTIVATE</button></form></td>";
                 }
                 echo "</tr>";
 
@@ -1273,9 +1293,9 @@ if(isset($_POST['download_purchase_report']))
             if ($category_num2) {
               while ($row_cat = $category_num2->fetch_assoc()) {
                 echo "<tr>";
-                echo "<td>" . $row_cat['Cat_ID'] . "</td>";
-                echo "<td>" . $row_cat['Cat_Name'] . "</td>";
-                echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="cat_updateid" value="' . $row_cat['Cat_ID'] . '"><button type="submit" class="btn btn-primary me-md-2" name="update_cat">UPDATE</button></form></td>';
+                echo "<td>" . e((string) $row_cat['Cat_ID']) . "</td>";
+                echo "<td>" . e((string) $row_cat['Cat_Name']) . "</td>";
+                echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="cat_updateid" value="' . e((string) $row_cat['Cat_ID']) . '"><button type="submit" class="btn btn-primary me-md-2" name="update_cat">UPDATE</button></form></td>';
                 echo "</tr>";
               }
             } else {
@@ -1319,10 +1339,10 @@ if(isset($_POST['download_purchase_report']))
               while ($row_typ = $type_num2->fetch_assoc()) {
 
                 echo "<tr>";
-                echo "<td>" . $row_typ['Type_ID'] . "</td>";
-                echo "<td>" . $row_typ['Cat_ID'] . "</td>";
-                echo "<td>" . $row_typ['Type_Name'] . "</td>";
-                echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="type_updateid" value="' . $row_typ['Type_ID'] . '"><button type="submit" class="btn btn-primary me-md-2" name="update_type">UPDATE</button></form></td>';
+                echo "<td>" . e((string) $row_typ['Type_ID']) . "</td>";
+                echo "<td>" . e((string) $row_typ['Cat_ID']) . "</td>";
+                echo "<td>" . e((string) $row_typ['Type_Name']) . "</td>";
+                echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="type_updateid" value="' . e((string) $row_typ['Type_ID']) . '"><button type="submit" class="btn btn-primary me-md-2" name="update_type">UPDATE</button></form></td>';
                 echo "</tr>";
               }
             }
@@ -1361,10 +1381,10 @@ if(isset($_POST['download_purchase_report']))
                 $brand_image = $row_br['Brand_Logo'];
 
                 echo "<tr>";
-                echo "<td>" . $row_br['Brand_ID'] . "</td>";
-                echo "<td>" . $row_br['Brand_Name'] . "</td>";
-                echo "<td><img src='" . $brand_image . "' alt='Brand Logo' height='60px' width='60px'></td>";
-                echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="brand_updateid" value="' . $row_br['Brand_ID'] . '"><button type="submit" class="btn btn-primary me-md-2" name="update_brand">UPDATE</button></form></td>';
+                echo "<td>" . e((string) $row_br['Brand_ID']) . "</td>";
+                echo "<td>" . e((string) $row_br['Brand_Name']) . "</td>";
+                echo "<td><img src='" . e((string) $brand_image) . "' alt='Brand Logo' height='60px' width='60px'></td>";
+                echo '<td style="text-align: center;"><form action="admin.php" method="POST"><input type="hidden" name="brand_updateid" value="' . e((string) $row_br['Brand_ID']) . '"><button type="submit" class="btn btn-primary me-md-2" name="update_brand">UPDATE</button></form></td>';
                 echo "</tr>";
               }
             }
@@ -1411,29 +1431,27 @@ if(isset($_POST['download_purchase_report']))
                 $image1 = $row_app['Appliance_Image1'];
                 $image2 = $row_app['Appliance_Image2'];
                 echo "<tr>";
-                echo "<td>" . $row_app['Appliance_ID'] . "</td>";
-                echo "<td>" . $row_app['Appliance_Name'] . "</td>";
-                //echo "<td>" . $row_app['Type_ID'] . "</td>";
+                echo "<td>" . e((string) $row_app['Appliance_ID']) . "</td>";
+                echo "<td>" . e((string) $row_app['Appliance_Name']) . "</td>";
+                //echo "<td>" . e((string) $row_app['Type_ID']) . "</td>";
                 $app_type=$row_app['Type_ID'];
                 $sql_type="SELECT Type_Name FROM tbl_type WHERE Type_ID='$app_type'";
                 $result_type=$conn->query($sql_type);
                 $row_type=$result_type->fetch_assoc();
-                //remove last letter from string
-                $row_type['Type_Name']=substr($row_type['Type_Name'],0,-1);
-                echo "<td>" . $row_type['Type_Name'] . "</td>";
+                echo "<td>" . e((string) $row_type['Type_Name']) . "</td>";
                 $app_brand=$row_app['Brand_ID'];
                 $sql_brand="SELECT Brand_Name FROM tbl_brand WHERE Brand_ID='$app_brand'";
                 $result_brand=$conn->query($sql_brand);
                 $row_brand=$result_brand->fetch_assoc();
-                echo "<td>" . $row_brand['Brand_Name'] . "</td>";
-                echo "<td><img src='" . $image1 . "' alt='Image 1' height='50px' width='45px'></td>";
-                echo "<td><img src='" . $image2 . "' alt='Image 2' height='50px' width='45px'></td>";
-                echo "<td>" . $row_app['Appliance_Profit_Percentage'] . "</td>";
-                echo "<td>" . $row_app['Appliance_Description'] . "</td>";
+                echo "<td>" . e((string) $row_brand['Brand_Name']) . "</td>";
+                echo "<td><img src='" . e((string) $image1) . "' alt='Image 1' height='50px' width='45px'></td>";
+                echo "<td><img src='" . e((string) $image2) . "' alt='Image 2' height='50px' width='45px'></td>";
+                echo "<td>" . e((string) $row_app['Appliance_Profit_Percentage']) . "</td>";
+                echo "<td>" . e((string) $row_app['Appliance_Description']) . "</td>";
 
 
                 //edit staff button
-                echo '<td><form action="admin.php" method="POST"><input type="hidden" name="app_updateid" value="' . $row_app['Appliance_ID'] . '"><button type="submit" class="btn btn-primary me-md-2" name="update_app">UPDATE</button></form></td>';
+                echo '<td><form action="admin.php" method="POST"><input type="hidden" name="app_updateid" value="' . e((string) $row_app['Appliance_ID']) . '"><button type="submit" class="btn btn-primary me-md-2" name="update_app">UPDATE</button></form></td>';
                 echo "</tr>";
               }
             } else {
@@ -1485,11 +1503,11 @@ if(isset($_POST['download_purchase_report']))
             if ($purchase_num2) {
               while ($row_pur = $purchase_num2->fetch_assoc()) {
                 echo "<tr>";
-                echo "<td>" . $row_pur['Purchase_Master_ID'] . "</td>";
-                echo "<td>" . $row_pur['Vendor_ID'] . "</td>";
-                echo "<td>" . $row_pur['Staff_ID'] . "</td>";
-                echo "<td>" . $row_pur['Total_Amt'] . "</td>";
-                echo "<td>" . $row_pur['Purchase_Date'] . "</td>";
+                echo "<td>" . e((string) $row_pur['Purchase_Master_ID']) . "</td>";
+                echo "<td>" . e((string) $row_pur['Vendor_ID']) . "</td>";
+                echo "<td>" . e((string) $row_pur['Staff_ID']) . "</td>";
+                echo "<td>" . e((string) $row_pur['Total_Amt']) . "</td>";
+                echo "<td>" . e((string) $row_pur['Purchase_Date']) . "</td>";
                 echo "</tr>";
               }
             } else {
@@ -1584,7 +1602,7 @@ if(isset($_POST['download_purchase_report']))
               echo "<td>" . $payment_id . "</td>";
               echo "<td>" . $customer_id . "</td>";
               echo "<td>" . $date . "</td>";
-              echo "<td>" . $customer_address . "</td>";
+              echo "<td>" . e((string) $customer_address) . "</td>";
               echo "<td><form action='' method='POST'><input type='hidden' name='payment_id' value='" . $payment_id . "'><select name='courier_assign_id' id='courier_id' style='width: 100%;' required><option value=''>Select Delivery Partner</option>";
               //select all courier partners from tabl courier with status 1
               //select * from tbl_courier where Cour_Status=1 and Cour_ID not in (select Courier_ID from tbl_courier_assign where CM_ID='$cart_master_id' and Delivery_Status='REASSIGNED')
@@ -1596,7 +1614,7 @@ if(isset($_POST['download_purchase_report']))
               }
               //option all in array
               foreach ($delivery_partners as $delivery_partner) {
-                echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
+                echo "<option value='" . e((string) $delivery_partner['Cour_ID']) . "'>" . e((string) $delivery_partner['Cour_Name']) . "</option>";
               }
               
               
@@ -1626,12 +1644,12 @@ if(isset($_POST['download_purchase_report']))
               //   }
               //   else
               //   {
-              //   echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
+              //   echo "<option value='" . e((string) $delivery_partner['Cour_ID']) . "'>" . e((string) $delivery_partner['Cour_Name']) . "</option>";
               //   }
               //   }
               //   else if(mysqli_num_rows($result_check_reassigned)==0)
               //   {
-              //     echo "<option value='" . $delivery_partner['Cour_ID'] . "'>" . $delivery_partner['Cour_Name'] . "</option>";
+              //     echo "<option value='" . e((string) $delivery_partner['Cour_ID']) . "'>" . e((string) $delivery_partner['Cour_Name']) . "</option>";
               //   }
               // }
               echo "</select></td><input type='hidden' name='master_cart_id' value='" . $cart_master_id . "'><input type='hidden' name='date' value='" . $date . "'><input type='hidden' name='Customer_Id' value='" . $customer_id . "'>";
@@ -1710,7 +1728,7 @@ if(isset($_POST['download_purchase_report']))
               echo "<td>" . $customer_id . "</td>";
               echo "<td>" . $ca_master_id . "</td>";
               echo "<td>" . $payment_id . "</td>";
-              echo "<td>" . $delivery_partner_name . "</td>";
+              echo "<td>" . e((string) $delivery_partner_name) . "</td>";
               echo "<td>" . $date . "</td>";
               echo "<td>" . $delivery_partner_assign_date . "</td>";
               echo "<td>" . $expectedDeliveryDate . "</td>";
@@ -1759,7 +1777,7 @@ if(isset($_POST['download_purchase_report']))
   table2excel.export(document.querySelectorAll("#purchase-table"));
   });
     </script>
-  <script type="text/js" src="js/bootstrap.min.js"></script>
+  <script type="text/js" src="assets/js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
     crossorigin="anonymous"></script>

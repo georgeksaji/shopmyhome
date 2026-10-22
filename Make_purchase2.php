@@ -1,10 +1,12 @@
 <?php
 include("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
-$selectedAppliances = $_SESSION['Selected_Appliances'];
-$count = count($selectedAppliances);
+$selectedAppliances = $_SESSION['Selected_Appliances'] ?? [];
+$count = is_array($selectedAppliances) ? count($selectedAppliances) : 0;
 //echo $count;
 foreach ($selectedAppliances as $selectedAppliance) {
   //echo $selectedAppliance;
@@ -22,40 +24,90 @@ for ($i = 0; $i < $count; $i++) {
 
 
 if (isset($_POST['submit'])) {
-  $vendor = $_POST['vendor'];
-  $quantity = $_POST['quantity'];
-  $price = $_POST['price'];
-  // Cost_Per_Piece 	Selling_Price 	Total_Cost_Price 	
-  $selling_price = array();
-  $total_price_of_item = array();
-  for ($i = 0; $i < $count; $i++) {
-    $total_price_of_item[$i] = $quantity[$i] * $price[$i];
-    $selling_price[$i] = $price[$i] + ($appliance_profit_percentage[$i] * ($price[$i] / 100));
+  if ($count === 0) {
+    header('Location: Make_purchase1.php');
+    exit;
   }
 
+  $vendor = post_id('vendor');
+  $quantities = $_POST['quantity'] ?? [];
+  $prices = $_POST['price'] ?? [];
 
+  $rows = [];
+  $inputError = '';
 
+  if ($vendor === null) {
+    $inputError = 'Please select a vendor.';
+  } else {
+    for ($i = 0; $i < $count; $i++) {
+      $applianceId = $selectedAppliances[$i] ?? null;
+      $quantity = filter_var($quantities[$i] ?? null, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 1, 'max_range' => 9999],
+      ]);
+      $price = filter_var($prices[$i] ?? null, FILTER_VALIDATE_FLOAT);
 
-  $total_price = array_sum($total_price_of_item);
-  // 	Purchase_Master_ID 	Vendor_ID 	Staff_ID 	Total_Amt 	Purchase_Date
-  $sql = "INSERT INTO tbl_purchase_master (Purchase_Master_ID, Vendor_ID, Staff_ID, Total_Amt) VALUES (generate_purchase_master_id(), '$vendor', '$userId', '$total_price')";
-  $result = mysqli_query($conn, $sql);
-  //get purchase master id
-  $sql = "SELECT Purchase_Master_ID FROM tbl_purchase_master WHERE Staff_ID='$userId' ORDER BY Purchase_Date DESC LIMIT 1";
-  $result = mysqli_query($conn, $sql);
-  $row = mysqli_fetch_assoc($result);
-  $purchase_master_id = $row['Purchase_Master_ID'];
-  echo $purchase_master_id;
-  // 	Purchase_Child_ID 	Purchase_Master_ID 	Appliance_ID 	Quantity 	Cost_Per_Piece 	Total_Cost_Price
-  for ($i = 0; $i < $count; $i++) {
-    $sql = "INSERT INTO tbl_purchase_child (Purchase_Child_ID, Purchase_Master_ID, Appliance_ID, Quantity, Balance_Stock, Cost_Per_Piece, Selling_Price, Total_Cost_Price) VALUES (generate_purchase_child_id(), '$purchase_master_id', '$selectedAppliances[$i]', '$quantity[$i]', '$quantity[$i]', '$price[$i]', '$selling_price[$i]', '$total_price_of_item[$i]')";
-    $result = mysqli_query($conn, $sql);
+      if (!is_valid_id($applianceId) || $quantity === false || $price === false || $price <= 0) {
+        $inputError = 'Please enter valid quantities and prices for every appliance.';
+        break;
+      }
 
+      $profit = (float) ($appliance_profit_percentage[$i] ?? 0);
+      $sellingPrice = round($price + ($profit * ($price / 100)), 2);
+      $totalCost = round($quantity * $price, 2);
+
+      $rows[] = [
+        'appliance_id' => $applianceId,
+        'quantity' => $quantity,
+        'price' => $price,
+        'selling_price' => $sellingPrice,
+        'total_cost' => $totalCost,
+      ];
+    }
   }
-  if ($result) {
-    unset($_SESSION['Selected_Appliances']);
-    echo "<script>alert('Purchase made successfully!');</script>";
-    header("location: admin.php");
+
+  if ($inputError !== '') {
+    echo '<script>alert(' . json_encode($inputError) . ');</script>';
+  } elseif (!$rows) {
+    echo "<script>alert('Please select at least one appliance.');</script>";
+  } else {
+    $totalPrice = array_sum(array_column($rows, 'total_cost'));
+
+    $conn->begin_transaction();
+    try {
+      $purchaseMasterId = db_val("SELECT generate_purchase_master_id()");
+
+      db_exec(
+        "INSERT INTO tbl_purchase_master (Purchase_Master_ID, Vendor_ID, Staff_ID, Total_Amt)
+         VALUES (?, ?, ?, ?)",
+        [$purchaseMasterId, $vendor, $userId, $totalPrice]
+      );
+
+      foreach ($rows as $row) {
+        db_exec(
+          "INSERT INTO tbl_purchase_child
+             (Purchase_Child_ID, Purchase_Master_ID, Appliance_ID, Quantity, Balance_Stock,
+              Cost_Per_Piece, Selling_Price, Total_Cost_Price)
+           VALUES (generate_purchase_child_id(), ?, ?, ?, ?, ?, ?, ?)",
+          [
+            $purchaseMasterId,
+            $row['appliance_id'],
+            $row['quantity'],
+            $row['quantity'],
+            $row['price'],
+            $row['selling_price'],
+            $row['total_cost'],
+          ]
+        );
+      }
+
+      $conn->commit();
+      unset($_SESSION['Selected_Appliances']);
+      header('Location: admin.php');
+      exit;
+    } catch (Throwable $e) {
+      $conn->rollback();
+      throw $e;
+    }
   }
 }
 ?>
@@ -64,11 +116,11 @@ if (isset($_POST['submit'])) {
 
 <head>
   
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Purchase</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -98,7 +150,7 @@ if (isset($_POST['submit'])) {
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -259,7 +311,7 @@ if (isset($_POST['submit'])) {
           $vendor_list = $conn->query($query);
           echo '<option value="" disabled selected hidden>Select Vendor</option>';
           while ($row = mysqli_fetch_assoc($vendor_list)) {
-            echo "<option value='" . $row['Vendor_ID'] . "'>" . $row['Vendor_Name'] . "</option>";
+            echo "<option value='" . e((string) $row['Vendor_ID']) . "'>" . e((string) $row['Vendor_Name']) . "</option>";
           }
           echo "</select>";
           ?>
@@ -290,16 +342,18 @@ if (isset($_POST['submit'])) {
                 $query2 = "SELECT Type_Name FROM tbl_type WHERE Type_ID='$appliance_type_id'";
                 $result2 = mysqli_query($conn, $query2);
                 $row2 = mysqli_fetch_assoc($result2);
-                $appliance_type_name = $row2['Type_Name'];
-                //remove last word from type name string
-                $appliance_type_name = substr($appliance_type_name, 0, strrpos($appliance_type_name, " "));
+                $appliance_type_name = (string) ($row2['Type_Name'] ?? '');
+                $lastSpace = strrpos($appliance_type_name, ' ');
+                if ($lastSpace !== false) {
+                    $appliance_type_name = substr($appliance_type_name, 0, $lastSpace);
+                }
                 $query3 = "SELECT Brand_Name FROM tbl_brand WHERE Brand_ID='$appliance_brand_id'";
                 $result3 = mysqli_query($conn, $query3);
                 $row3 = mysqli_fetch_assoc($result3);
                 $appliance_brand_name = $row3['Brand_Name'];
-                echo "<td>" . $appliance_brand_name . " " . $row['Appliance_Name'] . " " . $appliance_type_name . "</td>";
-                echo "<td><img src='" . $image1 . "' alt='Image 1' height='50px' width='45px'></td>";
-                echo "<td><img src='" . $image2 . "' alt='Image 1' height='50px' width='45px'></td>";
+                echo "<td>" . e((string) $appliance_brand_name) . " " . e((string) $row['Appliance_Name']) . " " . e((string) $appliance_type_name) . "</td>";
+                echo "<td><img src='" . e((string) $image1) . "' alt='Image 1' height='50px' width='45px'></td>";
+                echo "<td><img src='" . e((string) $image2) . "' alt='Image 1' height='50px' width='45px'></td>";
                 //enter quantity
                 echo "<td><input type='number' name='quantity[]' min='1' max='9999' required></td>";
                 //enter price
@@ -340,7 +394,7 @@ if(isset($_POST['submit']))
   $sql = "INSERT INTO tbl_purchase_master (Purchase_Master_ID, Vendor_ID, Staff_ID, Total_Amt) VALUES (generate_purchase_master_id(), '$vendor', '$userId', '$total_price')"; 
   $result = mysqli_query($conn, $sql);
   //get purchase master id
-  $sql = "SELECT Purchase_Master_ID FROM tbl_purchase_master WHERE Staff_ID='$userId' ORDER BY Purchase_Date DESC LIMIT 1";
+  $sql = "SELECT Purchase_Master_ID FROM tbl_purchase_master WHERE Staff_ID='$userId' ORDER BY Purchase_Date DESC, Purchase_Master_ID DESC LIMIT 1";
   $result = mysqli_query($conn, $sql);
   $row = mysqli_fetch_assoc($result);
   $purchase_master_id = $row['Purchase_Master_ID'];

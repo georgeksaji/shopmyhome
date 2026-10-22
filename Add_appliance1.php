@@ -1,13 +1,18 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 if(isset($_POST['submit']))
 {
-$cat_id = $_POST['category'];
-$_SESSION['Cat_ID'] = $cat_id;
-header("location: Add_appliance2.php");
+$cat_id = post_id('category');
+if ($cat_id !== null) {
+  $_SESSION['Cat_ID'] = $cat_id;
+  header("location: Add_appliance2.php");
+  exit;
+}
 }
 ?>
 <html>
@@ -15,7 +20,7 @@ header("location: Add_appliance2.php");
   <title>Add Appliance</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -44,7 +49,7 @@ header("location: Add_appliance2.php");
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -116,7 +121,7 @@ header("location: Add_appliance2.php");
 
 
   </style>
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   </head>
 <!-- <body>
 <script>
@@ -141,7 +146,7 @@ alert(jsMessage2);
          if ($category_list->num_rows > 0) {
              while ($row_cat = $category_list->fetch_assoc()) {
         
-            echo '<option value="'.$row_cat['Cat_ID'].'">'.$row_cat['Cat_Name'].'</option>';     }}
+            echo '<option value="' . e((string) $row_cat['Cat_ID']) . '">' . e((string) $row_cat['Cat_Name']) . '</option>';     }}
             echo '</select>';
         ?>
         </div>

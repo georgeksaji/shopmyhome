@@ -1,38 +1,42 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
+if (empty($_SESSION['Update_ID'])) {
+  header('Location: admin.php');
+  exit;
+}
 $updateid = $_SESSION['Update_ID'];
 // echo $updateid;
 
 if(isset($_POST['submit']))
 {
-  $name = $_POST['name'];
-  $sql = "UPDATE tbl_type SET Type_Name = '$name' WHERE Type_ID = '$updateid'";
-  $result = mysqli_query($conn, $sql);
-  if($result)
-  {
+  $name = trim((string)($_POST['name'] ?? ''));
+  if ($name === '') {
+    echo "<script>alert('Please enter a type name.');</script>";
+  } else {
+    db_exec("UPDATE tbl_type SET Type_Name = ? WHERE Type_ID = ?", [$name, $updateid]);
     echo "<script>alert('Type name updated successfully!');</script>";
-    if($usertype == "AD" && $userId == "ST00001")
-    {
+    if($usertype == 'AD' && $userId == 'ST00001') {
       header("location: admin.php");
-    }
-    else if($usertype == "ST")
-    {
+    } else if($usertype == 'ST') {
       header("location: staff.php");
     }
+    exit;
   }
 }
 
 ?>
 <html>
 <head>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Update Category Name</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -60,7 +64,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -207,7 +211,7 @@ alert(jsMessage2);
 
         // label for name
         echo "<label for='name'>Type Name</label>";
-        echo "<input type='text' name='name' value='$name' placeholder='Update Type Name' required>";
+        echo "<input type='text' name='name' value='" . e((string) $name) . "' placeholder='Update Type Name' required>";
         ?>
 
         </div>

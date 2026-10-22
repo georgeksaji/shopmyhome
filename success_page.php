@@ -1,13 +1,12 @@
 <?php
-// Check if a return URL is provided as a query parameter
-if (isset($_GET['return_url'])) {
-    $return_url = urldecode($_GET['return_url']);
-    // Redirect the user back to the original page
-    header("Location: " . $return_url);
-    exit();
-} else {
-    // If no return URL is provided, redirect to a default page
-    header("Location: index.php");
+// Only allow redirects to a local PHP page. This prevents open redirects and
+// header-injection attempts through the return_url parameter.
+$return_url = (string) ($_GET['return_url'] ?? '');
+
+if (preg_match('~^/?[A-Za-z0-9_.-]+\.php$~', $return_url) === 1 && strpos($return_url, '..') === false) {
+    header('Location: ' . $return_url);
     exit();
 }
-?>
+
+header('Location: index.php');
+exit();

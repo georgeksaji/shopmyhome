@@ -1,69 +1,54 @@
 <?php
 include("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
-$updateid=$_SESSION['Update_ID'];
+if (empty($_SESSION['Update_ID'])) {
+  header('Location: admin.php');
+  exit;
+}
+$updateid = $_SESSION['Update_ID'];
 
 if(isset($_POST['submit']))
 {
-  $name = $_POST['name'];
-  $profit = $_POST['decimal_value'];
-  $description = $_POST['description'];
-  if(!empty($_FILES['image1']['name']))
-  {
-    $image1 = "product_images/" . $_FILES['image1']['name'];
-  }
-  else
-  {
-    $image1 = "";
-  }
-  if(!empty($_FILES['image2']['name']))
-  {
-    $image2 = "product_images/" . $_FILES['image2']['name'];
-  }
-  else
-  {
-    $image2 = "";
-  }
-  // Define the destination directory
-  $upload_directory = "C:/xampp/htdocs/ohas_codes/product_images/";
+  $name = trim((string)($_POST['name'] ?? ''));
+  $profit = filter_var($_POST['decimal_value'] ?? null, FILTER_VALIDATE_FLOAT);
+  $description = trim((string)($_POST['description'] ?? ''));
 
-  // Move uploaded images to desired location
-  if(!empty($_FILES['image1']['name']))
-  {
-    move_uploaded_file($_FILES['image1']['tmp_name'], $upload_directory . $_FILES['image1']['name']);
-  }
-  if(!empty($_FILES['image2']['name']))
-  {
-  move_uploaded_file($_FILES['image2']['tmp_name'], $upload_directory . $_FILES['image2']['name']);
-  }
-  
-  $sql = "UPDATE tbl_appliance SET Appliance_Name='$name', Appliance_Description='$description', Appliance_Profit_Percentage='$profit' WHERE Appliance_ID='$updateid'";
-  $result = mysqli_query($conn, $sql);
-  if(!empty($_FILES['image1']['name']))
-  {
-    $sql = "UPDATE tbl_appliance SET Appliance_Image1='$image1' WHERE Appliance_ID='$updateid'";
-    $result = mysqli_query($conn, $sql);
-  }
-  if(!empty($_FILES['image2']['name']))
-  {
-    $sql = "UPDATE tbl_appliance SET Appliance_Image2='$image2' WHERE Appliance_ID='$updateid'";
-    $result = mysqli_query($conn, $sql);
-  }
+  if ($name === '' || $profit === false || $profit < 0 || $profit > 100) {
+    echo "<script>alert('Please enter a name and a profit percentage between 0 and 100.');</script>";
+  } else {
+    try {
+      $image1 = save_uploaded_image('image1', 'assets/uploads/product_images');
+      $image2 = save_uploaded_image('image2', 'assets/uploads/product_images');
 
+      $fields = "Appliance_Name = ?, Appliance_Description = ?, Appliance_Profit_Percentage = ?";
+      $params = [$name, $description, $profit];
 
-  if($result)
-  {
-    unset($_SESSION['Update_ID']);
-    echo "<script>alert('Appliance updated successfully!');</script>";
-    if($usertype == "AD" && $userId == "ST00001")
-    {
-      header("location: admin.php");
-    }
-    else if($usertype == "ST")
-    {
-      header("location: staff.php");
+      if ($image1 !== null) {
+        $fields .= ", Appliance_Image1 = ?";
+        $params[] = $image1;
+      }
+      if ($image2 !== null) {
+        $fields .= ", Appliance_Image2 = ?";
+        $params[] = $image2;
+      }
+
+      $params[] = $updateid;
+      db_exec("UPDATE tbl_appliance SET $fields WHERE Appliance_ID = ?", $params);
+
+      unset($_SESSION['Update_ID']);
+      echo "<script>alert('Appliance updated successfully!');</script>";
+      if($usertype == 'AD' && $userId == 'ST00001') {
+        header("location: admin.php");
+      } else if($usertype == 'ST') {
+        header("location: staff.php");
+      }
+      exit;
+    } catch (RuntimeException $e) {
+      echo '<script>alert(' . json_encode($e->getMessage()) . ');</script>';
     }
   }
 }
@@ -74,11 +59,11 @@ if(isset($_POST['submit']))
 
 <html>
 <head>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Update product</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -107,7 +92,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -270,24 +255,24 @@ alert(jsMessage2);
           ?>
               
           <label for="product_category">Product Category</label>
-          <input type='text' id='product_category' name='product_category' value='<?php echo $cat_id;?>' disabled>
+          <input type='text' id='product_category' name='product_category' value='<?php echo e((string) $cat_id); ?>' disabled>
 
             <label for="product_type">Product Type</label>
-            <input type='text' id='product_type' name='product_type' value='<?php echo $type_id;?>' disabled>
+            <input type='text' id='product_type' name='product_type' value='<?php echo e((string) $type_id); ?>' disabled>
 
 
           <label for="brand">Brand</label>
-          <input type='text' id='product_brand' name='product_brand' value='<?php echo $brand_id;?>' disabled>
+          <input type='text' id='product_brand' name='product_brand' value='<?php echo e((string) $brand_id); ?>' disabled>
 
           
           <label for="Name">Appliance name</label>
-          <input type="text" id="Name" name="name" placeholder="Name" maxlength="35" value='<?php echo $appliance_name;?>' required>
+          <input type="text" id="Name" name="name" placeholder="Name" maxlength="35" value='<?php echo e((string) $appliance_name); ?>' required>
 
          
             <label for="Image">Current Images</label>
             <?php if (!empty($image1) && ($image2)): ?>
-            <img src="<?php echo $image1; ?>" alt="Image 1" height="50px" width="45px" style="margin-right:5%">
-            <img src="<?php echo $image2; ?>" alt="Image 1" height="50px" width="45px">
+            <img src="<?php echo e((string) $image1); ?>" alt="Image 1" height="50px" width="45px" style="margin-right:5%">
+            <img src="<?php echo e((string) $image2); ?>" alt="Image 1" height="50px" width="45px">
             <?php endif; ?>
             <br>
             <label for="Image">Update Image 1</label>
@@ -304,10 +289,10 @@ alert(jsMessage2);
 
 
             <label for="profit">Profit Percentage</label>
-            <input type="number" step="0.01" min="0.00" max="999.99" name="decimal_value" placeholder="Enter Profit percentage as decimal(3,2)" value='<?php echo $appliance_profit_percentage;?>' required>
+            <input type="number" step="0.01" min="0.00" max="999.99" name="decimal_value" placeholder="Enter Profit percentage as decimal(3,2)" value='<?php echo e((string) $appliance_profit_percentage); ?>' required>
 
             <label for="description">Description</label>
-            <input type="text" name="description" maxlength="50" placeholder="Description of Appliance" value='<?php echo $appliance_description;?>' required>
+            <input type="text" name="description" maxlength="50" placeholder="Description of Appliance" value='<?php echo e((string) $appliance_description); ?>' required>
             <button type="submit" name="submit">Submit</button>
             </div>
             

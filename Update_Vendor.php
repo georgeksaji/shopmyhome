@@ -1,33 +1,42 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
+if (empty($_SESSION['Update_ID'])) {
+  header('Location: admin.php');
+  exit;
+}
 $updateid = $_SESSION['Update_ID'];
 //echo $updateid;
 
 if(isset($_POST['submit']))
 {
-  $name = $_POST['name'];
-  $phoneNumber = $_POST['phoneNumber'];
-  $buildingName = $_POST['buildingName'];
-  $pincode = $_POST['pincode'];
-  $state = $_POST['state'];
-  $email = $_POST['email'];
-  $street = $_POST['street'];
-  $district = $_POST['district'];
-  $passwordright = $_POST['passwordright'];
-  $passwordleft = $_POST['passwordleft'];
+  $name = trim((string)($_POST['name'] ?? ''));
+  $phoneNumber = trim((string)($_POST['phoneNumber'] ?? ''));
+  $buildingName = trim((string)($_POST['buildingName'] ?? ''));
+  $pincode = trim((string)($_POST['pincode'] ?? ''));
+  $state = trim((string)($_POST['state'] ?? ''));
+  $street = trim((string)($_POST['street'] ?? ''));
+  $district = trim((string)($_POST['district'] ?? ''));
 
-    
-    //Vendor_Name 	Vendor_Phno 	Vendor_Hname 	Vendor_Street 	Vendor_Dist 	State_Ut 	Vendor_Pin 
-    //update table  vednor
-    $update1 = "UPDATE tbl_vendor SET Vendor_Name='$name',Vendor_Phno='$phoneNumber',Vendor_Hname='$buildingName',Vendor_Street='$street',Vendor_Dist='$district',State_Ut='$state',Vendor_Pin='$pincode' WHERE Vendor_ID='$updateid'";
-    mysqli_query($conn, $update1);
-    //update table login
-   echo "<script>alert('Vendor details updated successfully!');</script>";
+  if ($name === '') {
+    echo "<script>alert('Please enter a vendor name.');</script>";
+  } else {
+    db_exec(
+      "UPDATE tbl_vendor
+       SET Vendor_Name = ?, Vendor_Phno = ?, Vendor_Hname = ?, Vendor_Street = ?,
+           Vendor_Dist = ?, State_Ut = ?, Vendor_Pin = ?
+       WHERE Vendor_ID = ?",
+      [$name, $phoneNumber, $buildingName, $street, $district, $state, $pincode, $updateid]
+    );
+
+    echo "<script>alert('Vendor details updated successfully!');</script>";
     header('Location: admin.php');
-
+    exit;
+  }
 }
 
 //   if($passwordleft == $passwordright)
@@ -64,11 +73,11 @@ if(isset($_POST['submit']))
 ?>
 <html>
 <head>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Update Courier</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -96,7 +105,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -253,30 +262,30 @@ alert(jsMessage2);
     ?>
 
 
-              <input type="text" id="firstName" name="name" value="<?php echo $name; ?>" placeholder="Update Name" maxlength="15" required>
+              <input type="text" id="firstName" name="name" value="<?php echo e((string) $name); ?>" placeholder="Update Name" maxlength="15" required>
 
               <label for="phoneNumber">Phone number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" value="<?php echo $phoneNumber; ?>" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
+            <input type="tel" id="phoneNumber" name="phoneNumber" value="<?php echo e((string) $phoneNumber); ?>" placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required title="Enter a valid phone number">
  
               <label for="pincode">Pincode</label>
-              <input type="text" id="pincode" name="pincode" value="<?php echo $pincode; ?>" placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
+              <input type="text" id="pincode" name="pincode" value="<?php echo e((string) $pincode); ?>" placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
 
               
             <label for="district">District</label>
-            <input type="text" id="district" name="district" value="<?php echo $district; ?>" placeholder="District" required>
+            <input type="text" id="district" name="district" value="<?php echo e((string) $district); ?>" placeholder="District" required>
 
           </div>
 
           <div class="registration-form-right">
 
             <label for="houseName">Building name</label>
-            <input type="text" id="buildingName" name="buildingName" value="<?php echo $buildingName; ?>" placeholder="Building, apartment, suit, etc." required>
+            <input type="text" id="buildingName" name="buildingName" value="<?php echo e((string) $buildingName); ?>" placeholder="Building, apartment, suit, etc." required>
 
             <label for="address">Street</label>
-             <input type="text" id="address" name="street" value="<?php echo $street; ?>" placeholder="Street" required>
+             <input type="text" id="address" name="street" value="<?php echo e((string) $street); ?>" placeholder="Street" required>
 
             <label for="state">State</label>
-            <input type="text" id="state" name="state" value="<?php echo $state; ?>" placeholder="State" required>
+            <input type="text" id="state" name="state" value="<?php echo e((string) $state); ?>" placeholder="State" required>
 
               <button type="submit" name="submit">Submit</button>
 

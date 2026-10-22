@@ -1,6 +1,8 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $_SESSION['search'] = null;
 $_SESSION['brand_id'] = null;
 $_SESSION['category_id'] = null;
@@ -20,7 +22,7 @@ else {
 //search appliance
 if(isset($_POST['submit']))
 {
-  $search = $_POST['search'];
+  $search = trim((string) ($_POST['search'] ?? ''));
   $_SESSION['search'] = $search;
   header("Location: list_products.php"); 
 }
@@ -48,14 +50,14 @@ if(isset($_POST['logout']))
 //category button
 if(isset($_POST['category']))
 {
-  $category_id = $_POST['category'];
+  $category_id = is_valid_id($_POST['category'] ?? null) ? $_POST['category'] : null;
   $_SESSION['category_id'] = $category_id;
   header("Location: list_types.php");
+  exit;
 }
 //cart button
 if(isset($_POST['cart']))
-{
-  $quantity = $_POST['quantity'];
+{
   header("Location: cart.php");
   /*cart_master Table Columns:
 
@@ -79,7 +81,7 @@ item_id*/
 <html lang="en">
   <head>
     <title>shopmyhome</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -122,7 +124,7 @@ alert(jsMessage2);
 }
 
 .navigation-logo {
-  background-image: url(Picture3.png);
+  background-image: url(assets/images/banners/Picture3.png);
     background-size: contain;
     margin-inline-start: 2vh;
     height: 100%;

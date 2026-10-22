@@ -1,41 +1,38 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
 if(isset($_POST['submit']))
 {
-  $name = $_POST['name'];
-  $cat_id = $_POST['category'];
-  if($cat_id != "")
-  {
-      $insert1= "INSERT INTO tbl_type(Type_ID,Cat_ID,Type_Name)VALUES(generate_type_id(),'$cat_id','$name')";
-      mysqli_query($conn,$insert1);
-      echo "<script>alert('Product Type added successfully!');</script>";
-      if($usertype == "AD" && $userId == "ST00001")
-      {
-        header("location: admin.php");
-      }
-      else if($usertype == "ST")
-      {
-        header("location: staff.php");
-      }
-  }
-  else
-  {
-    echo "<script>alert('Please select a category!');</script>";
+  $name = trim((string)($_POST['name'] ?? ''));
+  $cat_id = post_id('category');
+
+  if($cat_id === null || $name === '') {
+    echo "<script>alert('Please select a category and enter a type name.');</script>";
+  } else {
+    db_exec("INSERT INTO tbl_type (Type_ID, Cat_ID, Type_Name) VALUES (generate_type_id(), ?, ?)", [$cat_id, $name]);
+    echo "<script>alert('Product Type added successfully!');</script>";
+    if($usertype == 'AD' && $userId == 'ST00001') {
+      header("location: admin.php");
+    } else if($usertype == 'ST') {
+      header("location: staff.php");
+    }
+    exit;
   }
 }
 ?>
 <html>
 <head>
   
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Add Type</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -64,7 +61,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -216,7 +213,7 @@ alert(jsMessage2);
          if ($category_list->num_rows > 0) {
              while ($row_cat = $category_list->fetch_assoc()) {
         
-            echo '<option value="'.$row_cat['Cat_ID'].'">'.$row_cat['Cat_Name'].'</option>';     }}
+            echo '<option value="' . e((string) $row_cat['Cat_ID']) . '">' . e((string) $row_cat['Cat_Name']) . '</option>';     }}
 
 
             echo '</select>';

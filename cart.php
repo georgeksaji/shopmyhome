@@ -1,6 +1,8 @@
 <?php
 include("connection.php");
 session_start();
+csrf_verify();
+require_role(['CU']);
 $_SESSION['search'] = null;
 $_SESSION['brand_id'] = null;
 $_SESSION['category_id'] = null;
@@ -26,56 +28,47 @@ if (isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
 
 
 $cm_id = null;
-$sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
-$result = mysqli_query($conn, $sql);
-if (mysqli_num_rows($result) > 0) {
-  $row = mysqli_fetch_assoc($result);
-  $cm_id = $row['CM_ID'];
+
+if ($userId !== null) {
+  $cart = db_one("SELECT * FROM tbl_cart_master WHERE Customer_ID = ? AND Cart_Status = 'ASSIGNED'", [$userId]);
+  if ($cart !== null) {
+    $cm_id = $cart['CM_ID'];
+  }
 }
 
-if ($cm_id != null) {
-  $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
-  $result = mysqli_query($conn, $sql);
-  $count = mysqli_num_rows($result);
-  if ($count > 0) {
-    while ($row = mysqli_fetch_assoc($result)) {
-      $item_id = $row['Appliance_ID'];
-      $quantity = $row['Quantity'];
-      $previous_quantity = $quantity;
-      $price = $row['Price'];
-      $sql = "SELECT * FROM tbl_appliance WHERE Appliance_ID = '$item_id'";
-      $result1 = mysqli_query($conn, $sql);
-      $row1 = mysqli_fetch_assoc($result1);
+if ($cm_id !== null) {
+  $cart_items = db_all("SELECT * FROM tbl_cart_child WHERE CM_ID = ?", [$cm_id]);
+  foreach ($cart_items as $row) {
+    $item_id = $row['Appliance_ID'];
+    $quantity = (int) $row['Quantity'];
+    $price = (float) $row['Price'];
 
-      //$sql_quantity
-      $select_tbl_pc = "SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-      $result_pc = mysqli_query($conn, $select_tbl_pc);
-      if (mysqli_num_rows($result_pc) > 0) {
-        $row_quantity = mysqli_fetch_assoc($result_pc);
-        $available_quantity = $row_quantity['Balance_Stock'];
-        if ($quantity > $available_quantity) {
-          $deficit = $quantity - $available_quantity;
-          $quantity = $available_quantity;
-          $sql = "UPDATE tbl_cart_child SET Quantity = '$quantity' WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-          mysqli_query($conn, $sql);
-          //select Total_Amount from tbl_cart_master
-          $sql = "SELECT Total_Amount FROM tbl_cart_master WHERE CM_ID = '$cm_id'";
-          $result = mysqli_query($conn, $sql);
-          $row = mysqli_fetch_assoc($result);
-          $total_amount = $row['Total_Amount'];
-          //decrease price in tbl_cart_master
-          $selling_price = $row_quantity['Selling_Price'];
-          $decrease_price = $selling_price * $deficit;
-          $total_amount = $total_amount - $decrease_price;
-          $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
-          mysqli_query($conn, $sql);
-          //update price in tbl_cart_child
-          $price = $selling_price * $quantity;
-          $sql = "UPDATE tbl_cart_child SET Price = '$price' WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-          mysqli_query($conn, $sql);
+    $pc = db_one(
+      "SELECT * FROM tbl_purchase_child
+       WHERE Appliance_ID = ? AND Balance_Stock > 0
+       ORDER BY Purchase_Child_ID ASC LIMIT 1",
+      [$item_id]
+    );
 
-          $quantity_update_status = 1;
-        }
+    if ($pc !== null) {
+      $available_quantity = (int) $pc['Balance_Stock'];
+      if ($quantity > $available_quantity) {
+        $quantity = $available_quantity;
+        $selling_price = (float) $pc['Selling_Price'];
+        $price = $selling_price * $quantity;
+
+        db_exec(
+          "UPDATE tbl_cart_child SET Quantity = ?, Price = ? WHERE Appliance_ID = ? AND CM_ID = ?",
+          [$quantity, $price, $item_id, $cm_id]
+        );
+        db_exec(
+          "UPDATE tbl_cart_master
+           SET Total_Amount = (SELECT COALESCE(SUM(Price), 0) FROM tbl_cart_child WHERE CM_ID = ?)
+           WHERE CM_ID = ?",
+          [$cm_id, $cm_id]
+        );
+
+        $quantity_update_status = 1;
       }
     }
   }
@@ -83,183 +76,118 @@ if ($cm_id != null) {
 
 if (isset($_POST['checkout'])) {
   try {
-    if (!isset($_POST['card_id'])) {
+    $card_id = post_id('card_id');
+    $posted_cm = post_id('Master_ID');
+
+    if ($card_id === null) {
       throw new Exception('Please select a card to checkout');
     }
-
-    if (!isset($_POST['Master_ID'])) {
+    if ($posted_cm === null || $cm_id === null || $posted_cm !== $cm_id) {
       throw new Exception('Cart is Empty');
     }
 
-    $card_id = $_POST['card_id'];
+    $card = db_one(
+      "SELECT * FROM tbl_card WHERE Card_ID = ? AND Customer_ID = ? AND Card_Status = 1",
+      [$card_id, $userId]
+    );
+    if ($card === null) {
+      throw new Exception('Please select a valid card to checkout');
+    }
 
-    $cm_id = $_POST['Master_ID'];
-
-    // Check if any row with cm_id exists in tbl_cart_child
-    $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
-    $result = mysqli_query($conn, $sql);
-
-    if (mysqli_num_rows($result) == 0) {
+    $cart_items = db_all("SELECT * FROM tbl_cart_child WHERE CM_ID = ?", [$cm_id]);
+    if (!$cart_items) {
       throw new Exception('Cart is Empty');
     }
 
-    $canProceedToPayment = true;
-
-    if ($cm_id != null) {
-      while ($row = mysqli_fetch_assoc($result)) {
-        $item_id = $row['Appliance_ID'];
-        $quantity = $row['Quantity'];
-        $select_quantity = "SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-        $result_quantity = mysqli_query($conn, $select_quantity);
-
-        if (mysqli_num_rows($result_quantity) == 0) {
-          // An item in the cart is out of stock
-          $canProceedToPayment = false;
-          break; // Exit the loop early
-        }
+    foreach ($cart_items as $row) {
+      $pc = db_one(
+        "SELECT * FROM tbl_purchase_child
+         WHERE Appliance_ID = ? AND Balance_Stock > 0
+         ORDER BY Purchase_Child_ID ASC LIMIT 1",
+        [$row['Appliance_ID']]
+      );
+      if ($pc === null) {
+        throw new Exception('An item in your cart is out of stock. Please remove it to proceed to checkout');
       }
     }
 
-    if ($canProceedToPayment) {
-      $_SESSION['cm_id'] = $cm_id;
-      $_SESSION['card_id'] = $card_id;
-      header("Location: payment.php");
-      echo "Go to payment page";
-      // You can uncomment the header line if you want to redirect to the payment page
-      // header("Location: Payment.php");
-    } else {
-      throw new Exception('An item in your cart is out of stock. Please remove it to proceed to checkout');
-    }
-
+    $_SESSION['cm_id'] = $cm_id;
+    $_SESSION['card_id'] = $card_id;
+    header("Location: payment.php");
+    exit;
   } catch (Exception $e) {
-    // Handle the exception by displaying an alert
-    echo "<script>alert('" . $e->getMessage() . "')</script>";
+    echo "<script>alert(" . json_encode($e->getMessage()) . ")</script>";
   }
 }
-
-
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////
-
 
 //logout button
 if (isset($_POST['logout'])) {
   session_destroy();
   header("Location: index.php");
+  exit;
 }
-//cart button
-if (isset($_POST['cart'])) {
-  $quantity = $_POST['quantity'];
-  header("Location: cart.php");
-}
+
 if (isset($_POST['show_profile_page'])) {
   header("Location: profile.php");
+  exit;
 }
-
-
 
 if (isset($_POST['update_quantity'])) {
-  $quantity = $_POST['quantity'];
-  $item_id = $_POST['update_quantity'];
-  $previous_quantity = $_POST['previous_quantity'];
-  $cm_id = $_POST['Cart_Master_ID'];
-  //drop item from cart child
+  $item_id = post_id('update_quantity');
+  $posted_cm = post_id('Cart_Master_ID');
+  $quantity = (int) ($_POST['quantity'] ?? 0);
 
+  if ($item_id !== null && $posted_cm !== null && $posted_cm === $cm_id && $quantity > 0) {
+    $pc = db_one(
+      "SELECT * FROM tbl_purchase_child
+       WHERE Appliance_ID = ? AND Balance_Stock > 0
+       ORDER BY Purchase_Child_ID ASC LIMIT 1",
+      [$item_id]
+    );
 
+    if ($pc !== null) {
+      $available_quantity = (int) $pc['Balance_Stock'];
+      if ($quantity > $available_quantity) {
+        $quantity = $available_quantity;
+      }
 
-  $sql = "SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
-  $result = mysqli_query($conn, $sql);
-  $row = mysqli_fetch_assoc($result);
-  $selling_price = $row['Selling_Price'];
-  $decrease_price = $selling_price * $previous_quantity;
-  //decrease price in tbl_cart_master
-  $sql = "SELECT * FROM tbl_cart_master WHERE CM_ID = '$cm_id'";
-  $result = mysqli_query($conn, $sql);
-  $row = mysqli_fetch_assoc($result);
-  $total_amount = $row['Total_Amount'];
-  $total_amount = $total_amount - $decrease_price;
-  $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
-  mysqli_query($conn, $sql);
-  //increase price in tbl_cart_master
-  $increase_price = $selling_price * $quantity;
-  //select updated total amount
-  $sql = "SELECT * FROM tbl_cart_master WHERE CM_ID = '$cm_id'";
-  $result = mysqli_query($conn, $sql);
-  $row = mysqli_fetch_assoc($result);
-  $total_amount = $row['Total_Amount'];
-  $total_amount = $total_amount + $increase_price;
-  $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
-  mysqli_query($conn, $sql);
-  //update quantity and price in tbl_child cart
-  $sql = "UPDATE tbl_cart_child SET Quantity = '$quantity', Price = '$increase_price' WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-  mysqli_query($conn, $sql);
-  header("Location: cart.php");
-  /*
-    $decrease_price = $Cost_Per_Piece * $previous_quantity;
-    //decrease price in tbl_cart_master
-    $sql = "SELECT * FROM tbl_cart_master WHERE CM_ID = '$cm_id'";
-    $result = mysqli_query($conn,$sql);
-    $row = mysqli_fetch_assoc($result);
-    $total_amount = $row['Total_Amount'];
-    $total_amount = $total_amount - $decrease_price;
-    $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
-    mysqli_query($conn,$sql);
-    //increase price in tbl_cart_master
-    $increase_price = $Cost_Per_Piece * $quantity;
-    $total_amount = $total_amount + $increase_price;
-    $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
-    mysqli_query($conn,$sql);
-    //update quantity and price in tbl_child cart
+      $selling_price = (float) $pc['Selling_Price'];
+      $price = $selling_price * $quantity;
 
-      */
+      db_exec(
+        "UPDATE tbl_cart_child SET Quantity = ?, Price = ? WHERE Appliance_ID = ? AND CM_ID = ?",
+        [$quantity, $price, $item_id, $cm_id]
+      );
+      db_exec(
+        "UPDATE tbl_cart_master
+         SET Total_Amount = (SELECT COALESCE(SUM(Price), 0) FROM tbl_cart_child WHERE CM_ID = ?)
+         WHERE CM_ID = ?",
+        [$cm_id, $cm_id]
+      );
+    }
+
+    header("Location: cart.php");
+    exit;
+  }
 }
+
 if (isset($_POST['remove_item'])) {
-  $item_id = $_POST['remove_item'];
-  $cm_id = $_POST['Cart_Master_ID'];
-  $sql = "SELECT Price FROM tbl_cart_child WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-  $result = mysqli_query($conn, $sql);
-  $row = mysqli_fetch_assoc($result);
-  $price = $row['Price'];
-  //echo $price;
-  //delete row with item id in tbl_cart_child
-  $sql = "DELETE FROM tbl_cart_child WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-  mysqli_query($conn, $sql);
-  //set total amount in tbl_cart_master to be subtracted from price
-  $sql = "SELECT Total_Amount FROM tbl_cart_master WHERE CM_ID = '$cm_id'";
-  $result = mysqli_query($conn, $sql);
-  $row = mysqli_fetch_assoc($result);
-  $total_amount = $row['Total_Amount'];
-  $total_amount = $total_amount - $price;
-  $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
-  mysqli_query($conn, $sql);
-  header("Location: cart.php");
+  $item_id = post_id('remove_item');
+  $posted_cm = post_id('Cart_Master_ID');
 
+  if ($item_id !== null && $posted_cm !== null && $posted_cm === $cm_id) {
+    db_exec("DELETE FROM tbl_cart_child WHERE Appliance_ID = ? AND CM_ID = ?", [$item_id, $cm_id]);
+    db_exec(
+      "UPDATE tbl_cart_master
+       SET Total_Amount = (SELECT COALESCE(SUM(Price), 0) FROM tbl_cart_child WHERE CM_ID = ?)
+       WHERE CM_ID = ?",
+      [$cm_id, $cm_id]
+    );
 
-
-
-  /*
-  //set quantity in tbl_cart_child to 0
-  $sql = "UPDATE tbl_cart_child SET Quantity = 0 WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-  mysqli_query($conn,$sql);
-  //set price in tbl_cart_child to 0
-  $sql = "UPDATE tbl_cart_child SET Price = 0 WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
-  mysqli_query($conn,$sql);
-  //set total amount in tbl_cart_master to be subtracted from price
-  $sql = "SELECT * FROM tbl_cart_master WHERE CM_ID = '$cm_id'";
-  $result = mysqli_query($conn,$sql);
-  $row = mysqli_fetch_assoc($result);
-  $total_amount = $row['Total_Amount'];
-  $total_amount = $total_amount - $price;
-  $sql = "UPDATE tbl_cart_master SET Total_Amount = '$total_amount' WHERE CM_ID = '$cm_id'";
-  mysqli_query($conn,$sql);
-  header("Location: cart.php");*/
+    header("Location: cart.php");
+    exit;
+  }
 }
-
 ?>
 
 <!doctype html>
@@ -267,7 +195,7 @@ if (isset($_POST['remove_item'])) {
 
 <head>
   <title>shopmyhome</title>
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -312,7 +240,7 @@ if (isset($_POST['remove_item'])) {
     }
 
     .navigation-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       background-size: contain;
       margin-inline-start: 2vh;
       height: 100%;
@@ -643,7 +571,7 @@ if (isset($_POST['remove_item'])) {
     }
   </script>
 
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
 </head>
 
 <body>
@@ -676,7 +604,7 @@ if (isset($_POST['remove_item'])) {
             //profile page,Staff Dashboard, logout
             echo '<form action="" method="POST">';
             //profile page
-            echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+            echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></a></td>';
             echo '<td><button class="admin-box" name="admin">Staff Dashboard</button></td>';
             echo '<td><button class="logout-box" name="logout">Logout</button></td>';
             echo '</tr>';
@@ -686,7 +614,7 @@ if (isset($_POST['remove_item'])) {
           if ($usertype == 'CU') {
             //profile page, logout
             echo '<form action="" method="POST">';
-            echo '<tr><td><button class="profile-box" name="show_profile_page"><a href="profile.php"><img src="profile1.png" height="30px" width="30px"></a></button></td>';
+            echo '<tr><td><button class="profile-box" name="show_profile_page"><a href="profile.php"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></a></button></td>';
             //cart button
             $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
             $result = mysqli_query($conn, $sql);
@@ -696,10 +624,10 @@ if (isset($_POST['remove_item'])) {
               $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
               $result = mysqli_query($conn, $sql);
               $count = mysqli_num_rows($result);
-              echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+              echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
             } else if (mysqli_num_rows($result) == 0) {
               $cm_id = null;
-              echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
+              echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
             }
             echo '<td><button class="logout-box" name="logout">Logout</button></td>';
             echo '</tr>';
@@ -734,8 +662,8 @@ if (isset($_POST['remove_item'])) {
                   $product_name = $row1['Appliance_Name'];
                   $product_image = $row1['Appliance_Image1'];
                   echo "<tr>";
-                  echo "<td><img src='$product_image' height='100vh'></td>";
-                  echo "<td>$product_name</td>";
+                  echo "<td><img src='" . e((string) $product_image) . "' height='100vh'></td>";
+                  echo "<td>" . e((string) $product_name) . "</td>";
 
                   //$sql_quantity
                   $select_quantity = "SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$item_id' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
@@ -773,19 +701,19 @@ if (isset($_POST['remove_item'])) {
                     if($price2!=$price){
                       $sql = "UPDATE tbl_cart_child SET Price = '$price2' WHERE Appliance_ID = '$item_id' AND CM_ID = '$cm_id'";
                       mysqli_query($conn, $sql);
-                      echo "<td>₹ $price2</td>";
+                      echo "<td>₹ " . e((string) $price2) . "</td>";
                       $price_change_status = 1;
                     }
                     else{
-                      echo "<td>₹ $price</td>";
+                      echo "<td>₹ " . e((string) $price) . "</td>";
                     }
-                    echo "<td><button name='remove_item' value='$item_id' style='background-color:transparent;border-style:none'><img src='remove.png' height='30px'></button></td>";
+                    echo "<td><button name='remove_item' value='$item_id' style='background-color:transparent;border-style:none'><img src='assets/images/icons/remove.png' height='30px'></button></td>";
                     echo "</form></tr>";
                   } else if (mysqli_num_rows($result_quantity) == 0) {
                     echo "<form method='POST'>";
                     echo "<td style='color:red;'>OUT OF STOCK</td>";
-                    echo "<td>₹ $price</td>";
-                    echo "<td><input type='hidden' value='$cm_id' name='Cart_Master_ID'><button name='remove_item' value='$item_id' style='background-color:transparent;border-style:none'><img src='remove2.png' height='30px'></button></td>";
+                    echo "<td>₹ " . e((string) $price) . "</td>";
+                    echo "<td><input type='hidden' value='$cm_id' name='Cart_Master_ID'><button name='remove_item' value='$item_id' style='background-color:transparent;border-style:none'><img src='assets/images/icons/remove2.png' height='30px'></button></td>";
                     echo "</form></tr>";
                   }
                 }
@@ -816,9 +744,9 @@ if (isset($_POST['remove_item'])) {
                 $name = $row['Cust_Fname'] . " " . $row['Cust_Lname'];
                 $phone = $row['Cust_Phone'];
                 $address = $row['Cust_Hname'] . ", " . $row['Cust_Street'] . ", " . $row['Cust_Dist'] . ", " . $row['State_Ut'] . ", " . $row['Cust_Pin'];
-                echo "<tr><td>$name</td></tr>";
-                echo "<tr><td>$phone</td></tr>";
-                echo "<tr><td>$address</td></tr>";
+                echo "<tr><td>" . e((string) $name) . "</td></tr>";
+                echo "<tr><td>" . e((string) $phone) . "</td></tr>";
+                echo "<tr><td>" . e((string) $address) . "</td></tr>";
 
               } else {
                 echo "<td colspan='6'>No address found</td>";
@@ -855,7 +783,7 @@ if (isset($_POST['remove_item'])) {
                     echo "<td><input type='radio' name='card_id' value='" . $row['Card_ID'] . "'></td>";
                     //echo "<td>" . $row['Card_No'] . "</td>";
                     echo "<td>XXXX-XXXX-XXXX-" . substr($row['Card_No'], -4) . "</td>";
-                    echo "<td>" . $row['Bank_Name'] . "</td>";
+                    echo "<td>" . e((string) $row['Bank_Name']) . "</td>";
                     echo "<tr>";
                   }
 
@@ -904,7 +832,7 @@ if (isset($_POST['remove_item'])) {
                   } else {
                     $total_amount = 0;
                   }
-                  echo "<td><h5 style='color:red;'>₹ $total_amount</h5></td>";
+                  echo "<td><h5 style='color:red;'>₹ " . e((string) $total_amount) . "</h5></td>";
                   ?>
                 </tr>
               </table>

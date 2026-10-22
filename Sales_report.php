@@ -2,6 +2,8 @@
 include('connection.php');
 
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
@@ -22,17 +24,17 @@ if (isset($_POST['logout'])) {
 
 <head>
 <title>shopmyhome</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script> -->
 
   
-    <script src="html2canvas.min.js"></script>
-    <script src="jspdf.umd.min.js"></script>
-    <script src="html2pdf.bundle.js"></script>
-    <script src="html2pdf.bundle.min.js"></script>
-   <!-- <script src="paged.js"></script>-->
+    <script src="assets/js/html2canvas.min.js"></script>
+    <script src="assets/js/jspdf.umd.min.js"></script>
+    <script src="assets/js/html2pdf.bundle.js"></script>
+    <script src="assets/js/html2pdf.bundle.min.js"></script>
+   <!-- <script src="assets/js/paged.js"></script>-->
 
 
 
@@ -69,7 +71,7 @@ if (isset($_POST['logout'])) {
         }
 
         .navigation-logo {
-            background-image: url(Picture3.png);
+            background-image: url(assets/images/banners/Picture3.png);
             background-size: contain;
             margin-inline-start: 2vh;
             height: 100%;
@@ -228,7 +230,7 @@ if (isset($_POST['logout'])) {
         }
 
         .logo {
-            background-image: url(Picture3.png);
+            background-image: url(assets/images/banners/Picture3.png);
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;

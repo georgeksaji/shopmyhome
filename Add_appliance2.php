@@ -1,41 +1,49 @@
 <?php
 include("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
-$cat_id = $_SESSION['Cat_ID'];
+$cat_id = $_SESSION['Cat_ID'] ?? null;
+if ($cat_id === null) {
+  header('Location: Add_appliance1.php');
+  exit;
+}
 
 if(isset($_POST['submit']))
 {
-  $name = $_POST['name'];
-  $type = $_POST['product_type'];
-  $brand = $_POST['brand'];
-  $profit = $_POST['decimal_value'];
-  $description = $_POST['description'];
-  $image1 = "product_images/" . $_FILES['image1']['name'];
-  $image2 = "product_images/" . $_FILES['image2']['name'];
+  $name = trim((string)($_POST['name'] ?? ''));
+  $type = post_id('product_type');
+  $brand = post_id('brand');
+  $profit = filter_var($_POST['decimal_value'] ?? null, FILTER_VALIDATE_FLOAT);
+  $description = trim((string)($_POST['description'] ?? ''));
 
-  // Define the destination directory
-  $upload_directory = "C:/xampp/htdocs/ohas_codes/product_images/";
+  if ($name === '' || $type === null || $brand === null || $profit === false || $profit < 0 || $profit > 100) {
+    echo "<script>alert('Please complete all fields with valid values.');</script>";
+  } else {
+    try {
+      $image1 = save_uploaded_image('image1', 'assets/uploads/product_images');
+      $image2 = save_uploaded_image('image2', 'assets/uploads/product_images');
 
-  // Move uploaded images to desired location
-  move_uploaded_file($_FILES['image1']['tmp_name'], $upload_directory . $_FILES['image1']['name']);
-  move_uploaded_file($_FILES['image2']['tmp_name'], $upload_directory . $_FILES['image2']['name']);
+      db_exec(
+        "INSERT INTO tbl_appliance
+           (Appliance_ID, Appliance_Name, Type_ID, Brand_ID, Appliance_Description,
+            Appliance_Image1, Appliance_Image2, Appliance_Profit_Percentage)
+         VALUES (generate_appliance_id(), ?, ?, ?, ?, ?, ?, ?)",
+        [$name, $type, $brand, $description, $image1, $image2, $profit]
+      );
 
-  $sql = "INSERT INTO tbl_appliance (Appliance_ID, Appliance_Name, Type_ID, Brand_ID, Appliance_Description, Appliance_Image1, Appliance_Image2, Appliance_Profit_Percentage) VALUES (generate_appliance_id(),'$name','$type','$brand','$description','$image1','$image2','$profit')";
-  $result = mysqli_query($conn, $sql);
-
-  if($result)
-  {
-    unset($_SESSION['Cat_ID']); 
-    echo "<script>alert('Appliance added successfully!');</script>";
-    if($usertype == "AD" && $userId == "ST00001")
-    {
-      header("location: admin.php");
-    }
-    else if($usertype == "ST")
-    {
-      header("location: staff.php");
+      unset($_SESSION['Cat_ID']);
+      echo "<script>alert('Appliance added successfully!');</script>";
+      if($usertype == 'AD' && $userId == 'ST00001') {
+        header("location: admin.php");
+      } else if($usertype == 'ST') {
+        header("location: staff.php");
+      }
+      exit;
+    } catch (RuntimeException $e) {
+      echo '<script>alert(' . json_encode($e->getMessage()) . ');</script>';
     }
   }
 }
@@ -50,7 +58,7 @@ if(isset($_POST['submit']))
   <title>Add product</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -79,7 +87,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -202,7 +210,7 @@ if(isset($_POST['submit']))
 
   </style>
   
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   </head>
 <!-- <body>
 <script>
@@ -227,7 +235,7 @@ alert(jsMessage2);
               $sql_cat = "SELECT Cat_Name FROM tbl_category WHERE Cat_ID = '$cat_id'";
               $result_cat = mysqli_query($conn, $sql_cat);
               $category = mysqli_fetch_assoc($result_cat);
-              echo "<input type='text' id='product_category' name='product_category' value='".$category['Cat_Name']."' readonly>";
+              echo "<input type='text' id='product_category' name='product_category' value='".e($category['Cat_Name'] ?? '')."' readonly>";
               ?>
 
             <label for="product_type">Product Type</label>
@@ -241,9 +249,8 @@ alert(jsMessage2);
                 {
                   while($row_typ = mysqli_fetch_assoc($result_typ))
                   {
-                    echo "<option value=".$row_typ['Type_ID'].">".$row_typ['Type_Name']."</option>";
+                    echo "<option value='" . e((string) $row_typ['Type_ID']) . "'>" . e((string) $row_typ['Type_Name']) . "</option>";
                   }
-                  $type = $row_typ['Type_ID'];
                 }
                 ?>
                 </select>
@@ -259,7 +266,7 @@ alert(jsMessage2);
                 {
                   while($row_brd = mysqli_fetch_assoc($result_brd))
                   {
-                    echo "<option value=".$row_brd['Brand_ID'].">".$row_brd['Brand_Name']."</option>";
+                    echo "<option value='" . e((string) $row_brd['Brand_ID']) . "'>" . e((string) $row_brd['Brand_Name']) . "</option>";
                   }
                 }
                 ?>

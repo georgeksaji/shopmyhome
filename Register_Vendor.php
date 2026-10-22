@@ -1,50 +1,53 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
 if(isset($_POST['submit']))
 {
-  $name = $_POST['name'];
-  $phoneNumber = $_POST['phoneNumber'];
-  $buildingName = $_POST['buildingName'];
-  $pincode = $_POST['pincode'];
-  $state = $_POST['state'];
-  $email = $_POST['email'];
-  $street = $_POST['street'];
-  $district = $_POST['district'];
+  $name = trim((string)($_POST['name'] ?? ''));
+  $phoneNumber = trim((string)($_POST['phoneNumber'] ?? ''));
+  $buildingName = trim((string)($_POST['buildingName'] ?? ''));
+  $pincode = trim((string)($_POST['pincode'] ?? ''));
+  $state = trim((string)($_POST['state'] ?? ''));
+  $email = trim((string)($_POST['email'] ?? ''));
+  $street = trim((string)($_POST['street'] ?? ''));
+  $district = trim((string)($_POST['district'] ?? ''));
 
-  $sql = "SELECT * FROM tbl_vendor WHERE Vendor_Username = '$email'";
-  $result = mysqli_query($conn, $sql);
-  $num = mysqli_num_rows($result);
-  if($num > 0) 
+  $exists = (int) db_val("SELECT COUNT(*) FROM tbl_vendor WHERE Vendor_Email = ?", [$email]);
+  if($exists > 0)
   {
     echo "<script>alert('User already exists!');</script>";
-  } 
+  }
   else
   {
-    $insert1= "INSERT INTO tbl_vendor(Vendor_ID,Vendor_Email,Staff_Id,Vendor_Name,Vendor_Phno,Vendor_Hname,Vendor_Street,Vendor_Dist,State_Ut,Vendor_Pin)VAlUES(generate_vendor_id(),'$email','$userId','$name','$phoneNumber','$buildingName','$street','$district','$state','$pincode')";
-    mysqli_query($conn,$insert1);
+    db_exec(
+      "INSERT INTO tbl_vendor
+         (Vendor_ID, Vendor_Email, Vendor_Username, Staff_Id, Vendor_Name, Vendor_Phno,
+          Vendor_Hname, Vendor_Street, Vendor_Dist, State_Ut, Vendor_Pin)
+       VALUES (generate_vendor_id(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [$email, $email, $userId, $name, $phoneNumber, $buildingName, $street, $district, $state, $pincode]
+    );
     echo "<script>alert('Vendor registered successfully!');</script>";
-    if($usertype == "AD" && $userId == "ST00001")
-    {
+    if($usertype == 'AD' && $userId == 'ST00001') {
       header("location: admin.php");
-    }
-    else if($usertype == "ST")
-    {
+    } else if($usertype == 'ST') {
       header("location: staff.php");
     }
+    exit;
   }
 }
 ?>
 <html>
 <head>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Register Vendor</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -72,7 +75,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;

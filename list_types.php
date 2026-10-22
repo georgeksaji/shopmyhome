@@ -1,8 +1,9 @@
 <?php
 include("connection.php");
 session_start();
+csrf_verify();
 
-$category_id = $_SESSION['category_id'];
+$category_id = $_SESSION['category_id'] ?? null;
 
 if (isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
     $userId = $_SESSION['User_ID'];
@@ -15,9 +16,9 @@ if (isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
 //search appliance
 if(isset($_POST['submit']))
 {
-  $search = $_POST['search'];
+  $search = trim((string) ($_POST['search'] ?? ''));
   $_SESSION['search'] = $search;
-  echo $search;
+  echo e($search);
   $_SESSION['brand_id'] = null;
   $_SESSION['category_id'] = null;
   $_SESSION['type_id'] = null;
@@ -61,7 +62,7 @@ if (isset($_POST['logout'])) {
 
 // Handle category button
 if (isset($_POST['category'])) {
-    $category_id = $_POST['category'];
+    $category_id = is_valid_id($_POST['category'] ?? null) ? $_POST['category'] : null;
     $_SESSION['category_id'] = $category_id;
     unset($_SESSION['search']);
     unset($_SESSION['brand_id']);
@@ -70,7 +71,7 @@ if (isset($_POST['category'])) {
 }
 
 if (isset($_POST['type'])) {
-    $type_id = $_POST['type'];
+    $type_id = is_valid_id($_POST['type'] ?? null) ? $_POST['type'] : null;
     $_SESSION['type_id'] = $type_id;
     $_SESSION['category_id'] = null;
     $_SESSION['search'] = null;
@@ -87,7 +88,7 @@ if (isset($_POST['type'])) {
 <html lang="en">
   <head>
     <title>shopmyhome</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -130,7 +131,7 @@ alert(jsMessage2);
 }
 
 .navigation-logo {
-  background-image: url(Picture3.png);
+  background-image: url(assets/images/banners/Picture3.png);
     background-size: cover;
     margin-inline-start: 2vh;
     height: 100%;
@@ -409,7 +410,7 @@ a {
                   //profile page,Staff Dashboard, logout
                   echo '<form action="" method="POST">';
                   //profile page
-                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></a></td>';
                   echo '<td><button class="admin-box" name="admin">Staff Dashboard</button></td>';
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
@@ -419,7 +420,7 @@ a {
                 if ($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
+                  echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);
@@ -430,11 +431,11 @@ a {
                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                   $result = mysqli_query($conn,$sql);
                   $count = mysqli_num_rows($result);
-                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
                   }
                   else if(mysqli_num_rows($result) == 0)
                   {
-                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
+                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
                   
                   }
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
@@ -456,7 +457,7 @@ a {
     {
       $categoryname = $row['Cat_Name'];
       $categoryid = $row['Cat_ID'];
-      echo "<button class='category-name' name='category' value='$categoryid' style='display: inline-block;'>$categoryname</button>";
+      echo "<button class='category-name' name='category' value='" . e((string) $categoryid) . "' style='display: inline-block;'>" . e((string) $categoryname) . "</button>";
      }
     ?>
     </form>
@@ -473,7 +474,7 @@ while($row = mysqli_fetch_assoc($result))
   $typename = $row['Type_Name'];
   $typeid = $row['Type_ID'];
   //type name in button
-    echo "<div class='product_card_outer'><button class='product_image' name='type' value='$typeid'>$typename</button>";
+    echo "<div class='product_card_outer'><button class='product_image' name='type' value='" . e((string) $typeid) . "'>" . e((string) $typename) . "</button>";
     echo "</div>";
 }
 echo '</form>';
@@ -488,8 +489,8 @@ while($row = mysqli_fetch_assoc($result))
   $brandname = $row['Brand_Name'];
   $brandid = $row['Brand_ID'];
   $bransimage = $row['Brand_Logo'];
-    echo "<div class='product_card_outer'><button class='product_image' style='background-image: url($bransimage);' name='brand' value='$brandid'></button>";
-    echo "<div class='product_name'>$brandname</div>";
+    echo "<div class='product_card_outer'><button class='product_image' style='background-image: url(" . e((string) $bransimage) . ");' name='brand' value='" . e((string) $brandid) . "'></button>";
+    echo "<div class='product_name'>" . e((string) $brandname) . "</div>";
     echo "</div>";
 }*/
 ?>

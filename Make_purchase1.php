@@ -1,23 +1,28 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
 if (isset($_POST['submit'])) {
+    $selectedAppliances = [];
+
     if (isset($_POST['appliance']) && is_array($_POST['appliance'])) {
         foreach ($_POST['appliance'] as $selectedAppliance) {
-            $selectedAppliances[] = $selectedAppliance;
+            if (is_valid_id($selectedAppliance)) {
+                $selectedAppliances[] = $selectedAppliance;
+            }
         }
-        
-        // Display the selected appliance IDs using echo
-        //echo "Selected Appliance IDs: ";
-        //echo implode(', ', $selectedAppliances);
-        $_SESSION['Selected_Appliances']=$selectedAppliances;
-        header("location: Make_purchase2.php");
-        
+    }
+
+    if (!$selectedAppliances) {
+        echo "<script>alert('Please select at least one appliance.');</script>";
     } else {
-        echo "No appliances were selected.";
+        $_SESSION['Selected_Appliances'] = $selectedAppliances;
+        header("location: Make_purchase2.php");
+        exit;
     }
 }
 
@@ -25,11 +30,11 @@ if (isset($_POST['submit'])) {
 <html>
 <head>
   
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Select Items</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -58,7 +63,7 @@ if (isset($_POST['submit'])) {
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -187,17 +192,19 @@ alert(jsMessage2);
                 $query2 = "SELECT Type_Name FROM tbl_type WHERE Type_ID='$appliance_type_id'";
                 $result2 = mysqli_query($conn, $query2);
                 $row2 = mysqli_fetch_assoc($result2);
-                $appliance_type_name = $row2['Type_Name'];
-                //remove last word from type name string
-                $appliance_type_name = substr($appliance_type_name, 0, strrpos($appliance_type_name, " "));
+                $appliance_type_name = (string) ($row2['Type_Name'] ?? '');
+                $lastSpace = strrpos($appliance_type_name, ' ');
+                if ($lastSpace !== false) {
+                    $appliance_type_name = substr($appliance_type_name, 0, $lastSpace);
+                }
                 $query3 = "SELECT Brand_Name FROM tbl_brand WHERE Brand_ID='$appliance_brand_id'";
                 $result3 = mysqli_query($conn, $query3);
                 $row3 = mysqli_fetch_assoc($result3);
                 $appliance_brand_name = $row3['Brand_Name'];
-                echo "<td>" . $appliance_brand_name . " " . $row['Appliance_Name'] . " " . $appliance_type_name . "</td>";
+                echo "<td>" . e((string) $appliance_brand_name) . " " . e((string) $row['Appliance_Name']) . " " . e((string) $appliance_type_name) . "</td>";
                   //echo "<td>".$row['Appliance_Name']."</td>";
-                    echo "<td><img src='" . $image1 . "' alt='Image 1' height='50px' width='45px'></td>";
-                    echo "<td><img src='" . $image2 . "' alt='Image 1' height='50px' width='45px'></td>";
+                    echo "<td><img src='" . e((string) $image1) . "' alt='Image 1' height='50px' width='45px'></td>";
+                    echo "<td><img src='" . e((string) $image2) . "' alt='Image 1' height='50px' width='45px'></td>";
                   //checkbox
                 echo "<td><input type='checkbox' name='appliance[]' value='".$row['Appliance_ID']."'></td>";
                   echo "</tr>";

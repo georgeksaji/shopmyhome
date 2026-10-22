@@ -3,62 +3,82 @@
 include ("connection.php");
 
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
 if(isset($_POST['submit']))
 {
-  $firstName = $_POST['firstName'];
-  $lastName = $_POST['lastName'];
-  $email = $_POST['email'];
-  $gender = $_POST['gender'];
-  $phoneNumber = $_POST['phoneNumber'];
-  $houseName = $_POST['houseName'];
-  $street = $_POST['street'];
-  $district = $_POST['district'];
-  $state = $_POST['state'];
-  $pincode = $_POST['pincode'];
-  $designation = $_POST['designation'];
-  $salary = $_POST['salary'];
-  $passwordright = $_POST['passwordright'];
-  $passwordleft = $_POST['passwordleft'];
+  $firstName = trim((string)($_POST['firstName'] ?? ''));
+  $lastName = trim((string)($_POST['lastName'] ?? ''));
+  $email = trim((string)($_POST['email'] ?? ''));
+  $gender = (string)($_POST['gender'] ?? '');
+  $phoneNumber = trim((string)($_POST['phoneNumber'] ?? ''));
+  $houseName = trim((string)($_POST['houseName'] ?? ''));
+  $street = trim((string)($_POST['street'] ?? ''));
+  $district = trim((string)($_POST['district'] ?? ''));
+  $state = trim((string)($_POST['state'] ?? ''));
+  $pincode = trim((string)($_POST['pincode'] ?? ''));
+  $designation = trim((string)($_POST['designation'] ?? ''));
+  $salary = (float)($_POST['salary'] ?? 0);
+  $passwordright = (string)($_POST['passwordright'] ?? '');
+  $passwordleft = (string)($_POST['passwordleft'] ?? '');
 
-  if($passwordleft == $passwordright)
+  if($passwordleft !== $passwordright)
   {
-    $sql = "SELECT * FROM tbl_login WHERE Username = '$email'";
-    $result = mysqli_query($conn, $sql);
-    $num = mysqli_num_rows($result);
-    if($num > 0) 
-    {
-      echo "<script>alert('Username already exists!');</script>";
-    } 
-    else
-    {
-      $insert1= "INSERT INTO tbl_login(Username,Password,User_Type)VAlUES('$email','$passwordleft','ST')";
-      mysqli_query($conn,$insert1);
-      $insert1= "INSERT INTO tbl_staff(Staff_ID,Staff_Username,Staff_Fname, Staff_Lname, Staff_Phone, Staff_Gender, Staff_Hname, Staff_Street, Staff_Dist, State_Ut, Staff_Pin, Staff_Designation, Staff_Salary)VAlUES(generate_staff_id(),'$email','$firstName','$lastName','$phoneNumber','$gender','$houseName','$street','$district','$state','$pincode','$designation','$salary')";
-      mysqli_query($conn,$insert1);
-      echo "<script>alert('Staff registered successfully!');</script>";
-      if($usertype == "AD" && $userId == "ST00001")
-      {
-        header("location: admin.php");
-      }
-    }
+    echo "<script>alert('Passwords do not match!');</script>";
+  }
+  else if(strlen($passwordleft) < 8 || strlen($passwordleft) > 72)
+  {
+    echo "<script>alert('Password must be between 8 and 72 characters.');</script>";
   }
   else
   {
-  echo "<script>alert('Passwords do not match!');</script>";
+    $exists = (int) db_val("SELECT COUNT(*) FROM tbl_login WHERE Username = ?", [$email]);
+    if($exists > 0)
+    {
+      echo "<script>alert('Username already exists!');</script>";
+    }
+    else
+    {
+      $conn->begin_transaction();
+      try {
+        db_exec(
+          "INSERT INTO tbl_login (Username, Password, User_Type) VALUES (?, ?, 'ST')",
+          [$email, password_hash($passwordleft, PASSWORD_DEFAULT)]
+        );
+        db_exec(
+          "INSERT INTO tbl_staff
+             (Staff_ID, Staff_Username, Staff_Fname, Staff_Lname, Staff_Phone, Staff_Gender,
+              Staff_Hname, Staff_Street, Staff_Dist, State_Ut, Staff_Pin, Staff_Designation, Staff_Salary)
+           VALUES (generate_staff_id(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [$email, $firstName, $lastName, $phoneNumber, $gender, $houseName, $street, $district, $state, $pincode, $designation, $salary]
+        );
+        $conn->commit();
+        echo "<script>alert('Staff registered successfully!');</script>";
+        if($usertype == 'AD' && $userId == 'ST00001') {
+          header("location: admin.php");
+        } else {
+          header("location: staff.php");
+        }
+        exit;
+      } catch (Throwable $e) {
+        $conn->rollback();
+        throw $e;
+      }
+    }
   }
 }
 ?>
 <html>
 <head>
   
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Register Staff</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position:center;
@@ -88,7 +108,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -246,7 +266,7 @@ alert(jsMessage2);
               <input type="text" id="designation" name="designation" placeholder="Staff designation" required>
 
               <label for="passwordright">Create password</label>
-              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="4" maxlength="9" required title="Minimum 4 characters required.">
+              <input type="password" id="passwordright" name="passwordright" placeholder="Enter password" minlength="8" maxlength="72" required title="Minimum 8 and maximum 72 characters required.">
 
 
           </div>
@@ -272,7 +292,7 @@ alert(jsMessage2);
             <input type="number" id="salary" name="salary" placeholder="Salary per month" required>
 
             <label for="passwordleft"><br></label>
-            <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="4" maxlength="7" required title="Minimum 4 characters required.">
+            <input type="password" id="passwordleft" name="passwordleft" placeholder="Confirm password" minlength="8" maxlength="72" required title="Minimum 8 and maximum 72 characters required.">
            
           
             </div>

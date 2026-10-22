@@ -2,13 +2,17 @@
 include('connection.php');
 
 session_start();
+csrf_verify();
+require_role(['CU']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
-if(isset($_SESSION['Invoice_Number'])) {
-    $invoice_number = $_SESSION['Invoice_Number'];
-    // Your code to handle the $invoice_number goes here
-} else {
-    echo "Invoice Number is not set in the session."; // Handle the case when the Invoice_Number is not set
+$invoice_number = $_SESSION['Invoice_Number'] ?? null;
+if (!is_valid_id($invoice_number) || (int) db_val(
+    "SELECT COUNT(*) FROM tbl_cart_master WHERE CM_ID = ? AND Customer_ID = ?",
+    [$invoice_number, $userId]
+) !== 1) {
+    http_response_code(404);
+    exit('Invoice not found.');
 }
 
 
@@ -27,15 +31,15 @@ if (isset($_POST['home'])) {
 
 <head>
     <title>Invoice</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script> -->
 
     
-    <script src="html2canvas.min.js"></script>
-    <script src="jspdf.umd.min.js"></script>
-    <script src="html2pdf.bundle.js"></script>
+    <script src="assets/js/html2canvas.min.js"></script>
+    <script src="assets/js/jspdf.umd.min.js"></script>
+    <script src="assets/js/html2pdf.bundle.js"></script>
 
 
 
@@ -72,7 +76,7 @@ if (isset($_POST['home'])) {
         }
 
         .navigation-logo {
-            background-image: url(Picture3.png);
+            background-image: url(assets/images/banners/Picture3.png);
             background-size: contain;
             margin-inline-start: 2vh;
             height: 100%;
@@ -233,7 +237,7 @@ if (isset($_POST['home'])) {
         }
 
         .logo {
-            background-image: url(Picture4.png);
+            background-image: url(assets/images/banners/Picture4.png);
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -264,7 +268,7 @@ if (isset($_POST['home'])) {
             height: 61%;
         }
         .signature{
-            background-image: url(signature.jpg);
+            background-image: url(assets/images/banners/signature.jpg);
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -289,7 +293,7 @@ if (isset($_POST['home'])) {
                     if($usertype == 'CU') {
                         //profile page, logout
                         echo '<form action="" method="POST">';
-                        //echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                        //echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></a></td>';
                         //cart button
                         $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                         $result = mysqli_query($conn,$sql);
@@ -300,12 +304,12 @@ if (isset($_POST['home'])) {
                         $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                         $result = mysqli_query($conn,$sql);
                         $count = mysqli_num_rows($result);
-                        echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                        echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
                         }
                         else if(mysqli_num_rows($result) == 0)
                         {
                           $cm_id = null;
-                          echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
+                          echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
                         }
                          echo '<td><button class="admin-box" name="home">Home</button></td>';
                          echo '<td><button class="logout-box" name="logout">Logout</button></td>';
@@ -324,7 +328,7 @@ if (isset($_POST['home'])) {
                     echo '<table class="report-table">';
                     echo '<tr>';
                     echo '<td colspan="5" style="text-align: left;">';
-                    echo "<h6>Page Number: $page_no</h6>";
+                    echo "<h6>Page Number: " . e((string) $page_no) . "</h6>";
                     echo '</td>';
                     echo '<tr>';
                     echo '<tr rowspan="3">';
@@ -337,12 +341,12 @@ if (isset($_POST['home'])) {
                     //echo current date
                     date_default_timezone_set('Asia/Kolkata'); // Set the timezone to Indian Standard Time (IST)
                     $date = date("d/m/Y h:i A"); // This format includes both date and time
-                    echo "<br><h6>Invoice Date and Time: $date</h6>";
+                    echo "<br><h6>Invoice Date and Time: " . e((string) $date) . "</h6>";
 
 
 
                     // $date = date("d/m/Y h:i A"); // This format includes both date and time
-                    // echo "<br><h6>Invoice Date and Time: $date</h6>";
+                    // echo "<br><h6>Invoice Date and Time: " . e((string) $date) . "</h6>";
                     echo '</tr>';
                     //seller and buyer details
                     echo '<tr>';
@@ -360,7 +364,7 @@ if (isset($_POST['home'])) {
                     $cust_dist = $row['Cust_Dist'];
                     $state_ut = $row['State_Ut'];
                     $cust_pin = $row['Cust_Pin'];
-                    echo "$cust_fname $cust_lname <br>$cust_phone <br>$cust_street, $cust_dist <br>$state_ut, $cust_pin";
+                    echo e((string) $cust_fname) . ' ' . e((string) $cust_lname) . '<br>' . e((string) $cust_phone) . '<br>' . e((string) $cust_street) . ', ' . e((string) $cust_dist) . '<br>' . e((string) $state_ut) . ', ' . e((string) $cust_pin);
                     echo '</td>';
                     echo '<td colspan="3" style="text-align: center;">';
                     echo "<h6>SELLER ADDRESS</h6>";
@@ -375,10 +379,10 @@ if (isset($_POST['home'])) {
 
                     echo '<tr rowspan="3">';
                     echo '<td colspan="2" style="text-align: center;">';
-                    echo "<h6>Payment ID: $invoice_id</h6>";
+                    echo "<h6>Payment ID: " . e((string) $invoice_id) . "</h6>";
                     echo '</td>';
                     echo '<td colspan="3" style="text-align: center;">';
-                    echo "<h6>Order Date: $invoice_date</h6>";
+                    echo "<h6>Order Date: " . e((string) $invoice_date) . "</h6>";
                     echo '</td>';
                     //headings
                     echo '<tr>';
@@ -421,23 +425,20 @@ if (isset($_POST['home'])) {
                             $result1 = mysqli_query($conn,$sql);
                             $row1 = mysqli_fetch_assoc($result1);
                             $type_name = $row1['Type_Name'];
-                            //remove last letter from type name string
-                            $type_name = substr($type_name, 0, -1);
 
-                            
                             echo '<tr>';
-                            echo "<td>$i</td>";
-                            echo "<td>$brand_name $appliance_name $type_name</td>";
-                            $unit_price = $total/$quantity;
-                            echo "<td>₹ $unit_price</td>";
-                            echo "<td>$quantity</td>";
-                            echo "<td>₹ $total</td>";
+                            echo "<td>" . (int) $i . "</td>";
+                            echo "<td>" . e((string) $brand_name) . " " . e((string) $appliance_name) . " " . e((string) $type_name) . "</td>";
+                            $unit_price = $quantity > 0 ? $total / $quantity : 0;
+                            echo "<td>₹ " . e((string) $unit_price) . "</td>";
+                            echo "<td>" . (int) $quantity . "</td>";
+                            echo "<td>₹ " . e((string) $total) . "</td>";
                             echo '</tr>';
                             $i++;
                         }
                         echo '<tr style="background-color:rgb(255 220 51);color:rgb(0 0 0);">';
                         echo '<td colspan="4" style="text-align:right">Total</td>';
-                        echo "<td>₹ $invoice_total</td>";
+                        echo "<td>₹ " . e((string) $invoice_total) . "</td>";
                         echo '</tr>';
                         echo '<tr>';
                         echo '<td colspan="4">This invoice is authorised for Shopmyhome by George K Saji, CEO, Shopmyhome.</td>';

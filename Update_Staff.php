@@ -2,40 +2,76 @@
 include("connection.php");
 
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
+if (empty($_SESSION['Update_ID'])) {
+  header('Location: admin.php');
+  exit;
+}
 $updateid = $_SESSION['Update_ID'];
-$updatequery = mysqli_query($conn, "SELECT * FROM tbl_staff WHERE Staff_ID = '$updateid'");
-$db_data = mysqli_fetch_array($updatequery);
+$updatequery = db_one("SELECT * FROM tbl_staff WHERE Staff_ID = ?", [$updateid]);
+if ($updatequery === null) {
+  http_response_code(404);
+  exit('Staff not found.');
+}
+$db_data = $updatequery;
 $db_data1 = $db_data['Staff_Username'];
-$passwordquery = mysqli_query($conn, "SELECT Password FROM tbl_login WHERE Username = '$db_data1'");
-$passwordData = mysqli_fetch_assoc($passwordquery);
-$db_password = $passwordData['Password'];
 
 if (isset($_POST['submit'])) {
-  $firstName = $_POST['firstName'];
-  $lastName = $_POST['lastName'];
-  $gender = $_POST['gender'];
-  $phoneNumber = $_POST['phoneNumber'];
-  $houseName = $_POST['houseName'];
-  $street = $_POST['street'];
-  $district = $_POST['district'];
-  $state = $_POST['state'];
-  $pincode = $_POST['pincode'];
-  $designation = $_POST['designation'];
-  $salary = $_POST['salary'];
-  $passwordright = $_POST['passwordright'];
-  $passwordleft = $_POST['passwordleft'];
-  if ($passwordleft == $passwordright) {
-    $updatepas = "UPDATE tbl_login SET Password='$passwordright' WHERE Username='$db_data1'";
-    mysqli_query($conn, $updatepas);
-    $update1 = "UPDATE tbl_staff SET Staff_Fname='$firstName',Staff_Lname='$lastName',Staff_Phone='$phoneNumber',Staff_Gender='$gender',Staff_Hname='$houseName',Staff_Street='$street',Staff_Dist='$district',State_Ut='$state',Staff_Pin='$pincode',Staff_Designation='$designation',Staff_Salary='$salary' WHERE Staff_ID='$updateid'";
-    mysqli_query($conn, $update1);
+  $firstName = trim((string)($_POST['firstName'] ?? ''));
+  $lastName = trim((string)($_POST['lastName'] ?? ''));
+  $gender = (string)($_POST['gender'] ?? '');
+  $phoneNumber = trim((string)($_POST['phoneNumber'] ?? ''));
+  $houseName = trim((string)($_POST['houseName'] ?? ''));
+  $street = trim((string)($_POST['street'] ?? ''));
+  $district = trim((string)($_POST['district'] ?? ''));
+  $state = trim((string)($_POST['state'] ?? ''));
+  $pincode = trim((string)($_POST['pincode'] ?? ''));
+  $designation = trim((string)($_POST['designation'] ?? ''));
+  $salary = (float)($_POST['salary'] ?? 0);
+  $passwordright = (string)($_POST['passwordright'] ?? '');
+  $passwordleft = (string)($_POST['passwordleft'] ?? '');
 
-    echo "<script>alert('Staff details updated successfully!');</script>";
-    header('Location: admin.php');
-  } else {
-    echo "<script>alert('Error! Passwords not same.');</script>";
+  $passwordOk = true;
+  if ($passwordleft !== '' || $passwordright !== '') {
+    if ($passwordleft !== $passwordright) {
+      echo "<script>alert('Error! Passwords not same.');</script>";
+      $passwordOk = false;
+    } elseif (strlen($passwordleft) < 8 || strlen($passwordleft) > 72) {
+      echo "<script>alert('Password must be between 8 and 72 characters.');</script>";
+      $passwordOk = false;
+    }
+  }
+
+  if ($passwordOk) {
+    $conn->begin_transaction();
+    try {
+      db_exec(
+        "UPDATE tbl_staff
+         SET Staff_Fname = ?, Staff_Lname = ?, Staff_Phone = ?, Staff_Gender = ?,
+             Staff_Hname = ?, Staff_Street = ?, Staff_Dist = ?, State_Ut = ?,
+             Staff_Pin = ?, Staff_Designation = ?, Staff_Salary = ?
+         WHERE Staff_ID = ?",
+        [$firstName, $lastName, $phoneNumber, $gender, $houseName, $street, $district, $state, $pincode, $designation, $salary, $updateid]
+      );
+
+      if ($passwordleft !== '') {
+        db_exec(
+          "UPDATE tbl_login SET Password = ? WHERE Username = ?",
+          [password_hash($passwordleft, PASSWORD_DEFAULT), $db_data1]
+        );
+      }
+
+      $conn->commit();
+      echo "<script>alert('Staff details updated successfully!');</script>";
+      header('Location: admin.php');
+      exit;
+    } catch (Throwable $e) {
+      $conn->rollback();
+      throw $e;
+    }
   }
 }
 ?>
@@ -44,11 +80,11 @@ if (isset($_POST['submit'])) {
 <html>
 
 <head>
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Update Staff</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center;
@@ -78,7 +114,7 @@ if (isset($_POST['submit'])) {
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;
@@ -199,7 +235,7 @@ if (isset($_POST['submit'])) {
           <div class="registration-form-left">
             <label for="firstName">Staff name</label>
             <input type="text" id="firstName" name="firstName" placeholder="First name"
-              value="<?php echo $db_data['Staff_Fname']; ?>" required>
+              value="<?php echo e((string) $db_data['Staff_Fname']); ?>" required>
 
             <label for="gender">Gender</label>
             <select id="gender" name="gender" required>
@@ -214,52 +250,53 @@ if (isset($_POST['submit'])) {
 
             <label for="address">Street</label>
             <input type="text" id="address" name="street" placeholder="Street"
-              value="<?php echo $db_data['Staff_Street']; ?>" required>
+              value="<?php echo e((string) $db_data['Staff_Street']); ?>" required>
 
             <label for="pincode">Pincode</label>
-            <input type="number" id="pincode" name="pincode" value="<?php echo $db_data['Staff_Pin']; ?>"
+            <input type="number" id="pincode" name="pincode" value="<?php echo e((string) $db_data['Staff_Pin']); ?>"
               placeholder="Enter 6 digit pincode" pattern="[0-9]{6}" required title="Enter a valid pincode">
 
             <label for="designation">Designation</label>
-            <input type="text" id="designation" name="designation" value="<?php echo $db_data['Staff_Designation']; ?>"
+            <input type="text" id="designation" name="designation" value="<?php echo e((string) $db_data['Staff_Designation']); ?>"
               placeholder="Staff designation" required>
 
-            <label for="passwordright">Password</label>
-            <input type="password" id="passwordright" name="passwordright" value="<?php echo $db_password; ?>"
-              placeholder="Enter password" minlength="4" maxlength="7" required title="Minimum 4 characters required.">
+            <label for="passwordright">New Password (optional)</label>
+            <input type="password" id="passwordright" name="passwordright"
+              placeholder="Leave blank to keep current password" minlength="8" maxlength="72" autocomplete="new-password"
+              title="Minimum 8 and maximum 72 characters.">
 
-            <label for="passwordleft">Confirm Password</label>
-            <input type="password" id="passwordleft" name="passwordleft" value="<?php echo $db_password; ?>"
-              placeholder="Confirm password" minlength="4" maxlength="7" required
-              title="Minimum 4 characters required.">
+            <label for="passwordleft">Confirm New Password</label>
+            <input type="password" id="passwordleft" name="passwordleft"
+              placeholder="Confirm new password" minlength="8" maxlength="72" autocomplete="new-password"
+              title="Minimum 8 and maximum 72 characters.">
 
           </div>
 
           <div class="registration-form-right">
 
             <label for="lastName"><!--Enter your name:--><br></label>
-            <input type="text" id="lastName" name="lastName" value="<?php echo $db_data['Staff_Lname']; ?>"
+            <input type="text" id="lastName" name="lastName" value="<?php echo e((string) $db_data['Staff_Lname']); ?>"
               placeholder="Last name">
 
             <label for="phoneNumber">Phone number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" value="<?php echo $db_data['Staff_Phone']; ?>"
+            <input type="tel" id="phoneNumber" name="phoneNumber" value="<?php echo e((string) $db_data['Staff_Phone']); ?>"
               placeholder="Enter a 10 digit phone number" pattern="[0-9]{10}" required
               title="Enter a valid phone number">
 
             <label for="houseName">House name</label>
-            <input type="text" id="houseName" name="houseName" value="<?php echo $db_data['Staff_Hname']; ?>"
+            <input type="text" id="houseName" name="houseName" value="<?php echo e((string) $db_data['Staff_Hname']); ?>"
               placeholder="House, apartment, suit, etc." required>
 
             <label for="district">District</label>
-            <input type="text" id="district" name="district" value="<?php echo $db_data['Staff_Dist']; ?>"
+            <input type="text" id="district" name="district" value="<?php echo e((string) $db_data['Staff_Dist']); ?>"
               placeholder="District" required>
 
             <label for="state">State/UT</label>
-            <input type="text" id="state" name="state" value="<?php echo $db_data['State_Ut']; ?>"
+            <input type="text" id="state" name="state" value="<?php echo e((string) $db_data['State_Ut']); ?>"
               placeholder="State / Union Territory" required>
 
             <label for="Salary">Salary</label>
-            <input type="number" id="salary" name="salary" value="<?php echo $db_data['Staff_Salary']; ?>"
+            <input type="number" id="salary" name="salary" value="<?php echo e((string) $db_data['Staff_Salary']); ?>"
               placeholder="Salary per month" required>
 
             <button type="submit" name="submit">Update</button>

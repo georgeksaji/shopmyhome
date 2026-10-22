@@ -5,6 +5,7 @@ $brand_id = null;
 $type_id=null;
 $category_id = null;
 session_start();
+csrf_verify();
 if(isset($_SESSION['User_ID']) && $_SESSION['User_ID'] !== null) {
   $userId = $_SESSION['User_ID'];
   $usertype = $_SESSION['User_Type'];
@@ -14,28 +15,28 @@ else {
   $usertype = null;
 }
 
-  if($_SESSION['search'] != null)
+  if(($_SESSION['search'] ?? null) != null)
   {
     $search = $_SESSION['search'];
 
   }
-  if($_SESSION['brand_id'] != null)
+  if(($_SESSION['brand_id'] ?? null) != null)
   {
     $brand_id = $_SESSION['brand_id'];
 
   }
-  if($_SESSION['category_id'] != null)
+  if(($_SESSION['category_id'] ?? null) != null)
   {
     $category_id = $_SESSION['category_id'];
   }
-  if($_SESSION['type_id'] != null)
+  if(($_SESSION['type_id'] ?? null) != null)
   {
     $type_id = $_SESSION['type_id'];
   }
 //search appliance
 if(isset($_POST['submit']))
 {
-  $search = $_POST['search'];
+  $search = trim((string) ($_POST['search'] ?? ''));
   $_SESSION['search'] = null;
   $_SESSION['search'] = $search;
   $_SESSION['brand_id'] = null;
@@ -77,7 +78,7 @@ if(isset($_POST['cart']))
 //search appliance
 /*if(isset($_POST['submit']))
 {
-  $search = $_POST['search'];
+  $search = trim((string) ($_POST['search'] ?? ''));
   $_SESSION['search'] = $search;
   unset($_SESSION['brand_id']);
   unset($_SESSION['category_id']);
@@ -86,7 +87,7 @@ if(isset($_POST['cart']))
 //category button
 if(isset($_POST['category']))
 {
-  $category_id = $_POST['category'];
+  $category_id = is_valid_id($_POST['category'] ?? null) ? $_POST['category'] : null;
   $_SESSION['category_id'] = $category_id;
   $_SESSION['brand_id']=null;
   $_SESSION['search']=null;
@@ -96,7 +97,7 @@ if(isset($_POST['category']))
 //select product button
 if(isset($_POST['select_product']))
 {
-  $product_detail_id = $_POST['select_product'];
+  $product_detail_id = is_valid_id($_POST['select_product'] ?? null) ? $_POST['select_product'] : null;
   $_SESSION['product_detail_id'] = $product_detail_id;
   header("Location: product_details.php");
 }
@@ -106,7 +107,7 @@ if(isset($_POST['select_product']))
 <html lang="en">
   <head>
     <title>shopmyhome</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -149,7 +150,7 @@ alert(jsMessage2);
 }
 
 .navigation-logo {
-  background-image: url(Picture3.png);
+  background-image: url(assets/images/banners/Picture3.png);
     background-size: cover;
     margin-inline-start: 2vh;
     height: 100%;
@@ -437,7 +438,7 @@ justify-content: flex-start;
                   //profile page,Staff Dashboard, logout
                   echo '<form action="" method="POST">';
                   //profile page
-                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></a></td>';
                   echo '<td><button class="admin-box" name="admin">Staff Dashboard</button></td>';
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
@@ -447,7 +448,7 @@ justify-content: flex-start;
                 if ($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="profile1.png" height="30px" width="30px"></button></td>';
+                  echo '<tr><td class="profile"><button class="profile-box" name="profile"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);
@@ -458,11 +459,11 @@ justify-content: flex-start;
                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                   $result = mysqli_query($conn,$sql);
                   $count = mysqli_num_rows($result);
-                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
                   }
                   else if(mysqli_num_rows($result) == 0)
                   {
-                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
+                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>";
                   
                   }
                    echo '<td><button class="logout-box" name="logout">Logout</button></td>';
@@ -484,14 +485,14 @@ justify-content: flex-start;
     {
       $categoryname = $row['Cat_Name'];
       $categoryid = $row['Cat_ID'];
-      echo "<button class='category-name' name='category' value='$categoryid' style='display: inline-block;'>$categoryname</button>";
+      echo "<button class='category-name' name='category' value='" . e((string) $categoryid) . "' style='display: inline-block;'>" . e((string) $categoryname) . "</button>";
     }
     ?>
     </form>
     <form action="" method='POST'>
   </div>
   <div class="products_list">
-  <!--<div class="product_card_outer"><div class="product_image" style="background-image: url('./product_images/41Qhm1NWI2L.jpg');"></div>
+  <!--<div class="product_card_outer"><div class="product_image" style="background-image: url('./assets/uploads/product_images/41Qhm1NWI2L.jpg');"></div>
 <div class="product_name">text</div>
 <div class="product_price">price</div>-->
 <?php
@@ -517,8 +518,8 @@ if($search != null)
       $productname = $row2['Appliance_Name'];
       $productprice = $row2['Appliance_Profit_Percentage'];
       $productimage = $row2['Appliance_Image1'];
-      echo "<button class='product_card_button' name='select_product' value='" . $productid . "'><div class='product_card_outer'><div class='product_image' style='background-image: url($productimage);'></div>";
-      echo "<div class='product_name'>$brandname $productname</div>";
+      echo "<button class='product_card_button' name='select_product' value='" . e((string) $productid) . "'><div class='product_card_outer'><div class='product_image' style='background-image: url(" . e((string) $productimage) . ");'></div>";
+      echo "<div class='product_name'>" . e((string) $brandname) . " " . e((string) $productname) . "</div>";
       //checking quantity
       //SELECT * FROM tbl_purchase_child WHERE Appliance_ID = 'AP00003' AND Quantity > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1;
       $sql_selling_price="SELECT * FROM tbl_purchase_child WHERE Appliance_ID = '$productid' AND Balance_Stock > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1";
@@ -571,8 +572,8 @@ if($search != null)
       $productname = $row3['Appliance_Name'];
       $productprice = $row3['Appliance_Profit_Percentage'];
       $productimage = $row3['Appliance_Image1'];
-      echo "<button class='product_card_button' name='select_product' value='" . $productid . "'><div class='product_card_outer'><div class='product_image' style='background-image: url($productimage);'></div>";
-      echo "<div class='product_name'>$brandname $productname</div>";
+      echo "<button class='product_card_button' name='select_product' value='" . e((string) $productid) . "'><div class='product_card_outer'><div class='product_image' style='background-image: url(" . e((string) $productimage) . ");'></div>";
+      echo "<div class='product_name'>" . e((string) $brandname) . " " . e((string) $productname) . "</div>";
 
             //checking quantity
       //SELECT * FROM tbl_purchase_child WHERE Appliance_ID = 'AP00003' AND Quantity > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1;
@@ -623,8 +624,8 @@ if($search != null)
       $productname = $row4['Appliance_Name'];
       $productprice = $row4['Appliance_Profit_Percentage'];
       $productimage = $row4['Appliance_Image1'];
-      echo "<button class='product_card_button' name='select_product' value='" . $productid . "'><div class='product_card_outer'><div class='product_image' style='background-image: url($productimage);'></div>";
-      echo "<div class='product_name'>$brandname $productname</div>";
+      echo "<button class='product_card_button' name='select_product' value='" . e((string) $productid) . "'><div class='product_card_outer'><div class='product_image' style='background-image: url(" . e((string) $productimage) . ");'></div>";
+      echo "<div class='product_name'>" . e((string) $brandname) . " " . e((string) $productname) . "</div>";
 
             //checking quantity
       //SELECT * FROM tbl_purchase_child WHERE Appliance_ID = 'AP00003' AND Quantity > 0 ORDER BY Purchase_Child_ID ASC LIMIT 1;

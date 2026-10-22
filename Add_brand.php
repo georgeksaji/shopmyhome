@@ -1,38 +1,45 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['AD','ST']);
 $userId = $_SESSION['User_ID'];
 $usertype = $_SESSION['User_Type'];
 
 if(isset($_POST['submit']))
 {
-  $name = $_POST['name'];
-  $image1 = "brand_images/" . $_FILES['image1']['name'];
-  
-  $upload_directory = "C:/xampp/htdocs/ohas_codes/brand_images/";
-  move_uploaded_file($_FILES['image1']['tmp_name'], $upload_directory . $_FILES['image1']['name']);
- 
-      $insert1= "INSERT INTO tbl_brand(Brand_ID,Brand_Name,Brand_Logo)VALUES(generate_brand_id(),'$name','$image1')";
-      mysqli_query($conn,$insert1);
+  $name = trim((string)($_POST['name'] ?? ''));
+
+  if ($name === '') {
+    echo "<script>alert('Please enter a brand name.');</script>";
+  } else {
+    try {
+      $logo = save_uploaded_image('image1', 'assets/uploads/brand_images');
+      db_exec(
+        "INSERT INTO tbl_brand (Brand_ID, Brand_Name, Brand_Logo) VALUES (generate_brand_id(), ?, ?)",
+        [$name, $logo]
+      );
       echo "<script>alert('Brand added successfully!');</script>";
-      if($usertype == "AD" && $userId == "ST00001")
-      {
+      if($usertype == 'AD' && $userId == 'ST00001') {
         header("location: admin.php");
-      }
-      else if($usertype == "ST")
-      {
+      } else if($usertype == 'ST') {
         header("location: staff.php");
       }
+      exit;
+    } catch (RuntimeException $e) {
+      echo '<script>alert(' . json_encode($e->getMessage()) . ');</script>';
+    }
+  }
 }
 ?>
 <html>
 <head>
   
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
   <title>Add Brand</title>
   <style>
     body {
-      background-image: url("background.png");
+      background-image: url("assets/images/backgrounds/background.png");
       background-size: cover;
       background-repeat: no-repeat;
       background-position: fixed;
@@ -61,7 +68,7 @@ if(isset($_POST['submit']))
     }
 
     .registration-box-logo {
-      background-image: url(Picture3.png);
+      background-image: url(assets/images/banners/Picture3.png);
       margin: auto;
       background-size: contain;
       background-repeat: no-repeat;

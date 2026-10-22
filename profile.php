@@ -1,6 +1,8 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['CU']);
 $_SESSION['search'] = null;
 $_SESSION['brand_id'] = null;
 $_SESSION['category_id'] = null;
@@ -25,8 +27,7 @@ if(isset($_POST['logout']))
 }
 //cart button
 if(isset($_POST['cart']))
-{
-  $quantity = $_POST['quantity'];
+{
   header("Location: cart.php");
 }
 //password edit button
@@ -55,7 +56,7 @@ if(isset($_POST['view-cards']))
 <html lang="en">
   <head>
     <title>shopmyhome</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -96,7 +97,7 @@ alert(jsMessage2);
 }
 
 .navigation-logo {
-  background-image: url(Picture3.png);
+  background-image: url(assets/images/banners/Picture3.png);
     background-size: contain;
     margin-inline-start: 2vh;
     height: 100%;
@@ -281,22 +282,22 @@ a {
 }
 .card-inner-left1
 {
-background-image: url('orders.png');
+background-image: url('assets/images/icons/orders.png');
 }
 .card-inner-left2
 {
 
-  background-image: url('lock.png');
+  background-image: url('assets/images/icons/lock.png');
 }
 .card-inner-left3
 {
 
-  background-image: url('card.png');
+  background-image: url('assets/images/icons/card.png');
 }
 .card-inner-left4
 {
 
-  background-image: url('profile-update.png');
+  background-image: url('assets/images/icons/profile-update.png');
 }
 
 </style>
@@ -335,7 +336,7 @@ background-image: url('orders.png');
                   $row = mysqli_fetch_assoc($result);
                   $name = $row['Staff_Fname'];
                   //hi name
-                  echo '<tr><td><button class="profile-box" style="display: flex;align-items: end;transform: scale(1)"><h6 style="color:red">Hi, '.$name.'</h6></button></td>';
+                  echo '<tr><td><button class="profile-box" style="display: flex;align-items: end;transform: scale(1)"><h6 style="color:red">Hi, '.e($name).'</h6></button></td>';
                   
                   echo '<td><button class="admin-box" name="admin">Staff Dashboard</button></td>';
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
@@ -352,7 +353,7 @@ background-image: url('orders.png');
                   $row = mysqli_fetch_assoc($result);
                   $name = $row['Cust_Fname'];
                   //hi name
-                  echo '<tr><td><button class="profile-box" style="display: flex;align-items: end;transform: scale(1)"><h6 style="">'.$name.'</h6></button></td>';
+                  echo '<tr><td><button class="profile-box" style="display: flex;align-items: end;transform: scale(1)"><h6 style="">'.e($name).'</h6></button></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);
@@ -363,12 +364,12 @@ background-image: url('orders.png');
                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                   $result = mysqli_query($conn,$sql);
                   $count = mysqli_num_rows($result);
-                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
                   }
                   else if(mysqli_num_rows($result) == 0)
                   {
                     $cm_id = null;
-                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
+                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
                   }
                    echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';

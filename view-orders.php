@@ -1,6 +1,8 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['CU']);
 $_SESSION['search'] = null;
 $_SESSION['brand_id'] = null;
 $_SESSION['category_id'] = null;
@@ -26,8 +28,7 @@ if(isset($_POST['logout']))
 }
 //cart button
 if(isset($_POST['cart']))
-{
-  $quantity = $_POST['quantity'];
+{
   header("Location: cart.php");
 }
 //password edit button
@@ -47,11 +48,20 @@ if(isset($_POST['view-cards']))
 }
 //invoice
 if(isset($_POST['invoice'])) {
-  $cm_id = $_POST['invoice_cart'];
-  echo $cm_id;
-  $_SESSION['Invoice_Number'] = $cm_id;
-  header("Location: Invoice.php");
-  exit(); // Don't forget to exit after a header redirect
+  $cm_id = post_id('invoice_cart');
+  if ($cm_id !== null) {
+    $owns = db_one(
+      "SELECT CM_ID FROM tbl_cart_master WHERE CM_ID = ? AND Customer_ID = ?",
+      [$cm_id, $userId]
+    );
+    if ($owns !== null) {
+      $_SESSION['Invoice_Number'] = $cm_id;
+      header("Location: Invoice.php");
+      exit;
+    }
+  }
+  http_response_code(403);
+  exit('Invoice not found.');
 }
 
 
@@ -61,7 +71,7 @@ if(isset($_POST['invoice'])) {
 <html lang="en">
   <head>
     <title>Order History</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -104,7 +114,7 @@ alert(jsMessage2);
 }
 
 .navigation-logo {
-  background-image: url(Picture3.png);
+  background-image: url(assets/images/banners/Picture3.png);
     background-size: contain;
     margin-inline-start: 2vh;
     height: 100%;
@@ -396,7 +406,7 @@ a {
                   //profile page,Staff Dashboard, logout
                   echo '<form action="" method="POST">';
                   //profile page
-                  //echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  //echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></a></td>';
                   echo '<td><button class="admin-box" name="admin">Staff Dashboard</button></td>';
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
@@ -406,7 +416,7 @@ a {
                 if($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  //echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  //echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></a></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);
@@ -417,12 +427,12 @@ a {
                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                   $result = mysqli_query($conn,$sql);
                   $count = mysqli_num_rows($result);
-                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
                   }
                   else if(mysqli_num_rows($result) == 0)
                   {
                     $cm_id = null;
-                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
+                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
                   }
                    echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
@@ -479,19 +489,19 @@ a {
                   $result_payment = mysqli_query($conn,$sql_payment);
                   $row_payment = mysqli_fetch_assoc($result_payment);
                   $payment_date = $row_payment['Payment_Date'];
-                  echo "<div class='order-date'>Order Date: $payment_date</div>";
-                  echo "<div class='order-total'>Total Cost: ₹$total_amount</div>";
-                  echo "<div class='order-id'>Order ID: $cm_id</div>";
+                  echo "<div class='order-date'>Order Date: " . e((string) $payment_date) . "</div>";
+                  echo "<div class='order-total'>Total Cost: ₹" . e((string) $total_amount) . "</div>";
+                  echo "<div class='order-id'>Order ID: " . e((string) $cm_id) . "</div>";
                   echo "<div class='order-reciept'>";
 
                   echo '<form method="POST">';
-                  echo '  <input type="hidden" value="' . $cm_id . '" name="invoice_cart">';
+                  echo '  <input type="hidden" value="' . e((string) $cm_id) . '" name="invoice_cart">';
                   echo '  <button type="submit" name="invoice" class="invoice-button">Invoice</button>';
                   echo '</form>';
                   echo "</div>";
                   echo "</div>";
                   echo "<div class='order-box-center'>";
-                  //echo "<div class='order-status'>$status</div>";
+                  //echo "<div class='order-status'>" . e((string) $status) . "</div>";
                   //ASSIGNED SHIPPED REASSIGNED DELIVERED
                   //progress
                   if($status=='PAID')
@@ -500,19 +510,19 @@ a {
                       }
                   if($status=='COURIER ASSIGNED')
                   {   
-                  echo "<div class='order-status' style='background-color:red;color:white'>$status TO DELIVER YOUR CONSIGNMENT</div>";
+                  echo "<div class='order-status' style='background-color:red;color:white'>" . e((string) $status) . " TO DELIVER YOUR CONSIGNMENT</div>";
                   }
                   else if($status=='SHIPPED')
                   {
-                    echo "<div class='order-status' style='background-color:#dc30f196;color:white'>$status YOUR ORDER</div>";
+                    echo "<div class='order-status' style='background-color:#dc30f196;color:white'>" . e((string) $status) . " YOUR ORDER</div>";
                   }
                   else if($status=='REASSIGNED')
                   {
-                    echo "<div class='order-status' style='background-color:red;color:black'>$status COURIER PARTNER</div>";
+                    echo "<div class='order-status' style='background-color:red;color:black'>" . e((string) $status) . " COURIER PARTNER</div>";
                   }
                   else if($status=='DELIVERED')
                   {
-                    echo "<div class='order-status' style='background-color:#f1e947;color:white'>$status</div>";
+                    echo "<div class='order-status' style='background-color:#f1e947;color:white'>" . e((string) $status) . "</div>";
                   }
                   while($row1 = mysqli_fetch_assoc($result1))
                   {
@@ -533,16 +543,11 @@ a {
                     $result3 = mysqli_query($conn,$sql3);
                     $row3 = mysqli_fetch_assoc($result3);
                     $type_name = $row3['Type_Name'];
-                    // Check if the string is not empty and has at least one character
-                    if (!empty($type_name)) {
-            // Remove the last character
-                      $type_name = substr($type_name, 0, -1);
-                    }
                     $sql4 = "SELECT * FROM tbl_brand WHERE Brand_ID = '$brand_id'";
                     $result4 = mysqli_query($conn,$sql4);
                     $row4 = mysqli_fetch_assoc($result4);
                     $brand_name = $row4['Brand_Name'];
-                    echo "<div class='order-items'><div class='order-item-image' style='background-image:url($appliance_image1);'></div><div class='order-item-details-outer'><div class='order-item-name'>$brand_name $appliance_name $type_name</div><div class='order-item-qty'> Quantity: $quantity</div><div class='order-item-price'> Price: ₹$price</div></div></div>";
+                    echo "<div class='order-items'><div class='order-item-image' style='background-image:url(" . e((string) $appliance_image1) . ");'></div><div class='order-item-details-outer'><div class='order-item-name'>" . e((string) $brand_name) . " " . e((string) $appliance_name) . " " . e((string) $type_name) . "</div><div class='order-item-qty'> Quantity: " . (int) $quantity . "</div><div class='order-item-price'> Price: ₹" . e((string) $price) . "</div></div></div>";
           
 
                   }

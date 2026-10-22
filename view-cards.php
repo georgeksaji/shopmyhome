@@ -1,6 +1,8 @@
 <?php
 include ("connection.php");
 session_start();
+csrf_verify();
+require_role(['CU']);
 $_SESSION['search'] = null;
 $_SESSION['brand_id'] = null;
 $_SESSION['category_id'] = null;
@@ -25,8 +27,7 @@ if(isset($_POST['logout']))
 }
 //cart button
 if(isset($_POST['cart']))
-{
-  $quantity = $_POST['quantity'];
+{
   header("Location: cart.php");
 }
 if (isset($_POST['show_profile_page'])) {
@@ -36,45 +37,58 @@ if (isset($_POST['show_profile_page'])) {
 //iffest submit add to tbl card
 if(isset($_POST['submit']))
 {
-  $card_type = $_POST['card-type'];
-  $card_number = $_POST['card-number'];
-  $card_holder_name = $_POST['card-holder-name'];
-  $bank_name = $_POST['bank-name'];
-  $expiry_date = $_POST['expiry-date'];
-  $cvv = $_POST['cvv'];
-// Card_ID 	Customer_ID 	Card_No 	Card_Holder_Name 	CVV 	Bank_Name 	Card_Type 	Expiry_Date 	Card_Status 	
-  //find if card number already exists
-  $sql = "SELECT * FROM tbl_card WHERE Card_No = '$card_number'";
-  $result = mysqli_query($conn,$sql);
-  if(mysqli_num_rows($result) > 0)
-  {
-    echo "<script>alert('Card number already exists!');</script>";
+  $card_type = (string)($_POST['card-type'] ?? '');
+  $card_number = preg_replace('/\D/', '', (string)($_POST['card-number'] ?? ''));
+  $card_holder_name = trim((string)($_POST['card-holder-name'] ?? ''));
+  $bank_name = trim((string)($_POST['bank-name'] ?? ''));
+  $expiry_date = (string)($_POST['expiry-date'] ?? '');
+
+  $card_error = '';
+  if (!in_array($card_type, ['D', 'C'], true)) {
+    $card_error = 'Please choose a card type.';
+  } elseif (strlen($card_number) < 13 || strlen($card_number) > 19) {
+    $card_error = 'Please enter a valid card number.';
+  } elseif ($expiry_date === '' || $expiry_date < date('Y-m-d')) {
+    $card_error = 'Please enter a valid future expiry date.';
   }
-  else if(mysqli_num_rows($result) == 0)
-  {
-    //insert into tbl_card
-  $sql = "INSERT INTO tbl_card (Card_ID,Customer_ID,Card_No,Card_Holder_Name,CVV,Bank_Name,Card_Type,Expiry_Date) VALUES (generate_card_id(),'$userId','$card_number','$card_holder_name','$cvv','$bank_name','$card_type','$expiry_date')";
-  mysqli_query($conn,$sql); 	
-    echo "<script>alert('Card added successfully!');</script>";
-    header('Location: profile.php');
-}
+
+  if ($card_error !== '') {
+    echo '<script>alert(' . json_encode($card_error) . ');</script>';
+  } else {
+    $exists = (int) db_val("SELECT COUNT(*) FROM tbl_card WHERE Card_No = ?", [$card_number]);
+    if($exists > 0)
+    {
+      echo "<script>alert('Card number already exists!');</script>";
+    }
+    else
+    {
+      db_exec(
+        "INSERT INTO tbl_card (Card_ID, Customer_ID, Card_No, Card_Holder_Name, Bank_Name, Card_Type, Expiry_Date, Card_Status)
+         VALUES (generate_card_id(), ?, ?, ?, ?, ?, ?, 1)",
+        [$userId, $card_number, $card_holder_name, $bank_name, $card_type, $expiry_date]
+      );
+      echo "<script>alert('Card added successfully!');</script>";
+      header('Location: profile.php');
+      exit;
+    }
+  }
 }
 //activate and deactivate card status
 if(isset($_POST['deactivate_card_status_button']))
 {
-  $card_id = $_POST['card_id'];
-  $sql = "UPDATE tbl_card SET Card_Status = '0' WHERE Card_ID = '$card_id'";
-  mysqli_query($conn,$sql); 	
-    echo "<script>alert('Card deactivated successfully!');</script>";
-    header('Location: profile.php');
+  $card_id = (string)($_POST['card_id'] ?? '');
+  db_exec("UPDATE tbl_card SET Card_Status = 0 WHERE Card_ID = ? AND Customer_ID = ?", [$card_id, $userId]);
+  echo "<script>alert('Card deactivated successfully!');</script>";
+  header('Location: profile.php');
+  exit;
 }
 if(isset($_POST['activate_card_status_button']))
 {
-  $card_id = $_POST['card_id'];
-  $sql = "UPDATE tbl_card SET Card_Status = '1' WHERE Card_ID = '$card_id'";
-  mysqli_query($conn,$sql); 	
-    echo "<script>alert('Card activated successfully!');</script>";
-    header('Location: profile.php');
+  $card_id = (string)($_POST['card_id'] ?? '');
+  db_exec("UPDATE tbl_card SET Card_Status = 1 WHERE Card_ID = ? AND Customer_ID = ?", [$card_id, $userId]);
+  echo "<script>alert('Card activated successfully!');</script>";
+  header('Location: profile.php');
+  exit;
 }
 
 ?>
@@ -83,7 +97,7 @@ if(isset($_POST['activate_card_status_button']))
 <html lang="en">
   <head>
     <title>shopmyhome</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="assets/images/icons/favicon.png">
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -126,7 +140,7 @@ body {
 }
 
 .navigation-logo {
-  background-image: url(Picture3.png);
+  background-image: url(assets/images/banners/Picture3.png);
     background-size: contain;
     margin-inline-start: 2vh;
     height: 100%;
@@ -440,7 +454,7 @@ input[type=number]
                   //profile page,Staff Dashboard, logout
                   echo '<form action="" method="POST">';
                   //profile page
-                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="login"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></a></td>';
                   echo '<td><button class="admin-box" name="admin">Staff Dashboard</button></td>';
                   echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
@@ -450,7 +464,7 @@ input[type=number]
                 if($usertype == 'CU') {
                   //profile page, logout
                   echo '<form action="" method="POST">';
-                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="show_profile_page"><img src="profile1.png" height="30px" width="30px"></button></a></td>';
+                  echo '<tr><td><a href="profile.php"><button class="profile-box" name="show_profile_page"><img src="assets/images/icons/profile1.png" height="30px" width="30px"></button></a></td>';
                   //cart button
                   $sql = "SELECT * FROM tbl_cart_master WHERE Customer_ID = '$userId' AND Cart_Status = 'ASSIGNED'";
                   $result = mysqli_query($conn,$sql);
@@ -461,12 +475,12 @@ input[type=number]
                   $sql = "SELECT * FROM tbl_cart_child WHERE CM_ID = '$cm_id'";
                   $result = mysqli_query($conn,$sql);
                   $count = mysqli_num_rows($result);
-                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
+                  echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>$count</span></button></td>";
                   }
                   else if(mysqli_num_rows($result) == 0)
                   {
                     $cm_id = null;
-                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
+                    echo "<td><button type='submit' class='profile-box' name='cart'><img src='assets/images/icons/cart.png' height='30px' width='30px'><span style='font-size: 0.95em; color: rgb(239,51,36)' class='badge text-bg-secondary'>0</span></button></td>"; 
                   }
                    echo '<td><button class="logout-box" name="logout">Logout</button></td>';
                   echo '</tr>';
@@ -507,9 +521,6 @@ input[type=number]
                                 <tr>
                                     <td><label for="expiry-date">Expiry Date</label>
                                     <input type="date" name="expiry-date"  placeholder="MM/YY" min="<?php echo date('Y-m-d'); ?>" required></td>
-
-                                    <td><label for="cvv">CVV</label>  
-                                    <input type="number" name="cvv" min="100" max="9999" placeholder="Enter CVV" required></td>
                                 </tr>
                             </table>
                             <div class="input-box" style="border-bottom-left-radius: 10px;border-bottom-right-radius: 10px;">
@@ -542,18 +553,18 @@ input[type=number]
                           if ($result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
                                 echo "<tr>";
-                                //echo "<td>" . $row['Card_No'] . "</td>";
-                                echo "<td>XXXX-XXXX-XXXX-" . substr($row['Card_No'], -4) . "</td>";
-                                echo "<td>" . $row['Card_Holder_Name'] . "</td>";
-                                echo "<td>" . $row['Bank_Name'] . "</td>";
-                                echo "<td>" . $row['Expiry_Date'] . "</td>";
+                                //echo "<td>" . e((string) $row['Card_No']) . "</td>";
+                                echo "<td>XXXX-XXXX-XXXX-" . substr(e((string) $row['Card_No']), -4) . "</td>";
+                                echo "<td>" . e((string) $row['Card_Holder_Name']) . "</td>";
+                                echo "<td>" . e((string) $row['Bank_Name']) . "</td>";
+                                echo "<td>" . e((string) $row['Expiry_Date']) . "</td>";
                                 if($row['Card_Status'] == 1)
                                 {
-                                  echo "<td><form  method='POST'><input type='hidden' name='card_id' value='". $row['Card_ID'] ."'><button type='submit' class='deactivate_button' name='deactivate_card_status_button'>DEACTIVATE</button></form></td>";
+                                  echo "<td><form  method='POST'><input type='hidden' name='card_id' value='". e((string) $row['Card_ID']) ."'><button type='submit' class='deactivate_button' name='deactivate_card_status_button'>DEACTIVATE</button></form></td>";
                                 }
                                 if($row['Card_Status'] == 0)
                                 {
-                                  echo "<td><form  method='POST'><input type='hidden' name='card_id' value='". $row['Card_ID'] ."'><button type='submit' class='activate_button' name='activate_card_status_button'>ACTIVATE</button></form></td>";
+                                  echo "<td><form  method='POST'><input type='hidden' name='card_id' value='". e((string) $row['Card_ID']) ."'><button type='submit' class='activate_button' name='activate_card_status_button'>ACTIVATE</button></form></td>";
                                 }
                                 if($row['Card_Status'] == 2)
                                 {

@@ -1,0 +1,48 @@
+SHOPMYHOME / OHAS - HOW TO RUN
+================================
+
+Requirements
+- XAMPP with PHP 8.0+ and MariaDB 10.4+
+- Project folder: D:\Projects\shopmyhome
+
+1. Start MariaDB
+   Open XAMPP Control Panel and start MySQL.
+   Or run: C:\xampp\mysql\bin\mysqld.exe
+
+2. Create/import the database
+   Open Command Prompt and run:
+
+   cd /d D:\Projects\shopmyhome
+   C:\xampp\mysql\bin\mysql.exe -u root --default-character-set=utf8mb4 < database\ohas_schema.sql
+   C:\xampp\mysql\bin\mysql.exe -u root --default-character-set=utf8mb4 < database\ohas_seed.sql
+
+   Default database settings:
+   Host: localhost
+   User: root
+   Password: (blank)
+   Database: ohas
+
+3. Start the PHP development server
+
+   cd /d D:\Projects\shopmyhome
+   C:\xampp\php\php.exe -S 127.0.0.1:8000 router.php
+
+   Keep this window open. Press Ctrl+C to stop the server.
+
+4. Open the application
+
+   http://127.0.0.1:8000/
+
+Demo accounts
+   Admin:    admin@shopmyhome.com / Admin@123
+   Staff:    staff@shopmyhome.com / Staff@123
+   Courier:  courier@shopmyhome.com / Courier@123
+   Customer: customer@shopmyhome.com / Customer@123
+
+Reset demo data
+   Run the two MySQL import commands from step 2 again.
+
+Notes
+- Use the PHP server command above, not XAMPP Apache.
+- router.php blocks access to database/, vendor/, dotfiles, and PHP files in uploads.
+- Set OHAS_DEBUG=1 only while debugging PHP errors.
